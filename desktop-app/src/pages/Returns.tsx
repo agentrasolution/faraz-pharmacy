@@ -1,14 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Minus, Trash2, AlertCircle, Download } from "lucide-react";
+import { Search, Plus, Minus, Trash2, AlertCircle, Download, Loader2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
@@ -16,15 +15,10 @@ import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import type { ReturnEntry, Sale, SaleItem, PrinterConfig } from "@/types";
 
-function today() {
-  return new Date().toISOString().split("T")[0];
-}
-
 export default function Returns() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState(today());
   const [selectedSaleId, setSelectedSaleId] = useState("");
   const [reason, setReason] = useState("");
   const [returnQtys, setReturnQtys] = useState<Record<string, number>>({});
@@ -34,13 +28,11 @@ export default function Returns() {
   const [pendingSale, setPendingSale] = useState<Sale | null>(null);
   const [selectedReturn, setSelectedReturn] = useState<ReturnEntry | null>(null);
 
-  const { data: returns = [], isLoading } = useQuery({ queryKey: ["returns"], queryFn: api.returns.list });
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [invoiceResults, setInvoiceResults] = useState<Sale[]>([]);
+  const [searchingInvoice, setSearchingInvoice] = useState(false);
 
-  const { data: sales = [] } = useQuery({
-    queryKey: ["sales-by-date", selectedDate],
-    queryFn: () => api.sales.listByDate(selectedDate),
-    enabled: open,
-  });
+  const { data: returns = [], isLoading } = useQuery({ queryKey: ["returns"], queryFn: api.returns.list });
 
   const { data: selectedSale, isLoading: loadingSale } = useQuery({
     queryKey: ["sale", selectedSaleId],
@@ -48,9 +40,51 @@ export default function Returns() {
     enabled: !!selectedSaleId,
   });
 
+  useEffect(() => {
+    const q = invoiceSearch.trim();
+    if (!q) {
+      setInvoiceResults([]);
+      return;
+    }
+    setSearchingInvoice(true);
+    const t = setTimeout(async () => {
+      try {
+        const results = await api.sales.search(q);
+        setInvoiceResults(results);
+      } catch {
+        setInvoiceResults([]);
+      } finally {
+        setSearchingInvoice(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [invoiceSearch]);
+
   const filtered = returns.filter((r: ReturnEntry) =>
     !search || r.sale_id.includes(search) || r.reason.toLowerCase().includes(search.toLowerCase())
   );
+
+  function selectSale(sale: Sale) {
+    setSelectedSaleId(sale.id);
+    setReturnQtys({});
+    setError("");
+  }
+
+  function handleInvoiceSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    if (invoiceResults.length === 1) {
+      selectSale(invoiceResults[0]);
+      setInvoiceResults([]);
+      setInvoiceSearch("");
+      return;
+    }
+    const exact = invoiceResults.find((s) => s.id.toLowerCase() === invoiceSearch.trim().toLowerCase());
+    if (exact) {
+      selectSale(exact);
+      setInvoiceResults([]);
+      setInvoiceSearch("");
+    }
+  }
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -73,10 +107,9 @@ export default function Returns() {
       toast.success("Return processed");
       queryClient.invalidateQueries({ queryKey: ["returns"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["sales-by-date"] });
 
       setPendingReturnData(returnData);
-      setPendingSale(selectedSale);
+      if (selectedSale) setPendingSale(selectedSale);
       setShowPrintPreview(true);
 
       setOpen(false);
@@ -153,117 +186,169 @@ export default function Returns() {
           setSelectedSaleId("");
           setReason("");
           setReturnQtys({});
+          setInvoiceSearch("");
+          setInvoiceResults([]);
           setError("");
         }
         setOpen(v);
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>New Return</DialogTitle></DialogHeader>
           <div className="px-5 pb-5 space-y-4">
             <div>
-              <Label>Select Date</Label>
-              <Input type="date" value={selectedDate} onChange={(e) => { setSelectedDate(e.target.value); setSelectedSaleId(""); setReturnQtys({}); }} />
-            </div>
-
-            <div>
-              <Label>Sale Invoice</Label>
-              <Select value={selectedSaleId} onValueChange={(v) => { setSelectedSaleId(v); setReturnQtys({}); setError(""); }}>
-                <SelectTrigger><SelectValue placeholder={sales.length === 0 ? "No sales for this date" : "Select invoice"} /></SelectTrigger>
-                <SelectContent>
-                  {sales.map((s: Sale) => {
+              <Label>Search Invoice</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+                <Input
+                  placeholder="Search invoice ID, customer or product..."
+                  value={invoiceSearch}
+                  onChange={(e) => setInvoiceSearch(e.target.value)}
+                  onKeyDown={handleInvoiceSearchKeyDown}
+                  className="pl-9"
+                />
+              </div>
+              {searchingInvoice && (
+                <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Searching invoices...
+                </p>
+              )}
+              {!searchingInvoice && invoiceSearch.trim() && invoiceResults.length > 0 && (
+                <div className="mt-1 border border-border rounded-lg max-h-48 overflow-y-auto divide-y divide-border">
+                  {invoiceResults.map((s: Sale) => {
                     const isReturned = (s.return_count ?? 0) > 0;
                     return (
-                      <SelectItem key={s.id} value={s.id} disabled={isReturned}>
-                        <span className="flex items-center gap-2">
-                          <span className="font-mono text-xs">{s.id.slice(0, 8)}</span>
-                          <span>{formatCurrency(s.total)}</span>
-                          <span className="text-text-secondary text-xs">({s.customer_name || "Walk-in"})</span>
-                          {isReturned && <span className="text-xs text-danger ml-1">[Returned]</span>}
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => { selectSale(s); setInvoiceSearch(""); setInvoiceResults([]); }}
+                        className="w-full text-left px-3 py-2 hover:bg-surface-2 flex items-center justify-between gap-2 disabled:opacity-50"
+                      >
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono text-xs">{s.id}</span>
+                          <span className="text-xs text-text-secondary truncate">{s.customer_name || "Walk-in"}</span>
                         </span>
-                      </SelectItem>
+                        <span className="flex items-center gap-2 shrink-0">
+                          <span className="font-mono text-xs">{formatCurrency(s.total)}</span>
+                          {isReturned && <span className="text-xs text-danger">[Returned]</span>}
+                        </span>
+                      </button>
                     );
                   })}
-                </SelectContent>
-              </Select>
-              {selectedSale && (selectedSale.return_count ?? 0) > 0 && (
-                <p className="text-xs text-danger mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> This sale has already been returned
+                </div>
+              )}
+              {!searchingInvoice && invoiceSearch.trim() && invoiceResults.length === 0 && (
+                <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> No invoices found for "{invoiceSearch}"
                 </p>
               )}
             </div>
 
-            {loadingSale && (
-              <div className="flex items-center justify-center py-8">
-                <Skeleton className="h-20 w-full" />
-              </div>
-            )}
+            {selectedSaleId && (
+              loadingSale ? (
+                <div className="flex items-center justify-center py-8">
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : selectedSale ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-border p-3 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-text-secondary shrink-0">Invoice:</span>
+                      <span className="font-mono font-medium truncate">{selectedSale.id}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-xs text-text-secondary mt-1">
+                      <span className="truncate">{selectedSale.customer_name || "Walk-in"}</span>
+                      <span className="shrink-0">{formatDateTime(selectedSale.created_at)}</span>
+                      <span className="font-mono shrink-0">{formatCurrency(selectedSale.total)}</span>
+                    </div>
+                  </div>
 
-            {selectedSale && selectedSale.items && selectedSale.items.length > 0 && (selectedSale.return_count ?? 0) === 0 && (
-              <div>
-                <Label className="mb-2 block">Items to Return</Label>
-                <div className="max-h-48 overflow-y-auto space-y-2 border border-border rounded-lg p-3">
-                  {selectedSale.items.map((item: SaleItem) => {
-                    const qty = returnQtys[item.product_id] || 0;
-                    const showDelete = qty > 0;
-                    return (
-                      <div key={item.product_id} className="flex items-center gap-2">
-                        <span className="flex-1 text-sm truncate">{item.product_name}</span>
-                        <span className="text-xs text-text-secondary font-mono">{formatCurrency(item.unit_price)} ×</span>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.max(0, (prev[item.product_id] || 0) - 1) }))}
-                            className="h-7 w-7 rounded-md bg-surface-2 flex items-center justify-center hover:bg-border"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="w-6 text-center text-sm font-mono">{qty}</span>
-                          <button
-                            onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(item.quantity, (prev[item.product_id] || 0) + 1) }))}
-                            className="h-7 w-7 rounded-md bg-surface-2 flex items-center justify-center hover:bg-border"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                          {showDelete && (
-                            <button
-                              onClick={() => {
-                                const next = { ...returnQtys };
-                                delete next[item.product_id];
-                                setReturnQtys(next);
-                              }}
-                              className="h-7 w-7 rounded-md bg-danger/10 flex items-center justify-center hover:bg-danger/20 ml-1"
-                            >
-                              <Trash2 className="h-3 w-3 text-danger" />
-                            </button>
-                          )}
-                        </div>
+                  {(selectedSale.return_count ?? 0) > 0 && (
+                    <p className="text-xs text-danger flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> This sale has already been returned
+                    </p>
+                  )}
+
+                  {selectedSale.items && selectedSale.items.length > 0 && (selectedSale.return_count ?? 0) === 0 && (
+                    <div>
+                      <Label className="mb-2 block">Items to Return</Label>
+                      <div className="max-h-48 overflow-y-auto space-y-2 border border-border rounded-lg p-3">
+                        {selectedSale.items.map((item: SaleItem) => {
+                          const qty = returnQtys[item.product_id] || 0;
+                          const showDelete = qty > 0;
+                          return (
+                            <div key={item.product_id} className="flex items-center gap-2">
+                              <span className="flex-1 text-sm truncate">{item.product_name}</span>
+                              <span className="text-xs text-text-secondary font-mono">{formatCurrency(item.unit_price)} × {item.quantity}</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.max(0, (prev[item.product_id] || 0) - 1) }))}
+                                  className="h-7 w-7 rounded-md bg-surface-2 flex items-center justify-center hover:bg-border"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span className="w-6 text-center text-sm font-mono">{qty}</span>
+                                <button
+                                  onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(item.quantity, (prev[item.product_id] || 0) + 1) }))}
+                                  className="h-7 w-7 rounded-md bg-surface-2 flex items-center justify-center hover:bg-border"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                                {showDelete && (
+                                  <button
+                                    onClick={() => {
+                                      const next = { ...returnQtys };
+                                      delete next[item.product_id];
+                                      setReturnQtys(next);
+                                    }}
+                                    className="h-7 w-7 rounded-md bg-danger/10 flex items-center justify-center hover:bg-danger/20 ml-1"
+                                  >
+                                    <Trash2 className="h-3 w-3 text-danger" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                    </div>
+                  )}
 
-            {selectedSale && (!selectedSale.items || selectedSale.items.length === 0) && (
-              <p className="text-sm text-text-secondary text-center py-4">No items found for this sale.</p>
-            )}
+                  {selectedSale.items && selectedSale.items.length === 0 && (
+                    <p className="text-sm text-text-secondary text-center py-4">No items found for this sale.</p>
+                  )}
 
-            {selectedSale && (selectedSale.return_count ?? 0) === 0 && (
-              <>
-                <div>
-                  <Label>Reason</Label>
-                  <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Damaged, Expired, Wrong item" />
-                </div>
+                  {(selectedSale.return_count ?? 0) === 0 && (
+                    <>
+                      <div>
+                        <Label>Reason</Label>
+                        <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Damaged, Expired, Wrong item" />
+                      </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-text-secondary">Total Refund:</span>
-                  <span className="font-mono font-bold text-danger">
-                    {formatCurrency(Object.entries(returnQtys).reduce((s, [id, qty]) => {
-                      const item = selectedSale?.items?.find((i: SaleItem) => i.product_id === id);
-                      return s + (item?.unit_price || 0) * qty;
-                    }, 0))}
-                  </span>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-text-secondary">Total Refund:</span>
+                        <span className="font-mono font-bold text-danger">
+                          {formatCurrency(Object.entries(returnQtys).reduce((s, [id, qty]) => {
+                            const item = selectedSale.items?.find((i: SaleItem) => i.product_id === id);
+                            return s + (item?.unit_price || 0) * qty;
+                          }, 0))}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  <Button
+                    className="w-full"
+                    disabled={!selectedSaleId || !reason || !Object.values(returnQtys).some(q => q > 0) || (selectedSale?.return_count ?? 0) > 0}
+                    onClick={() => createMutation.mutate()}
+                  >
+                    {createMutation.isPending ? "Processing..." : "Process Return"}
+                  </Button>
                 </div>
-              </>
+              ) : (
+                <p className="text-sm text-danger text-center py-4 flex items-center justify-center gap-1">
+                  <AlertCircle className="h-4 w-4" /> Invoice not found
+                </p>
+              )
             )}
 
             {error && (
@@ -271,14 +356,6 @@ export default function Returns() {
                 <AlertCircle className="h-4 w-4" /> {error}
               </p>
             )}
-
-            <Button
-              className="w-full"
-              disabled={!selectedSaleId || !reason || Object.values(returnQtys).every(q => q === 0) || (selectedSale?.return_count ?? 0) > 0}
-              onClick={() => createMutation.mutate()}
-            >
-              {createMutation.isPending ? "Processing..." : "Process Return"}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

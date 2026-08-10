@@ -1,13 +1,26 @@
 import { useEffect, useState, useRef } from "react";
-import { Barcode, Printer } from "lucide-react";
+import { Barcode } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import JsBarcode from "jsbarcode";
-import { generateBarcode } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { generateBarcode, renderBarcode } from "@/lib/utils";
 import { api } from "@/lib/api";
-import type { USBPrinterInfo } from "@/types/electron";
+
+const LABEL_SIZES = [
+  { value: "35x20", label: "35 x 20 mm" },
+  { value: "40x25", label: "40 x 25 mm" },
+  { value: "50x30", label: "50 x 30 mm" },
+  { value: "60x40", label: "60 x 40 mm" },
+  { value: "100x50", label: "100 x 50 mm" },
+] as const;
 
 interface PrintBarcodeDialogProps {
   open: boolean;
@@ -20,7 +33,9 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
   const [copies, setCopies] = useState(1);
   const [generating, setGenerating] = useState(false);
   const [isNewBarcode, setIsNewBarcode] = useState(false);
-  const [usbPrinters, setUsbPrinters] = useState<USBPrinterInfo[]>([]);
+  const [printers, setPrinters] = useState<{ name: string; displayName: string; isDefault: boolean }[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState("default");
+  const [labelSize, setLabelSize] = useState("50x30");
   const barcodeId = useRef(0);
 
   useEffect(() => {
@@ -65,7 +80,10 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
 
   useEffect(() => {
     if (open) {
-      window.getUSBPrinters().then(setUsbPrinters).catch(() => setUsbPrinters([]));
+      window.electronAPI?.printers
+        ?.list()
+        .then(setPrinters)
+        .catch(() => setPrinters([]));
     }
   }, [open]);
 
@@ -77,18 +95,7 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
     if (!svg) return;
     requestAnimationFrame(() => {
       if (id !== barcodeId.current) return;
-      try {
-        JsBarcode(svg, barcode, {
-          format: "EAN13",
-          width: 2,
-          height: 60,
-          displayValue: true,
-          fontSize: 14,
-          margin: 10,
-        });
-      } catch {
-        // invalid barcode
-      }
+      renderBarcode(svg, barcode, { margin: 10 });
     });
   }, [barcode, open]);
 
@@ -97,7 +104,17 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
       if (isNewBarcode) {
         await api.barcodes.create(barcode);
       }
-      const result = await window.printBarcodeLabel(barcode, copies);
+      const svgEl = document.getElementById("barcode-svg") as unknown as SVGElement | null;
+      const svgHtml = svgEl ? svgEl.outerHTML : "";
+      const [labelWidth, labelHeight] = labelSize.split("x").map(Number);
+      const result = await window.printBarcodeLabel(
+        barcode,
+        copies,
+        svgHtml,
+        labelWidth,
+        labelHeight,
+        selectedPrinter === "default" ? undefined : selectedPrinter,
+      );
       if (!result.success) {
         alert("Barcode print failed: " + (result.error || "Unknown error"));
       } else {
@@ -131,28 +148,55 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
                 <p className="text-xs text-text-secondary font-mono tracking-wider">{barcode}</p>
               </div>
               <div className="space-y-1">
-                <Label>Number of copies</Label>
-                <Input type="number" min={1} max={100} value={copies} onChange={(e) => setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} />
+                <Label>Printer</Label>
+                <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Default printer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default Printer</SelectItem>
+                    {printers.map((p) => (
+                      <SelectItem key={p.name} value={p.name}>
+                        {p.displayName}{" "}
+                        {p.isDefault ? (
+                          <span className="text-text-secondary">(Default)</span>
+                        ) : (
+                          ""
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {printers.length === 0 && (
+                  <p className="text-[10px] text-text-secondary">
+                    No installed printers detected. Make sure the printer driver is installed.
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Label size</Label>
+                  <Select value={labelSize} onValueChange={setLabelSize}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Label size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LABEL_SIZES.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Number of copies</Label>
+                  <Input type="number" min={1} max={100} value={copies} onChange={(e) => setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} />
+                </div>
               </div>
               <Button className="w-full" onClick={handlePrint}>
                 Print {copies} label{copies > 1 ? "s" : ""}
               </Button>
-              {usbPrinters.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-text-secondary flex items-center gap-1">
-                    <Printer className="h-3 w-3" />
-                    Detected printers
-                  </p>
-                  <div className="space-y-1">
-                    {usbPrinters.map((p, i) => (
-                      <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-border bg-surface-2 text-xs">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                        <span className="text-text-primary truncate">{p.productName}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>

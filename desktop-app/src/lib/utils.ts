@@ -1,8 +1,39 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import JsBarcode from "jsbarcode";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export interface RenderBarcodeOptions {
+  width?: number;
+  height?: number;
+  displayValue?: boolean;
+  fontSize?: number;
+  margin?: number;
+}
+
+export function renderBarcode(svg: SVGElement, value: string, options: RenderBarcodeOptions = {}): boolean {
+  const opts = {
+    width: 2,
+    height: 60,
+    displayValue: true,
+    fontSize: 14,
+    margin: 8,
+    ...options,
+  };
+  try {
+    JsBarcode(svg, value, { format: "EAN13", ...opts });
+    return true;
+  } catch {
+    try {
+      JsBarcode(svg, value, { format: "CODE128", ...opts });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export function formatCurrency(amount: number | null | undefined): string {

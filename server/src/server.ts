@@ -4,6 +4,7 @@ import { app } from "./app";
 import { logger } from "./utils/logger";
 import { prisma } from "./services/prisma";
 import { initializeSocket, getIO } from "./socket";
+import "./config/env.js";
 
 async function main() {
   try {

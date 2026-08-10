@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CreditCard, Plus, Trash2, CheckCircle, Lock, Printer } from "lucide-react";
+import { CreditCard, Plus, Trash2, CheckCircle, Lock, Printer, History } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { api } from "@/lib/api";
-import type { Arrear, Customer } from "@/types";
+import type { Arrear, Customer, ArrearPayment } from "@/types";
 
 export default function Arrears() {
   const queryClient = useQueryClient();
@@ -23,6 +23,7 @@ export default function Arrears() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [form, setForm] = useState({ customerId: "", totalBill: "", amountPaid: "" });
   const [passwordDialog, setPasswordDialog] = useState<{ open: boolean; action: "pay" | "settle" | "delete"; targetId: string; payAmount?: number }>({ open: false, action: "pay", targetId: "" });
   const [adminPassword, setAdminPassword] = useState("");
@@ -129,6 +130,9 @@ export default function Arrears() {
     {
       key: "actions", header: "Action", cell: (a: Arrear) => (
         <div className="flex items-center gap-1.5 justify-center">
+          <button onClick={() => setExpanded(expanded === a.id ? null : a.id)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-secondary/60 transition-colors" title={expanded === a.id ? "Hide history" : "Payment history"}>
+            <History className="h-3.5 w-3.5" />
+          </button>
           {a.status === "pending" && (
             <>
               {payingId === a.id ? (
@@ -173,6 +177,48 @@ export default function Arrears() {
       <div className="rounded-xl border border-border overflow-hidden">
         <DataTable columns={columns} data={arrears} loading={isLoading} keyExtractor={(a: Arrear) => a.id} />
       </div>
+
+      {expanded && (() => {
+        const arrear = arrears.find((a: Arrear) => a.id === expanded);
+        if (!arrear) return null;
+        const payments = arrear.payments ?? [];
+        return (
+          <div className="mt-3 rounded-xl border border-border overflow-hidden bg-bg-secondary/30">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
+              <History className="h-4 w-4 text-text-secondary" />
+              <span className="text-sm font-medium text-text-primary">Payment History — {arrear.customer_name}</span>
+              <span className="text-xs text-text-secondary ml-auto font-mono">{payments.length} payment{payments.length !== 1 ? "s" : ""}</span>
+            </div>
+            {payments.length === 0 ? (
+              <div className="text-center text-text-secondary py-8 text-xs">No payments recorded yet</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/60">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-text-secondary">Date</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-text-secondary">Amount</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-text-secondary">Running Total Paid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((p: ArrearPayment, i: number) => {
+                      const runningTotal = payments.slice(0, i + 1).reduce((s, x) => s + x.amount, 0);
+                      return (
+                        <tr key={p.id} className="border-b border-border/40">
+                          <td className="px-4 py-2.5 font-mono text-xs text-text-secondary">{formatDateTime(p.created_at)}</td>
+                          <td className="px-4 py-2.5 font-mono font-medium text-success">{formatCurrency(p.amount)}</td>
+                          <td className="px-4 py-2.5 font-mono text-text-primary">{formatCurrency(runningTotal)} / {formatCurrency(arrear.total_bill)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

@@ -63,6 +63,7 @@ export const ModelName = {
   Sale: 'Sale',
   SaleItem: 'SaleItem',
   Arrear: 'Arrear',
+  ArrearPayment: 'ArrearPayment',
   StockPurchase: 'StockPurchase',
   ReturnEntry: 'ReturnEntry',
   ReturnItem: 'ReturnItem',
@@ -243,6 +244,17 @@ export const ArrearScalarFieldEnum = {
 } as const
 
 export type ArrearScalarFieldEnum = (typeof ArrearScalarFieldEnum)[keyof typeof ArrearScalarFieldEnum]
+
+
+export const ArrearPaymentScalarFieldEnum = {
+  id: 'id',
+  arrearId: 'arrearId',
+  amount: 'amount',
+  paymentSaleId: 'paymentSaleId',
+  createdAt: 'createdAt'
+} as const
+
+export type ArrearPaymentScalarFieldEnum = (typeof ArrearPaymentScalarFieldEnum)[keyof typeof ArrearPaymentScalarFieldEnum]
 
 
 export const StockPurchaseScalarFieldEnum = {

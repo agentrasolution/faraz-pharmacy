@@ -3,21 +3,35 @@ import { NotFoundError, BadRequestError } from "../../utils/errors";
 import type { CreateCustomerInput } from "./customers.schema";
 import { Prisma } from "../../generated/prisma/client";
 
+interface CustomerStats {
+  total_purchases: number;
+  outstanding_arrear: number;
+  last_purchase: string | null;
+}
+
+const customerStatsSelect = `
+  (SELECT COUNT(*)::int FROM sales s WHERE s.customer_id = c.id) AS total_purchases,
+  COALESCE((SELECT SUM(a.balance_due) FROM arrears a WHERE a.customer_id = c.id AND a.status = 'pending'), 0) AS outstanding_arrear,
+  (SELECT MAX(s.created_at) FROM sales s WHERE s.customer_id = c.id) AS last_purchase`;
+
 export const customersService = {
   async list() {
-    return prisma.customer.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        _count: { select: { sales: true } },
-        arrears: { where: { status: "pending" }, select: { balanceDue: true } },
-      },
-    });
+    return prisma.$queryRawUnsafe<unknown[]>(
+      `SELECT c.id, c.name, c.phone, c.address, c.created_at,
+        ${customerStatsSelect}
+       FROM customers c
+       ORDER BY c.name ASC`,
+    );
   },
 
   async search(query: string) {
     const q = `%${query}%`;
     return prisma.$queryRawUnsafe<unknown[]>(
-      `SELECT * FROM customers WHERE name ILIKE $1 OR phone ILIKE $1 ORDER BY name LIMIT 20`,
+      `SELECT c.id, c.name, c.phone, c.address, c.created_at,
+        ${customerStatsSelect}
+       FROM customers c
+       WHERE c.name ILIKE $1 OR c.phone ILIKE $1
+       ORDER BY c.name LIMIT 20`,
       q,
     );
   },
@@ -26,16 +40,74 @@ export const customersService = {
     const customer = await prisma.customer.findUnique({
       where: { id },
       include: {
-        _count: { select: { sales: true } },
-        arrears: { where: { status: "pending" }, select: { balanceDue: true } },
         sales: {
           orderBy: { createdAt: "desc" },
-          include: { _count: { select: { items: true } } },
+          include: { items: true },
+        },
+        arrears: {
+          orderBy: { createdAt: "desc" },
+          include: { payments: { orderBy: { createdAt: "asc" } } },
         },
       },
     });
     if (!customer) throw new NotFoundError("Customer");
-    return customer;
+
+    const [stats] = await prisma.$queryRawUnsafe<CustomerStats[]>(
+      `SELECT
+        ${customerStatsSelect}
+       FROM customers c
+       WHERE c.id = $1
+       GROUP BY c.id`,
+      id,
+    );
+
+    return {
+      id: customer.id,
+      name: customer.name,
+      phone: customer.phone,
+      address: customer.address,
+      created_at: customer.createdAt.toISOString(),
+      total_purchases: stats?.total_purchases ?? 0,
+      outstanding_arrear: stats?.outstanding_arrear ?? 0,
+      last_purchase: stats?.last_purchase ?? null,
+      purchases: customer.sales.map((s) => ({
+        id: s.id,
+        customer_id: s.customerId ?? undefined,
+        subtotal: s.subtotal,
+        discount: s.discount,
+        total: s.total,
+        amount_paid: s.amountPaid,
+        change: s.change,
+        status: s.status,
+        created_at: s.createdAt.toISOString(),
+        items: s.items.map((i) => ({
+          id: i.id,
+          sale_id: i.saleId,
+          product_id: i.productId,
+          product_name: i.productName,
+          barcode: i.barcode,
+          quantity: i.quantity,
+          unit_price: i.unitPrice,
+          subtotal: i.subtotal,
+        })),
+      })),
+      arrears: customer.arrears.map((a) => ({
+        id: a.id,
+        sale_id: a.saleId ?? "",
+        customer_id: a.customerId,
+        total_bill: a.totalBill,
+        amount_paid: a.amountPaid,
+        balance_due: a.balanceDue,
+        status: a.status,
+        created_at: a.createdAt.toISOString(),
+        payments: a.payments.map((p) => ({
+          id: p.id,
+          amount: p.amount,
+          payment_sale_id: p.paymentSaleId ?? null,
+          created_at: p.createdAt.toISOString(),
+        })),
+      })),
+    };
   },
 
   async create(data: CreateCustomerInput) {

@@ -12,6 +12,12 @@ function normalizeArrear(a: Record<string, unknown>): Record<string, unknown> {
     balance_due: a.balanceDue,
     status: a.status,
     created_at: a.createdAt,
+    payments: ((a as any).payments ?? []).map((p: Record<string, unknown>) => ({
+      id: p.id,
+      amount: p.amount,
+      payment_sale_id: p.paymentSaleId ?? null,
+      created_at: p.createdAt,
+    })),
   };
 }
 

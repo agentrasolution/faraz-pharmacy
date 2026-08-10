@@ -250,6 +250,7 @@ export type ArrearWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Arrear"> | Date | string
   sale?: Prisma.XOR<Prisma.SaleNullableScalarRelationFilter, Prisma.SaleWhereInput> | null
   customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
+  payments?: Prisma.ArrearPaymentListRelationFilter
 }
 
 export type ArrearOrderByWithRelationInput = {
@@ -263,6 +264,7 @@ export type ArrearOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   sale?: Prisma.SaleOrderByWithRelationInput
   customer?: Prisma.CustomerOrderByWithRelationInput
+  payments?: Prisma.ArrearPaymentOrderByRelationAggregateInput
 }
 
 export type ArrearWhereUniqueInput = Prisma.AtLeast<{
@@ -279,6 +281,7 @@ export type ArrearWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Arrear"> | Date | string
   sale?: Prisma.XOR<Prisma.SaleNullableScalarRelationFilter, Prisma.SaleWhereInput> | null
   customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
+  payments?: Prisma.ArrearPaymentListRelationFilter
 }, "id">
 
 export type ArrearOrderByWithAggregationInput = {
@@ -320,6 +323,7 @@ export type ArrearCreateInput = {
   createdAt?: Date | string
   sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
   customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
+  payments?: Prisma.ArrearPaymentCreateNestedManyWithoutArrearInput
 }
 
 export type ArrearUncheckedCreateInput = {
@@ -331,6 +335,7 @@ export type ArrearUncheckedCreateInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
+  payments?: Prisma.ArrearPaymentUncheckedCreateNestedManyWithoutArrearInput
 }
 
 export type ArrearUpdateInput = {
@@ -342,6 +347,7 @@ export type ArrearUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
   customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
+  payments?: Prisma.ArrearPaymentUpdateManyWithoutArrearNestedInput
 }
 
 export type ArrearUncheckedUpdateInput = {
@@ -353,6 +359,7 @@ export type ArrearUncheckedUpdateInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  payments?: Prisma.ArrearPaymentUncheckedUpdateManyWithoutArrearNestedInput
 }
 
 export type ArrearCreateManyInput = {
@@ -441,6 +448,11 @@ export type ArrearSumOrderByAggregateInput = {
   balanceDue?: Prisma.SortOrder
 }
 
+export type ArrearScalarRelationFilter = {
+  is?: Prisma.ArrearWhereInput
+  isNot?: Prisma.ArrearWhereInput
+}
+
 export type ArrearCreateNestedManyWithoutCustomerInput = {
   create?: Prisma.XOR<Prisma.ArrearCreateWithoutCustomerInput, Prisma.ArrearUncheckedCreateWithoutCustomerInput> | Prisma.ArrearCreateWithoutCustomerInput[] | Prisma.ArrearUncheckedCreateWithoutCustomerInput[]
   connectOrCreate?: Prisma.ArrearCreateOrConnectWithoutCustomerInput | Prisma.ArrearCreateOrConnectWithoutCustomerInput[]
@@ -525,6 +537,20 @@ export type ArrearUncheckedUpdateManyWithoutSaleNestedInput = {
   deleteMany?: Prisma.ArrearScalarWhereInput | Prisma.ArrearScalarWhereInput[]
 }
 
+export type ArrearCreateNestedOneWithoutPaymentsInput = {
+  create?: Prisma.XOR<Prisma.ArrearCreateWithoutPaymentsInput, Prisma.ArrearUncheckedCreateWithoutPaymentsInput>
+  connectOrCreate?: Prisma.ArrearCreateOrConnectWithoutPaymentsInput
+  connect?: Prisma.ArrearWhereUniqueInput
+}
+
+export type ArrearUpdateOneRequiredWithoutPaymentsNestedInput = {
+  create?: Prisma.XOR<Prisma.ArrearCreateWithoutPaymentsInput, Prisma.ArrearUncheckedCreateWithoutPaymentsInput>
+  connectOrCreate?: Prisma.ArrearCreateOrConnectWithoutPaymentsInput
+  upsert?: Prisma.ArrearUpsertWithoutPaymentsInput
+  connect?: Prisma.ArrearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ArrearUpdateToOneWithWhereWithoutPaymentsInput, Prisma.ArrearUpdateWithoutPaymentsInput>, Prisma.ArrearUncheckedUpdateWithoutPaymentsInput>
+}
+
 export type ArrearCreateWithoutCustomerInput = {
   id?: string
   totalBill?: number
@@ -533,6 +559,7 @@ export type ArrearCreateWithoutCustomerInput = {
   status?: string
   createdAt?: Date | string
   sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
+  payments?: Prisma.ArrearPaymentCreateNestedManyWithoutArrearInput
 }
 
 export type ArrearUncheckedCreateWithoutCustomerInput = {
@@ -543,6 +570,7 @@ export type ArrearUncheckedCreateWithoutCustomerInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
+  payments?: Prisma.ArrearPaymentUncheckedCreateNestedManyWithoutArrearInput
 }
 
 export type ArrearCreateOrConnectWithoutCustomerInput = {
@@ -593,6 +621,7 @@ export type ArrearCreateWithoutSaleInput = {
   status?: string
   createdAt?: Date | string
   customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
+  payments?: Prisma.ArrearPaymentCreateNestedManyWithoutArrearInput
 }
 
 export type ArrearUncheckedCreateWithoutSaleInput = {
@@ -603,6 +632,7 @@ export type ArrearUncheckedCreateWithoutSaleInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
+  payments?: Prisma.ArrearPaymentUncheckedCreateNestedManyWithoutArrearInput
 }
 
 export type ArrearCreateOrConnectWithoutSaleInput = {
@@ -631,6 +661,66 @@ export type ArrearUpdateManyWithWhereWithoutSaleInput = {
   data: Prisma.XOR<Prisma.ArrearUpdateManyMutationInput, Prisma.ArrearUncheckedUpdateManyWithoutSaleInput>
 }
 
+export type ArrearCreateWithoutPaymentsInput = {
+  id?: string
+  totalBill?: number
+  amountPaid?: number
+  balanceDue?: number
+  status?: string
+  createdAt?: Date | string
+  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
+  customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
+}
+
+export type ArrearUncheckedCreateWithoutPaymentsInput = {
+  id?: string
+  saleId?: string | null
+  customerId: string
+  totalBill?: number
+  amountPaid?: number
+  balanceDue?: number
+  status?: string
+  createdAt?: Date | string
+}
+
+export type ArrearCreateOrConnectWithoutPaymentsInput = {
+  where: Prisma.ArrearWhereUniqueInput
+  create: Prisma.XOR<Prisma.ArrearCreateWithoutPaymentsInput, Prisma.ArrearUncheckedCreateWithoutPaymentsInput>
+}
+
+export type ArrearUpsertWithoutPaymentsInput = {
+  update: Prisma.XOR<Prisma.ArrearUpdateWithoutPaymentsInput, Prisma.ArrearUncheckedUpdateWithoutPaymentsInput>
+  create: Prisma.XOR<Prisma.ArrearCreateWithoutPaymentsInput, Prisma.ArrearUncheckedCreateWithoutPaymentsInput>
+  where?: Prisma.ArrearWhereInput
+}
+
+export type ArrearUpdateToOneWithWhereWithoutPaymentsInput = {
+  where?: Prisma.ArrearWhereInput
+  data: Prisma.XOR<Prisma.ArrearUpdateWithoutPaymentsInput, Prisma.ArrearUncheckedUpdateWithoutPaymentsInput>
+}
+
+export type ArrearUpdateWithoutPaymentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  totalBill?: Prisma.FloatFieldUpdateOperationsInput | number
+  amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
+  balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
+  customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
+}
+
+export type ArrearUncheckedUpdateWithoutPaymentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  saleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  totalBill?: Prisma.FloatFieldUpdateOperationsInput | number
+  amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
+  balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type ArrearCreateManyCustomerInput = {
   id?: string
   saleId?: string | null
@@ -649,6 +739,7 @@ export type ArrearUpdateWithoutCustomerInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
+  payments?: Prisma.ArrearPaymentUpdateManyWithoutArrearNestedInput
 }
 
 export type ArrearUncheckedUpdateWithoutCustomerInput = {
@@ -659,6 +750,7 @@ export type ArrearUncheckedUpdateWithoutCustomerInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  payments?: Prisma.ArrearPaymentUncheckedUpdateManyWithoutArrearNestedInput
 }
 
 export type ArrearUncheckedUpdateManyWithoutCustomerInput = {
@@ -689,6 +781,7 @@ export type ArrearUpdateWithoutSaleInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
+  payments?: Prisma.ArrearPaymentUpdateManyWithoutArrearNestedInput
 }
 
 export type ArrearUncheckedUpdateWithoutSaleInput = {
@@ -699,6 +792,7 @@ export type ArrearUncheckedUpdateWithoutSaleInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  payments?: Prisma.ArrearPaymentUncheckedUpdateManyWithoutArrearNestedInput
 }
 
 export type ArrearUncheckedUpdateManyWithoutSaleInput = {
@@ -712,6 +806,35 @@ export type ArrearUncheckedUpdateManyWithoutSaleInput = {
 }
 
 
+/**
+ * Count Type ArrearCountOutputType
+ */
+
+export type ArrearCountOutputType = {
+  payments: number
+}
+
+export type ArrearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  payments?: boolean | ArrearCountOutputTypeCountPaymentsArgs
+}
+
+/**
+ * ArrearCountOutputType without action
+ */
+export type ArrearCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ArrearCountOutputType
+   */
+  select?: Prisma.ArrearCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ArrearCountOutputType without action
+ */
+export type ArrearCountOutputTypeCountPaymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ArrearPaymentWhereInput
+}
+
 
 export type ArrearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -724,6 +847,8 @@ export type ArrearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   createdAt?: boolean
   sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  payments?: boolean | Prisma.Arrear$paymentsArgs<ExtArgs>
+  _count?: boolean | Prisma.ArrearCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["arrear"]>
 
 export type ArrearSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -767,6 +892,8 @@ export type ArrearOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type ArrearInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  payments?: boolean | Prisma.Arrear$paymentsArgs<ExtArgs>
+  _count?: boolean | Prisma.ArrearCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ArrearIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
@@ -782,6 +909,7 @@ export type $ArrearPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     sale: Prisma.$SalePayload<ExtArgs> | null
     customer: Prisma.$CustomerPayload<ExtArgs>
+    payments: Prisma.$ArrearPaymentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1188,6 +1316,7 @@ export interface Prisma__ArrearClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   sale<T extends Prisma.Arrear$saleArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Arrear$saleArgs<ExtArgs>>): Prisma.Prisma__SaleClient<runtime.Types.Result.GetResult<Prisma.$SalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   customer<T extends Prisma.CustomerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CustomerDefaultArgs<ExtArgs>>): Prisma.Prisma__CustomerClient<runtime.Types.Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  payments<T extends Prisma.Arrear$paymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Arrear$paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ArrearPaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1642,6 +1771,30 @@ export type Arrear$saleArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   include?: Prisma.SaleInclude<ExtArgs> | null
   where?: Prisma.SaleWhereInput
+}
+
+/**
+ * Arrear.payments
+ */
+export type Arrear$paymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ArrearPayment
+   */
+  select?: Prisma.ArrearPaymentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ArrearPayment
+   */
+  omit?: Prisma.ArrearPaymentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ArrearPaymentInclude<ExtArgs> | null
+  where?: Prisma.ArrearPaymentWhereInput
+  orderBy?: Prisma.ArrearPaymentOrderByWithRelationInput | Prisma.ArrearPaymentOrderByWithRelationInput[]
+  cursor?: Prisma.ArrearPaymentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ArrearPaymentScalarFieldEnum | Prisma.ArrearPaymentScalarFieldEnum[]
 }
 
 /**

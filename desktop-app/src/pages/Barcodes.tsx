@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import JsBarcode from "jsbarcode";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { api } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, renderBarcode } from "@/lib/utils";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
 import type { BarcodeEntry } from "@/types";
 
@@ -74,19 +73,13 @@ export default function Barcodes() {
       filtered.forEach((b) => {
         const el = document.getElementById(`bc-${b.id}`) as unknown as SVGElement | null;
         if (!el) return;
-        try {
-          JsBarcode(el, b.code, {
-            format: "EAN13",
-            width: 1.5,
-            height: 40,
-            displayValue: false,
-            margin: 0,
-            fontSize: 12,
-            background: "transparent",
-          });
-        } catch {
-          // invalid barcode
-        }
+        renderBarcode(el, b.code, {
+          width: 1.5,
+          height: 40,
+          displayValue: false,
+          margin: 0,
+          fontSize: 12,
+        });
       });
     });
     return () => cancelAnimationFrame(timer);

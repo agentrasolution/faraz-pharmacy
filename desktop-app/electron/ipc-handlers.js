@@ -8,7 +8,6 @@ import {
   printReceipt,
   printReturnReceipt,
   printBarcodeLabel,
-  listUSBPrinters,
   generateHTML,
   generateReturnReceiptHTML,
 } from "./printer.js";
@@ -81,14 +80,6 @@ function registerHandlers() {
     return { success: true };
   });
 
-  ipcMain.handle("usb-printers:list", async () => {
-    try {
-      return await listUSBPrinters();
-    } catch {
-      return [];
-    }
-  });
-
   ipcMain.handle("print:receipt", async (_, sale, printerConfig) => {
     try {
       await printReceipt(sale, printerConfig);
@@ -112,9 +103,9 @@ function registerHandlers() {
 
   ipcMain.handle(
     "print:barcode-label",
-    async (_, barcode, copies, labelWidth, labelHeight) => {
+    async (_, barcode, copies, svgHtml, labelWidth, labelHeight, deviceName) => {
       try {
-        await printBarcodeLabel(barcode, copies, labelWidth, labelHeight);
+        await printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName);
         return { success: true };
       } catch (e) {
         return { success: false, error: e.message };

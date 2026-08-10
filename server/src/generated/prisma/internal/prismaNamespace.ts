@@ -396,6 +396,7 @@ export const ModelName = {
   Sale: 'Sale',
   SaleItem: 'SaleItem',
   Arrear: 'Arrear',
+  ArrearPayment: 'ArrearPayment',
   StockPurchase: 'StockPurchase',
   ReturnEntry: 'ReturnEntry',
   ReturnItem: 'ReturnItem',
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "authToken" | "recoveryKey" | "product" | "barcode" | "productPrice" | "distributor" | "company" | "customer" | "sale" | "saleItem" | "arrear" | "stockPurchase" | "returnEntry" | "returnItem" | "category" | "expense"
+    modelProps: "user" | "authToken" | "recoveryKey" | "product" | "barcode" | "productPrice" | "distributor" | "company" | "customer" | "sale" | "saleItem" | "arrear" | "arrearPayment" | "stockPurchase" | "returnEntry" | "returnItem" | "category" | "expense"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1308,6 +1309,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ArrearPayment: {
+      payload: Prisma.$ArrearPaymentPayload<ExtArgs>
+      fields: Prisma.ArrearPaymentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ArrearPaymentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ArrearPaymentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>
+        }
+        findFirst: {
+          args: Prisma.ArrearPaymentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ArrearPaymentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>
+        }
+        findMany: {
+          args: Prisma.ArrearPaymentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>[]
+        }
+        create: {
+          args: Prisma.ArrearPaymentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>
+        }
+        createMany: {
+          args: Prisma.ArrearPaymentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ArrearPaymentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>[]
+        }
+        delete: {
+          args: Prisma.ArrearPaymentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>
+        }
+        update: {
+          args: Prisma.ArrearPaymentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>
+        }
+        deleteMany: {
+          args: Prisma.ArrearPaymentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ArrearPaymentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ArrearPaymentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>[]
+        }
+        upsert: {
+          args: Prisma.ArrearPaymentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArrearPaymentPayload>
+        }
+        aggregate: {
+          args: Prisma.ArrearPaymentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateArrearPayment>
+        }
+        groupBy: {
+          args: Prisma.ArrearPaymentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArrearPaymentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ArrearPaymentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArrearPaymentCountAggregateOutputType> | number
+        }
+      }
+    }
     StockPurchase: {
       payload: Prisma.$StockPurchasePayload<ExtArgs>
       fields: Prisma.StockPurchaseFieldRefs
@@ -1876,6 +1951,17 @@ export const ArrearScalarFieldEnum = {
 export type ArrearScalarFieldEnum = (typeof ArrearScalarFieldEnum)[keyof typeof ArrearScalarFieldEnum]
 
 
+export const ArrearPaymentScalarFieldEnum = {
+  id: 'id',
+  arrearId: 'arrearId',
+  amount: 'amount',
+  paymentSaleId: 'paymentSaleId',
+  createdAt: 'createdAt'
+} as const
+
+export type ArrearPaymentScalarFieldEnum = (typeof ArrearPaymentScalarFieldEnum)[keyof typeof ArrearPaymentScalarFieldEnum]
+
+
 export const StockPurchaseScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
@@ -2147,6 +2233,7 @@ export type GlobalOmitConfig = {
   sale?: Prisma.SaleOmit
   saleItem?: Prisma.SaleItemOmit
   arrear?: Prisma.ArrearOmit
+  arrearPayment?: Prisma.ArrearPaymentOmit
   stockPurchase?: Prisma.StockPurchaseOmit
   returnEntry?: Prisma.ReturnEntryOmit
   returnItem?: Prisma.ReturnItemOmit
