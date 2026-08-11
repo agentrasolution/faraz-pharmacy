@@ -129,6 +129,14 @@ export interface Arrear {
   balance_due: number;
   status: string;
   created_at: string;
+  payments?: ArrearPayment[];
+}
+
+export interface ArrearPayment {
+  id: string;
+  amount: number;
+  payment_sale_id: string | null;
+  created_at: string;
 }
 
 export interface ArrearInput {

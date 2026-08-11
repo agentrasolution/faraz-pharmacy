@@ -165,18 +165,30 @@ model SaleItem {
 }
 
 model Arrear {
-  id         String   @id @default(uuid())
-  saleId     String?  @map("sale_id")
-  customerId String   @map("customer_id")
-  totalBill  Float    @default(0) @map("total_bill")
-  amountPaid Float    @default(0) @map("amount_paid")
-  balanceDue Float    @default(0) @map("balance_due")
-  status     String   @default("pending")
-  createdAt  DateTime @default(now()) @map("created_at")
-  sale       Sale?    @relation(fields: [saleId], references: [id])
-  customer   Customer @relation(fields: [customerId], references: [id])
+  id         String          @id @default(uuid())
+  saleId     String?         @map("sale_id")
+  customerId String          @map("customer_id")
+  totalBill  Float           @default(0) @map("total_bill")
+  amountPaid Float           @default(0) @map("amount_paid")
+  balanceDue Float           @default(0) @map("balance_due")
+  status     String          @default("pending")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  sale       Sale?           @relation(fields: [saleId], references: [id])
+  customer   Customer        @relation(fields: [customerId], references: [id])
+  payments   ArrearPayment[]
 
   @@map("arrears")
+}
+
+model ArrearPayment {
+  id            String   @id @default(uuid())
+  arrearId      String   @map("arrear_id")
+  amount        Float    @default(0)
+  paymentSaleId String?  @map("payment_sale_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  arrear        Arrear   @relation(fields: [arrearId], references: [id], onDelete: Cascade)
+
+  @@map("arrear_payments")
 }
 
 model StockPurchase {

@@ -102,6 +102,11 @@ export type SaleItem = Prisma.SaleItemModel
  */
 export type Arrear = Prisma.ArrearModel
 /**
+ * Model ArrearPayment
+ * 
+ */
+export type ArrearPayment = Prisma.ArrearPaymentModel
+/**
  * Model StockPurchase
  * 
  */

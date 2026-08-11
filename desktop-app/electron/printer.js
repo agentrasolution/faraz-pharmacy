@@ -2,7 +2,6 @@ import { BrowserWindow, app } from "electron";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { usb } from "usb";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -16,22 +15,13 @@ const logoBase64 = (() => {
   }
 })();
 
-function safeDeviceProp(device, prop) {
+const jsBarcodeSource = (() => {
   try {
-    const val = device[prop];
-    return val != null ? val : null;
+    return fs.readFileSync(path.join(__dirname, "vendor", "JsBarcode.all.min.js"), "utf-8");
   } catch {
-    return null;
+    return "";
   }
-}
-
-function safeProductName(device) {
-  return safeDeviceProp(device, "productName") || "Unknown Printer";
-}
-
-function safeSerial(device) {
-  return safeDeviceProp(device, "serialNumber") || null;
-}
+})();
 
 
 function generateSaleReceiptHTML(sale) {
@@ -83,7 +73,7 @@ function generateSaleReceiptHTML(sale) {
 <style>
 
 @page{
-    size:80mm auto;
+    size:75mm auto;
     margin:0;
     display:flex,
     justify-content: center,
@@ -95,10 +85,10 @@ function generateSaleReceiptHTML(sale) {
 
 body{
     width:70mm;
-    margin:0;
-    padding:0mm;
+    margin:5;
+    padding:5;
     font-family:Arial,sans-serif;
-    font-size:11px;
+    font-size:12px;
     color:#000;
 }
 
@@ -107,7 +97,7 @@ body{
 }
 
 .bold{
-    font-weight:500;
+    font-weight:550;
 }
 
 .right{
@@ -130,7 +120,7 @@ body{
 }
 
 .divider{
-    border-top:1px dashed #000;
+    border-top:1.5px dashed #000;
     margin:6px 0;
 }
 
@@ -141,14 +131,14 @@ table{
 
 th{
     text-align:left;
-    border-bottom:1px dashed #000;
+    border-bottom:1.5px dashed #000;
     padding-bottom:3px;
-    font-size:10px;
+    font-size:12px;
 }
 
 td{
     padding:2px 0;
-    font-size:10px;
+    font-size:12px;
     vertical-align:top;
     text-center: start,
 }
@@ -166,7 +156,7 @@ td{
     direction:rtl;
     font-size:10px;
     line-height:1.2;
-    padding:2px
+    padding:3px
 }
 
 .calculation{
@@ -201,7 +191,7 @@ td{
 
 <div class="header center">
     <h1>FARAZ PHARMACY</h1>
-    <p>Near Civil Hospital Barikot, Swat</p>
+    <p>Beside Luqman Clinical Laboratory Barikot, Swat</p>
     <p>Phone: 0346-9383792 | 0344-9006940</p>
 </div>
 
@@ -298,7 +288,7 @@ ${itemsHTML}
 
 <div class="footer center">
 
-www.farsightsystem.com 
+Developed by www.farsightsystem.com 
 
 </div>
 
@@ -875,108 +865,182 @@ function generateESCPOSReturnReceipt(returnData, sale) {
   return Buffer.concat(parts);
 }
 
-function findBulkOutEndpoint(iface) {
-  const eps = iface.endpoints;
-  if (eps) {
-    for (const ep of eps) {
-      if (ep.direction === "out" && ep.type === "bulk") {
-        return ep.address;
-      }
+function generateBarcodeLabelHTML(barcode, svgHtml, copies) {
+  const count = Math.max(1, copies || 1);
+
+  let body;
+  if (jsBarcodeSource) {
+    const valuesJson = JSON.stringify(Array(count).fill(String(barcode))).replace(/</g, "\\u003c");
+    const labels = [];
+    for (let i = 0; i < count; i++) {
+      labels.push('<div class="label"><svg class="bc"></svg></div>');
     }
-  }
-  return null;
-}
-
-function isPrinterInterface(iface) {
-  try {
-    const alt = iface.alternate;
-    if (!alt) return false;
-    const ifClass = alt.interfaceClass;
-    if (ifClass === 7) return true;
-    if (ifClass === 0xff) {
-      const eps = alt.endpoints || [];
-      return eps.some(ep => ep.direction === "out" && ep.type === "bulk");
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-const ZEBRA_VENDOR_ID = 0x0a5f;
-
-async function findZebraPrinter() {
-  const devices = await usb.getDevices();
-  for (const d of devices) {
+    body = `${labels.join("")}
+<script>
+try {
+  var values = ${valuesJson};
+  function renderBarcode(svg, value) {
     try {
-      if (d.vendorId !== ZEBRA_VENDOR_ID) continue;
-      const cfgs = d.configurations;
-      if (!cfgs || cfgs.length === 0) continue;
-      for (const cfg of cfgs) {
-        for (let i = 0; i < cfg.interfaces.length; i++) {
-          const iface = cfg.interfaces[i];
-          if (!isPrinterInterface(iface)) continue;
-          const ep = findBulkOutEndpoint(iface);
-          if (ep !== null) return { device: d, interfaceNum: i, endpoint: ep };
+      JsBarcode(svg, value, { format: "EAN13", width: 2, height: 60, displayValue: true, fontSize: 14, margin: 8 });
+    } catch (e) {
+      JsBarcode(svg, value, { format: "CODE128", width: 2, height: 60, displayValue: true, fontSize: 14, margin: 8 });
+    }
+  }
+  var svgs = document.querySelectorAll("svg.bc");
+  for (var i = 0; i < svgs.length; i++) renderBarcode(svgs[i], values[i]);
+} catch (e) {}
+</script>`;
+  } else if (svgHtml) {
+    const labels = [];
+    for (let i = 0; i < count; i++) {
+      labels.push(`<div class="label"><div class="barcode">${svgHtml}</div></div>`);
+    }
+    body = labels.join("");
+  } else {
+    const labels = [];
+    for (let i = 0; i < count; i++) {
+      labels.push(`<div class="label"><div class="code">${barcode}</div></div>`);
+    }
+    body = labels.join("");
+  }
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><script>${jsBarcodeSource}</script><style>
+@page { margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #fff; }
+.label {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  page-break-after: always;
+}
+.label:last-child { page-break-after: auto; }
+.label svg,
+.label .barcode {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 72%;
+  height: 78%;
+}
+.label .barcode { display: flex; align-items: center; justify-content: center; }
+.label .barcode svg { width: 100%; height: 100%; }
+.label .code {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 4mm;
+  letter-spacing: 1px;
+  text-align: center;
+  white-space: nowrap;
+}
+</style></head><body>${body}</body></html>`;
+}
+
+function doBarcodePrintJob(html, deviceName, labelWidth, labelHeight) {
+  const widthMicrons = Math.round((labelWidth || 50) * 1000);
+  const heightMicrons = Math.round((labelHeight || 30) * 1000);
+
+  return new Promise((resolve, reject) => {
+    const filePath = writeTempFile(html, "html");
+
+    const printWin = new BrowserWindow({
+      width: 500,
+      height: 500,
+      show: false,
+      paintWhenReady: true,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        webSecurity: false,
+      },
+    });
+
+    let resolved = false;
+
+    function cleanup() {
+      resolved = true;
+      try {
+        printWin.close();
+      } catch (_) {}
+      try {
+        fs.unlinkSync(filePath);
+      } catch (_) {}
+    }
+
+    function printWithOptions(options) {
+      return new Promise((resolvePrint, rejectPrint) => {
+        try {
+          printWin.webContents.print(options, (success, failureReason) => {
+            if (success) return resolvePrint();
+            rejectPrint(new Error(failureReason || "Print failed or cancelled"));
+          });
+        } catch (e) {
+          rejectPrint(e);
         }
-      }
-    } catch (_) {}
-  }
-  return null;
-}
-
-async function doUSBZPLPrint(dataBuffer) {
-  const result = await findZebraPrinter();
-  if (!result) {
-    throw new Error("No Zebra printer found. Check connection and power.");
-  }
-  const { device, interfaceNum, endpoint } = result;
-  await device.open();
-  try {
-    await device.detachKernelDriver(interfaceNum);
-  } catch (_) {}
-  await device.claimInterface(interfaceNum);
-  try {
-    const transferResult = await device.transferOut(endpoint, dataBuffer);
-    if (transferResult.status !== "ok") {
-      throw new Error("Zebra USB write failed: " + transferResult.status);
+      });
     }
-  } finally {
-    try {
-      await device.releaseInterface(interfaceNum);
-    } catch (_) {}
-    try {
-      device.close();
-    } catch (_) {}
-  }
+
+    function doPrint() {
+      if (resolved) return;
+      const baseOptions = {
+        silent: true,
+        printBackground: true,
+        deviceName: deviceName || undefined,
+        margins: { marginType: "none" },
+      };
+      const customSizeOptions = {
+        ...baseOptions,
+        pageSize: { width: widthMicrons, height: heightMicrons },
+      };
+
+      (async () => {
+        try {
+          await printWithOptions(customSizeOptions);
+        } catch {
+          if (resolved) return;
+          await printWithOptions(baseOptions);
+        }
+      })()
+        .then(() => {
+          if (resolved) return;
+          cleanup();
+          resolve();
+        })
+        .catch((e) => {
+          if (resolved) return;
+          cleanup();
+          reject(e);
+        });
+    }
+
+    printWin.webContents.on("did-finish-load", () => {
+      setTimeout(doPrint, 150);
+    });
+    printWin.webContents.on("did-fail-load", (_, code, desc) => {
+      if (resolved) return;
+      cleanup();
+      reject(new Error(`Failed to load barcode label: ${desc} (${code})`));
+    });
+
+    printWin.loadURL(`file://${filePath.replace(/\\/g, "/")}`);
+
+    setTimeout(() => {
+      if (!resolved) {
+        cleanup();
+        reject(new Error("Barcode print timeout"));
+      }
+    }, 20000);
+  });
 }
 
-function generateZPLBarcode(barcode, copies, labelWidth, labelHeight) {
-  const pw = labelWidth || 203;
-  const ll = labelHeight || 102;
-  const labels = [];
-  for (let i = 0; i < copies; i++) {
-    labels.push(`^XA
-^PW${pw}
-^LL${ll}
-^FO5,5
-^BY2
-^BEN,60,Y,N,N
-^FD${barcode}
-^FS
-^XZ`);
-  }
-  return Buffer.from(labels.join(""), "latin1");
-}
-
-async function printBarcodeLabel(barcode, copies, labelWidth, labelHeight) {
-  const data = generateZPLBarcode(
-    barcode,
-    copies || 1,
-    labelWidth,
-    labelHeight,
-  );
-  await doUSBZPLPrint(data);
+async function printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName) {
+  const html = generateBarcodeLabelHTML(barcode, svgHtml, copies || 1);
+  await doBarcodePrintJob(html, deviceName, labelWidth, labelHeight);
 }
 
 function generateHTML(sale, paperSize) {
@@ -1077,33 +1141,4 @@ function printReturnReceipt(returnData, sale, printerConfig) {
   return doPrintJob(html, printerConfig);
 }
 
-async function listUSBPrinters() {
-  const devices = await usb.getDevices();
-  const printers = [];
-  for (const d of devices) {
-    try {
-      const cfgs = d.configurations;
-      if (!cfgs || cfgs.length === 0) continue;
-      let found = false;
-      for (const cfg of cfgs) {
-        for (const iface of cfg.interfaces) {
-          if (isPrinterInterface(iface)) {
-            found = true;
-            break;
-          }
-        }
-        if (found) break;
-      }
-      if (!found) continue;
-      printers.push({
-        vendorId: d.vendorId,
-        productId: d.productId,
-        productName: safeProductName(d),
-        serialNumber: safeSerial(d),
-      });
-    } catch (_) {}
-  }
-  return printers;
-}
-
-export { printReceipt, printReturnReceipt, printBarcodeLabel, listUSBPrinters, generateHTML, generateReturnReceiptHTML };
+export { printReceipt, printReturnReceipt, printBarcodeLabel, generateHTML, generateReturnReceiptHTML };

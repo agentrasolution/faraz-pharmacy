@@ -89,12 +89,13 @@ export const salesService = {
     });
   },
 
-  async listByDate(dateStr: string) {
-    const start = new Date(`${dateStr}T00:00:00.000Z`);
-    const end = new Date(`${dateStr}T23:59:59.999Z`);
+  async listByDate(dateStr: string, tzOffsetMinutes?: number) {
+    const offsetMs = (tzOffsetMinutes ?? 0) * 60000;
+    const start = new Date(`${dateStr}T00:00:00.000Z`).getTime() - offsetMs;
+    const end = start + 24 * 60 * 60 * 1000 - 1;
 
     return prisma.sale.findMany({
-      where: { createdAt: { gte: start, lte: end } },
+      where: { createdAt: { gte: new Date(start), lte: new Date(end) } },
       orderBy: { createdAt: "desc" },
       include: {
         customer: { select: { name: true } },
@@ -103,17 +104,46 @@ export const salesService = {
     });
   },
 
-  async listAll(opts?: { search?: string; dateFrom?: string; dateTo?: string }) {
+  async search(q: string, limit = 50) {
+    const query = q.trim();
+    return prisma.sale.findMany({
+      where: {
+        OR: [
+          { id: { contains: query, mode: "insensitive" } },
+          { customer: { is: { name: { contains: query, mode: "insensitive" } } } },
+          { items: { some: { productName: { contains: query, mode: "insensitive" } } } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        customer: { select: { name: true } },
+        _count: { select: { items: true, returns: true } },
+      },
+    });
+  },
+
+  async listAll(opts?: { search?: string; dateFrom?: string; dateTo?: string; tzOffsetMinutes?: number }) {
     const where: Record<string, unknown> = {};
+    const offsetMs = (opts?.tzOffsetMinutes ?? 0) * 60000;
 
     if (opts?.dateFrom || opts?.dateTo) {
       where.createdAt = {};
       if (opts.dateFrom) {
-        (where.createdAt as Record<string, Date>).gte = new Date(`${opts.dateFrom}T00:00:00.000Z`);
+        (where.createdAt as Record<string, Date>).gte = new Date(new Date(`${opts.dateFrom}T00:00:00.000Z`).getTime() - offsetMs);
       }
       if (opts.dateTo) {
-        (where.createdAt as Record<string, Date>).lte = new Date(`${opts.dateTo}T23:59:59.999Z`);
+        (where.createdAt as Record<string, Date>).lte = new Date(new Date(`${opts.dateTo}T23:59:59.999Z`).getTime() - offsetMs);
       }
+    }
+
+    const search = opts?.search?.trim();
+    if (search) {
+      where.OR = [
+        { id: { contains: search, mode: "insensitive" } },
+        { customer: { is: { name: { contains: search, mode: "insensitive" } } } },
+        { items: { some: { productName: { contains: search, mode: "insensitive" } } } },
+      ];
     }
 
     return prisma.sale.findMany({

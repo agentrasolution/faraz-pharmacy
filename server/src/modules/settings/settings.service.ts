@@ -10,6 +10,48 @@ function ensureDataDir() {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 }
 
+function findPgBinary(name: string): string {
+  const cmd = process.platform === "win32" ? `where.exe ${name}` : `which ${name}`;
+  try {
+    const found = execSync(cmd, { encoding: "utf-8" })
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0);
+    if (found) return found;
+  } catch {
+    // not on PATH, fall through to common install locations
+  }
+  const exe = process.platform === "win32" ? `${name}.exe` : name;
+  const roots =
+    process.platform === "win32"
+      ? ["C:\\Program Files\\PostgreSQL", "C:\\Program Files (x86)\\PostgreSQL", "D:\\PostgreSQL"]
+      : ["/usr/lib/postgresql", "/opt/postgresql", "/usr/local/bin"];
+  if (process.platform === "win32") {
+    try {
+      const versions = fs.readdirSync(roots[0]);
+      for (const version of versions.sort().reverse()) {
+        const candidate = path.join(roots[0], version, "bin", exe);
+        if (fs.existsSync(candidate)) return candidate;
+      }
+    } catch {
+      // no default install dir
+    }
+  } else {
+    try {
+      const versions = fs.readdirSync(roots[0]);
+      for (const version of versions.sort().reverse()) {
+        for (const bin of ["bin", "bin/psql"]) {
+          const candidate = path.join(roots[0], version, bin, exe);
+          if (fs.existsSync(candidate)) return candidate;
+        }
+      }
+    } catch {
+      // no default install dir
+    }
+  }
+  throw new Error(`${name} not found. Install PostgreSQL or add ${name} to PATH.`);
+}
+
 function getConfigPath() {
   ensureDataDir();
   return path.join(dataDir, "config.json");
@@ -41,7 +83,9 @@ export const settingsService = {
     const backupPath = path.join(backupDir, backupName);
 
     const dbUrl = process.env.DATABASE_URL || "";
-    execSync(`pg_dump "${dbUrl}" > "${backupPath}"`);
+    if (!dbUrl) throw new Error("DATABASE_URL is not configured");
+    const pgDump = findPgBinary("pg_dump");
+    execSync(`"${pgDump}" --clean --if-exists "${dbUrl}" > "${backupPath}"`);
 
     const stat = fs.statSync(backupPath);
     return {
@@ -81,7 +125,9 @@ export const settingsService = {
     if (!fs.existsSync(backupPath)) throw new Error("Backup file not found");
 
     const dbUrl = process.env.DATABASE_URL || "";
-    execSync(`psql "${dbUrl}" < "${backupPath}"`);
+    if (!dbUrl) throw new Error("DATABASE_URL is not configured");
+    const psql = findPgBinary("psql");
+    execSync(`"${psql}" "${dbUrl}" < "${backupPath}"`, { stdio: "pipe" });
     return { success: true };
   },
 

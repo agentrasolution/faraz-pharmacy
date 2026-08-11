@@ -3,6 +3,7 @@ import { salesService } from "./sales.service";
 
 function normalizeSale(s: Record<string, unknown> | null): Record<string, unknown> | null {
   if (!s) return null;
+  const items = ((s as any).items ?? []) as any[];
   return {
     id: s.id,
     customer_id: s.customerId ?? null,
@@ -14,8 +15,17 @@ function normalizeSale(s: Record<string, unknown> | null): Record<string, unknow
     change: s.change,
     status: s.status,
     created_at: s.createdAt,
-    items: (s as any).items ?? [],
-    item_count: (s as any)._count?.items ?? (s as any).items?.length ?? 0,
+    items: items.map((i: any) => ({
+      id: i.id,
+      sale_id: i.saleId ?? s.id,
+      product_id: i.productId,
+      product_name: i.productName,
+      barcode: i.barcode,
+      quantity: i.quantity,
+      unit_price: i.unitPrice,
+      subtotal: i.subtotal,
+    })),
+    item_count: (s as any)._count?.items ?? items.length,
     return_count: (s as any)._count?.returns ?? 0,
   };
 }
@@ -36,9 +46,19 @@ export const salesController = {
     } catch (err) { next(err); }
   },
 
+  async search(req: Request, res: Response, next: NextFunction) {
+    try {
+      const q = (req.query.q as string) ?? "";
+      if (!q.trim()) return res.json([]);
+      const sales = await salesService.search(q);
+      res.json(sales.map(normalizeSale));
+    } catch (err) { next(err); }
+  },
+
   async listByDate(req: Request, res: Response, next: NextFunction) {
     try {
-      const sales = await salesService.listByDate(req.params.date);
+      const tzOffsetMinutes = parseInt(req.query.tzOffset as string, 10) || 0;
+      const sales = await salesService.listByDate(req.params.date, tzOffsetMinutes);
       res.json(sales.map(normalizeSale));
     } catch (err) { next(err); }
   },
@@ -49,6 +69,7 @@ export const salesController = {
         search: req.query.search as string,
         dateFrom: req.query.dateFrom as string,
         dateTo: req.query.dateTo as string,
+        tzOffsetMinutes: parseInt(req.query.tzOffset as string, 10) || 0,
       });
       res.json(sales.map(normalizeSale));
     } catch (err) { next(err); }

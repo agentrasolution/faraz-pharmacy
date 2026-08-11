@@ -24,22 +24,42 @@ export const arrearsService = {
     return prisma.arrear.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      include: { customer: { select: { name: true } } },
+      include: {
+        customer: { select: { name: true } },
+        payments: { orderBy: { createdAt: "asc" } },
+      },
     });
   },
 
   async create(data: { customerId: string; totalBill: number; amountPaid?: number; saleId?: string }) {
-    const balanceDue = data.totalBill - (data.amountPaid ?? 0);
-    return prisma.arrear.create({
-      data: {
-        saleId: data.saleId ?? null,
-        customerId: data.customerId,
-        totalBill: data.totalBill,
-        amountPaid: data.amountPaid ?? 0,
-        balanceDue: Math.max(0, balanceDue),
-        status: balanceDue <= 0 ? "settled" : "pending",
-      },
-      include: { customer: { select: { name: true } } },
+    const amountPaid = data.amountPaid ?? 0;
+    const balanceDue = data.totalBill - amountPaid;
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const arrear = await tx.arrear.create({
+        data: {
+          saleId: data.saleId ?? null,
+          customerId: data.customerId,
+          totalBill: data.totalBill,
+          amountPaid,
+          balanceDue: Math.max(0, balanceDue),
+          status: balanceDue <= 0 ? "settled" : "pending",
+        },
+        include: { customer: { select: { name: true } } },
+      });
+
+      if (amountPaid > 0) {
+        await tx.arrearPayment.create({
+          data: { arrearId: arrear.id, amount: amountPaid },
+        });
+      }
+
+      return tx.arrear.findUniqueOrThrow({
+        where: { id: arrear.id },
+        include: {
+          customer: { select: { name: true } },
+          payments: { orderBy: { createdAt: "asc" } },
+        },
+      });
     });
   },
 
@@ -88,7 +108,19 @@ export const arrearsService = {
         },
       });
 
-      return { arrear: updated, paymentSaleId: paymentSale.id };
+      await tx.arrearPayment.create({
+        data: { arrearId: arrear.id, amount, paymentSaleId: paymentSale.id },
+      });
+
+      const withPayments = await tx.arrear.findUniqueOrThrow({
+        where: { id },
+        include: {
+          customer: { select: { name: true } },
+          payments: { orderBy: { createdAt: "asc" } },
+        },
+      });
+
+      return { arrear: withPayments, paymentSaleId: paymentSale.id };
     });
   },
 
@@ -135,7 +167,21 @@ export const arrearsService = {
         },
       });
 
-      return { arrear: updated, paymentSaleId: paymentSale.id };
+      if (settleAmount > 0) {
+        await tx.arrearPayment.create({
+          data: { arrearId: arrear.id, amount: settleAmount, paymentSaleId: paymentSale.id },
+        });
+      }
+
+      const withPayments = await tx.arrear.findUniqueOrThrow({
+        where: { id },
+        include: {
+          customer: { select: { name: true } },
+          payments: { orderBy: { createdAt: "asc" } },
+        },
+      });
+
+      return { arrear: withPayments, paymentSaleId: paymentSale.id };
     });
   },
 

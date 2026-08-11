@@ -69,10 +69,18 @@ const api = {
     create: (s: SaleInput): Promise<Sale> => fetchJson("POST", "/api/sales", s),
     listRecent: (l = 10): Promise<Sale[]> => fetchJson("GET", `/api/sales/recent?limit=${l}`),
     getById: (id: string): Promise<Sale | null> => fetchJson("GET", `/api/sales/${id}`),
-    listByDate: (dateStr: string): Promise<Sale[]> => fetchJson("GET", `/api/sales/date/${dateStr}`),
+    search: (q: string): Promise<Sale[]> => fetchJson("GET", `/api/sales/search?q=${encodeURIComponent(q)}`),
+    listByDate: (dateStr: string): Promise<Sale[]> => {
+      const tzOffset = -new Date().getTimezoneOffset();
+      return fetchJson("GET", `/api/sales/date/${dateStr}?tzOffset=${tzOffset}`);
+    },
     listAll: (opts?: { search?: string; dateFrom?: string; dateTo?: string }): Promise<Sale[]> => {
-      const params = opts ? "?" + new URLSearchParams(Object.fromEntries(Object.entries(opts).filter(([_, v]) => v))).toString() : "";
-      return fetchJson("GET", `/api/sales${params}`);
+      const params = new URLSearchParams();
+      if (opts?.search) params.set("search", opts.search);
+      if (opts?.dateFrom) params.set("dateFrom", opts.dateFrom);
+      if (opts?.dateTo) params.set("dateTo", opts.dateTo);
+      params.set("tzOffset", String(-new Date().getTimezoneOffset()));
+      return fetchJson("GET", `/api/sales${params.toString() ? `?${params.toString()}` : ""}`);
     },
   },
   customers: {
