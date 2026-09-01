@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ServerConnectionProvider } from "@/contexts/ServerConnectionContext";
+import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
+import { getLastReceipt } from "@/lib/receiptStore";
+import type { PrinterConfig } from "@/types";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import OfflineBanner from "@/components/shared/OfflineBanner";
@@ -40,13 +43,95 @@ function AnimatedPage({ children }: { children: React.ReactNode }) {
 }
 
 function AppShell() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [ready, setReady] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const [reprintOpen, setReprintOpen] = useState(false);
+  const [reprintData, setReprintData] = useState<unknown>(null);
 
   useEffect(() => {
     setReady(true);
   }, []);
+
+  const generateReprintHtml = useCallback(async (paperSize: string): Promise<string> => {
+    if (!reprintData) return "";
+    const result = await window.generateReceiptHTML(reprintData, paperSize);
+    return result.success ? result.html : "";
+  }, [reprintData]);
+
+  async function handleReprint(config: PrinterConfig) {
+    if (!reprintData) return;
+    const result = await window.printReceipt(reprintData, config);
+    if (!result.success) {
+      throw new Error(result.error || "Print failed");
+    }
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey) return;
+      const target = e.target as HTMLElement | null;
+      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+
+      if (e.ctrlKey && e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        navigate("/returns");
+        return;
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        navigate("/pos");
+        return;
+      }
+      if ((e.ctrlKey && e.key.toLowerCase() === "p") || (e.altKey && e.key.toLowerCase() === "t")) {
+        e.preventDefault();
+        const data = getLastReceipt();
+        if (data) {
+          setReprintData(data);
+          setReprintOpen(true);
+        } else {
+          toast.error("No recent receipt to print");
+        }
+        return;
+      }
+      if (e.altKey && !e.ctrlKey) {
+        switch (e.key.toLowerCase()) {
+          case "p": navigate("/products"); return;
+          case "s": navigate("/stock"); return;
+          case "c": navigate("/customers"); return;
+          case "r": navigate("/returns"); return;
+          case "a": navigate("/arrears"); return;
+          case "d": navigate("/distributors"); return;
+          case "e": navigate("/expenses"); return;
+          case "h": navigate("/reports"); return;
+          case "b": navigate("/pos"); return;
+          case "l": { e.preventDefault(); logout(); return; }
+        }
+        return;
+      }
+      if (e.altKey || e.ctrlKey) return;
+
+      switch (e.key) {
+        case "F1": e.preventDefault(); navigate("/pos"); break;
+        case "F2": e.preventDefault(); navigate("/invoices"); break;
+        case "F3": e.preventDefault(); navigate("/returns"); break;
+        case "F4": e.preventDefault(); navigate("/customers"); break;
+        case "F5": e.preventDefault(); navigate("/arrears"); break;
+        case "F6": e.preventDefault(); navigate("/products"); break;
+        case "F7": e.preventDefault(); navigate("/stock"); break;
+        case "F8": e.preventDefault(); navigate("/barcodes"); break;
+        case "F9": e.preventDefault(); navigate("/expenses"); break;
+        case "F10": e.preventDefault(); navigate("/settings"); break;
+        case "F11": e.preventDefault(); window.toggleFullscreen?.(); break;
+        case "F12": e.preventDefault(); navigate("/dashboard"); break;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isAuthenticated, navigate, logout]);
 
   if (!ready) return null;
 
@@ -83,6 +168,16 @@ function AppShell() {
           </AnimatePresence>
         </main>
       </div>
+      <PrintPreviewDialog
+        open={reprintOpen}
+        onOpenChange={(v) => {
+          setReprintOpen(v);
+          if (!v) setReprintData(null);
+        }}
+        title="Receipt Preview"
+        htmlGenerator={generateReprintHtml}
+        onPrint={handleReprint}
+      />
     </div>
   );
 }

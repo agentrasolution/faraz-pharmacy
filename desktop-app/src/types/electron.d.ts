@@ -61,5 +61,6 @@ declare global {
     printBarcodeLabel: (barcode: string, copies: number, svgHtml?: string, labelWidth?: number, labelHeight?: number, deviceName?: string) => Promise<{ success: boolean; error?: string }>;
     generateReceiptHTML: (sale: unknown, paperSize?: string) => Promise<{ success: boolean; html: string; error?: string }>;
     generateReturnReceiptHTML: (returnData: unknown, sale: unknown, paperSize?: string) => Promise<{ success: boolean; html: string; error?: string }>;
+    toggleFullscreen: () => Promise<{ success: boolean; fullscreen?: boolean }>;
   }
 }

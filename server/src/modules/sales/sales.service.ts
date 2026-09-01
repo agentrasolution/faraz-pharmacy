@@ -163,6 +163,7 @@ export const salesService = {
       include: {
         customer: { select: { name: true } },
         items: true,
+        returns: { include: { items: true } },
         _count: { select: { returns: true } },
       },
     });

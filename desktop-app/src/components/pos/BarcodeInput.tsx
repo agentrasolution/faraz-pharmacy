@@ -12,6 +12,7 @@ export default function BarcodeInput({ value, onChange, onSubmit }: BarcodeInput
     <div className="relative">
       <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
       <Input
+        autoFocus
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {

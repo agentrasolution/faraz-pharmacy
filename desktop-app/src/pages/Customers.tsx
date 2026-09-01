@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Search, Plus, Phone, MapPin, Pencil, Trash2, Download, Lock, AlertTriangle, LayoutGrid, List } from "lucide-react";
@@ -19,6 +19,7 @@ import type { Customer } from "@/types";
 
 export default function Customers() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -124,6 +125,14 @@ export default function Customers() {
     setOpen(true);
   }
 
+  useEffect(() => {
+    if ((location.state as { openNew?: boolean } | null)?.openNew) {
+      openAdd();
+      window.history.replaceState({}, "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
+
   function openEdit(c: Customer) {
     setEditingId(c.id);
     setName(c.name);
@@ -168,7 +177,7 @@ export default function Customers() {
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input autoFocus placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="sm" onClick={() => downloadCSV(`customers_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Phone","Address","Purchases","Arrear","Last Purchase"], filtered.map((c: Customer) => [c.name, c.phone, c.address, c.total_purchases||0, c.outstanding_arrear||0, c.last_purchase||""]))}>
           <Download className="h-4 w-4 mr-1" /> CSV

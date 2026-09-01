@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -92,6 +92,18 @@ export default function CheckoutPanel({
     }
   }
 
+  useEffect(() => {
+    const onCheckoutRequest = () => {
+      if (canPay) {
+        handleCheckout();
+      } else {
+        document.getElementById("pos-amount-paid")?.focus();
+      }
+    };
+    window.addEventListener("faraz:pos-checkout", onCheckoutRequest);
+    return () => window.removeEventListener("faraz:pos-checkout", onCheckoutRequest);
+  });
+
   return (
     <>
       <div className="flex items-center justify-between mb-3">
@@ -177,6 +189,7 @@ export default function CheckoutPanel({
                 {discountType === "pkr" ? "PKR" : "%"}
               </button>
               <Input
+                id="pos-discount"
                 type="number"
                 placeholder={`Discount (${discountType === "pkr" ? "PKR" : "%"})`}
                 value={discountValue || ""}
@@ -211,6 +224,7 @@ export default function CheckoutPanel({
 
           <div className="space-y-2">
             <Input
+              id="pos-amount-paid"
               type="number"
               placeholder="Amount paid"
               value={amountPaid}

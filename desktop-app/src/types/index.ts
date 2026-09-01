@@ -96,6 +96,7 @@ export interface SaleItem {
   product_name: string;
   barcode: string;
   quantity: number;
+  returned_qty?: number;
   unit_price: number;
   subtotal: number;
 }

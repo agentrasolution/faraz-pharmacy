@@ -27,3 +27,4 @@ contextBridge.exposeInMainWorld("printReturnReceipt", (returnData, sale, printer
 contextBridge.exposeInMainWorld("printBarcodeLabel", (barcode, copies, svgHtml, labelWidth, labelHeight, deviceName) => ipcRenderer.invoke("print:barcode-label", barcode, copies, svgHtml, labelWidth, labelHeight, deviceName));
 contextBridge.exposeInMainWorld("generateReceiptHTML", (sale, paperSize) => ipcRenderer.invoke("print:generate-receipt-html", sale, paperSize));
 contextBridge.exposeInMainWorld("generateReturnReceiptHTML", (returnData, sale, paperSize) => ipcRenderer.invoke("print:generate-return-receipt-html", returnData, sale, paperSize));
+contextBridge.exposeInMainWorld("toggleFullscreen", () => ipcRenderer.invoke("window:toggle-fullscreen"));

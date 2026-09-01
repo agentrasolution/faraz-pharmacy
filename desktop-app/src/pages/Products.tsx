@@ -554,6 +554,7 @@ export default function Products() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary" />
           <Input
             ref={searchRef}
+            autoFocus
             placeholder="Search or scan barcode..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

@@ -4,6 +4,15 @@ import { salesService } from "./sales.service";
 function normalizeSale(s: Record<string, unknown> | null): Record<string, unknown> | null {
   if (!s) return null;
   const items = ((s as any).items ?? []) as any[];
+
+  const returnedByProduct: Record<string, number> = {};
+  const returns = (s as any).returns ?? [];
+  for (const r of returns) {
+    for (const ri of r.items ?? []) {
+      returnedByProduct[ri.productId] = (returnedByProduct[ri.productId] ?? 0) + ri.quantity;
+    }
+  }
+
   return {
     id: s.id,
     customer_id: s.customerId ?? null,
@@ -22,6 +31,7 @@ function normalizeSale(s: Record<string, unknown> | null): Record<string, unknow
       product_name: i.productName,
       barcode: i.barcode,
       quantity: i.quantity,
+      returned_qty: returnedByProduct[i.productId] ?? 0,
       unit_price: i.unitPrice,
       subtotal: i.subtotal,
     })),

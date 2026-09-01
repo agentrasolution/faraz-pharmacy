@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatCurrency } from "@/lib/utils";
+import { setLastReceipt } from "@/lib/receiptStore";
 import { toast } from "sonner";
 import type { Product, PrinterConfig, ProductPrice } from "@/types";
 
@@ -35,6 +36,54 @@ export default function POS() {
   const pendingPrices = pendingProduct
     ? ((pendingProduct as any).prices as ProductPrice[] | undefined)
     : undefined;
+
+  const [lastSaleData, setLastSaleData] = useState<unknown>(null);
+  const [pendingPrintData, setPendingPrintData] = useState<unknown>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+
+      if (e.ctrlKey && e.key.toLowerCase() === "p" || (e.altKey && e.key.toLowerCase() === "t")) {
+        e.preventDefault();
+        if (lastSaleData) {
+          setPendingPrintData(lastSaleData);
+          setShowPrintDialog(true);
+        } else {
+          toast.error("No recent sale to reprint");
+        }
+        return;
+      }
+      if ((e.ctrlKey && e.key === "Enter") || (e.ctrlKey && e.key.toLowerCase() === "s")) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("faraz:pos-checkout"));
+        return;
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        document.getElementById("pos-discount")?.focus();
+        return;
+      }
+      if (typing || e.ctrlKey || e.altKey || e.metaKey) return;
+
+      const last = cart.items[cart.items.length - 1];
+      if (e.key === "Delete") {
+        if (last) cart.removeItem(last.productId);
+        return;
+      }
+      if (e.key === "+" || e.key === "=") {
+        if (last) cart.incrementBy(last.productId, 1);
+        return;
+      }
+      if (e.key === "-") {
+        if (last) cart.updateQuantity(last.productId, last.quantity - 1);
+        return;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cart, lastSaleData]);
 
   const { data: products = [] } = useQuery({
     queryKey: ["products", debouncedSearch],
@@ -115,8 +164,6 @@ export default function POS() {
     promptPriceTier(product);
   };
 
-  const [pendingPrintData, setPendingPrintData] = useState<unknown>(null);
-
   const handleCheckout = async (amountPaid: number, discount: number) => {
     setError("");
     try {
@@ -158,6 +205,7 @@ export default function POS() {
         })),
       };
       setPendingPrintData(printData);
+      setLastReceipt(printData);
       setShowPrintDialog(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");

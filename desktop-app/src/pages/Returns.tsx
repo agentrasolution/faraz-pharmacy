@@ -64,6 +64,10 @@ export default function Returns() {
     !search || r.sale_id.includes(search) || r.reason.toLowerCase().includes(search.toLowerCase())
   );
 
+  const hasReturns = (selectedSale?.return_count ?? 0) > 0;
+  const fullyReturned = (selectedSale?.items?.length ?? 0) > 0 &&
+    (selectedSale?.items ?? []).every((i: SaleItem) => (i.quantity - (i.returned_qty ?? 0)) <= 0);
+
   function selectSale(sale: Sale) {
     setSelectedSaleId(sale.id);
     setReturnQtys({});
@@ -150,7 +154,7 @@ export default function Returns() {
 
   const columns = [
     { key: "created_at", header: "Date", cell: (r: ReturnEntry) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(r.created_at)}</span> },
-    { key: "sale_id", header: "Sale ID", cell: (r: ReturnEntry) => <span className="font-mono text-xs text-text-secondary">{r.sale_id.slice(0, 8)}</span> },
+    { key: "sale_id", header: "Sale ID", cell: (r: ReturnEntry) => <span className="font-mono text-xs text-text-secondary">{r.sale_id}</span> },
     { key: "customer_name", header: "Customer", cell: (r: ReturnEntry) => <span className="text-text-secondary">{r.customer_name || "—"}</span> },
     { key: "refund_amount", header: "Refund Amount", cell: (r: ReturnEntry) => <span className="font-mono font-medium text-danger">{formatCurrency(r.refund_amount)}</span> },
     { key: "reason", header: "Reason", cell: (r: ReturnEntry) => <span className="text-text-secondary">{r.reason}</span> },
@@ -162,7 +166,7 @@ export default function Returns() {
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input placeholder="Search returns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input autoFocus placeholder="Search returns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="sm" onClick={() => downloadCSV(`returns_${new Date().toISOString().split("T")[0]}.csv`, ["Date","Sale ID","Customer","Refund Amount","Reason"], filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]))}>
           <Download className="h-4 w-4 mr-1" /> CSV
@@ -262,23 +266,35 @@ export default function Returns() {
                     </div>
                   </div>
 
-                  {(selectedSale.return_count ?? 0) > 0 && (
-                    <p className="text-xs text-danger flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" /> This sale has already been returned
+                  {hasReturns && (
+                    <p className={`text-xs flex items-center gap-1 ${fullyReturned ? "text-danger" : "text-accent"}`}>
+                      <AlertCircle className="h-3 w-3" />
+                      {fullyReturned
+                        ? "This invoice has already been fully returned"
+                        : "This invoice has partial returns — you can return the remaining items"}
                     </p>
                   )}
 
-                  {selectedSale.items && selectedSale.items.length > 0 && (selectedSale.return_count ?? 0) === 0 && (
+                  {selectedSale.items && selectedSale.items.length > 0 && !fullyReturned && (
                     <div>
                       <Label className="mb-2 block">Items to Return</Label>
                       <div className="max-h-48 overflow-y-auto space-y-2 border border-border rounded-lg p-3">
                         {selectedSale.items.map((item: SaleItem) => {
+                          const returnedQty = item.returned_qty ?? 0;
+                          const remaining = item.quantity - returnedQty;
                           const qty = returnQtys[item.product_id] || 0;
                           const showDelete = qty > 0;
                           return (
                             <div key={item.product_id} className="flex items-center gap-2">
-                              <span className="flex-1 text-sm truncate">{item.product_name}</span>
-                              <span className="text-xs text-text-secondary font-mono">{formatCurrency(item.unit_price)} × {item.quantity}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm truncate">{item.product_name}</p>
+                                <p className="text-xs text-text-secondary font-mono">
+                                  {formatCurrency(item.unit_price)} × {item.quantity}
+                                  {returnedQty > 0 && (
+                                    <span className="text-accent"> ({returnedQty} returned, {remaining} left)</span>
+                                  )}
+                                </p>
+                              </div>
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.max(0, (prev[item.product_id] || 0) - 1) }))}
@@ -288,8 +304,9 @@ export default function Returns() {
                                 </button>
                                 <span className="w-6 text-center text-sm font-mono">{qty}</span>
                                 <button
-                                  onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(item.quantity, (prev[item.product_id] || 0) + 1) }))}
-                                  className="h-7 w-7 rounded-md bg-surface-2 flex items-center justify-center hover:bg-border"
+                                  onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(remaining, (prev[item.product_id] || 0) + 1) }))}
+                                  disabled={remaining <= 0}
+                                  className={`h-7 w-7 rounded-md flex items-center justify-center ${remaining <= 0 ? "opacity-40 cursor-not-allowed" : "bg-surface-2 hover:bg-border"}`}
                                 >
                                   <Plus className="h-3 w-3" />
                                 </button>
@@ -317,10 +334,10 @@ export default function Returns() {
                     <p className="text-sm text-text-secondary text-center py-4">No items found for this sale.</p>
                   )}
 
-                  {(selectedSale.return_count ?? 0) === 0 && (
+                  {!fullyReturned && (
                     <>
                       <div>
-                        <Label>Reason</Label>
+                        <Label>Reason (optional)</Label>
                         <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Damaged, Expired, Wrong item" />
                       </div>
 
@@ -338,7 +355,7 @@ export default function Returns() {
 
                   <Button
                     className="w-full"
-                    disabled={!selectedSaleId || !reason || !Object.values(returnQtys).some(q => q > 0) || (selectedSale?.return_count ?? 0) > 0}
+                    disabled={!selectedSaleId || !Object.values(returnQtys).some(q => q > 0)}
                     onClick={() => createMutation.mutate()}
                   >
                     {createMutation.isPending ? "Processing..." : "Process Return"}

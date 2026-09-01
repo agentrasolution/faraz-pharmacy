@@ -85,7 +85,7 @@ export default function Companies() {
       <div className="flex items-center gap-2 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input placeholder="Search companies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input autoFocus placeholder="Search companies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="sm" onClick={() => downloadCSV(`companies_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Company Contact","Contact #2","Address","Products"], filtered.map((c: Company) => [c.name, c.phone, c.second_number||"", c.address, c.product_count||0]))}>
           <Download className="h-4 w-4 mr-1" /> CSV

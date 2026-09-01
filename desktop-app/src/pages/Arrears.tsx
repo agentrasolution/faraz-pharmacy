@@ -137,8 +137,22 @@ export default function Arrears() {
             <>
               {payingId === a.id ? (
                 <>
-                  <Input type="number" placeholder="Amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="h-8 w-24 text-sm font-mono" autoFocus />
-                  <Button size="sm" className="h-8" onClick={() => { setPasswordDialog({ open: true, action: "pay", targetId: a.id, payAmount: Number(paymentAmount) }); setAdminPassword(""); }} disabled={!paymentAmount}>Pay</Button>
+                  <Input
+                    type="number"
+                    placeholder="Amount"
+                    value={paymentAmount}
+                    min="0.01"
+                    max={a.balance_due}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="h-8 w-24 text-sm font-mono"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    onClick={() => { setPasswordDialog({ open: true, action: "pay", targetId: a.id, payAmount: Number(paymentAmount) }); setAdminPassword(""); }}
+                    disabled={!paymentAmount || Number(paymentAmount) <= 0 || Number(paymentAmount) > a.balance_due}
+                  >Pay</Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={() => setPayingId(null)}>Cancel</Button>
                 </>
               ) : (

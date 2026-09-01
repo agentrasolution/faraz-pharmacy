@@ -28,10 +28,37 @@ export const returnsService = {
   },
 
   async create(data: CreateReturnInput) {
-    const existing = await prisma.returnEntry.findFirst({ where: { saleId: data.saleId } });
-    if (existing) throw new BadRequestError("This sale has already been returned");
-
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const sale = await tx.sale.findUnique({
+        where: { id: data.saleId },
+        include: {
+          items: true,
+          returns: { include: { items: true } },
+        },
+      });
+      if (!sale) throw new NotFoundError("Sale");
+
+      const soldQty: Record<string, number> = {};
+      for (const si of sale.items) {
+        soldQty[si.productId] = (soldQty[si.productId] ?? 0) + si.quantity;
+      }
+
+      const returnedQty: Record<string, number> = {};
+      for (const r of sale.returns) {
+        for (const ri of r.items) {
+          returnedQty[ri.productId] = (returnedQty[ri.productId] ?? 0) + ri.quantity;
+        }
+      }
+
+      for (const item of data.items) {
+        const maxReturnable = (soldQty[item.productId] ?? 0) - (returnedQty[item.productId] ?? 0);
+        if (item.quantity > maxReturnable) {
+          throw new BadRequestError(
+            `Cannot return more than ${maxReturnable} of "${item.productName}" (remaining for this invoice)`
+          );
+        }
+      }
+
       const returnEntry = await tx.returnEntry.create({
         data: {
           saleId: data.saleId,
