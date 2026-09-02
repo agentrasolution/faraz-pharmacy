@@ -124,6 +124,13 @@ export default function CustomerDetail() {
             <ShoppingBag className="h-3.5 w-3.5" />
             {customer.phone}
           </div>
+          {(customer.father_name || customer.father_phone) && (
+            <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
+              <ShoppingBag className="h-3.5 w-3.5" />
+              Father: {customer.father_name || "\u2014"}
+              {customer.father_phone ? ` \u00b7 ${customer.father_phone}` : ""}
+            </div>
+          )}
           {customer.address && (
             <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
               <ShoppingBag className="h-3.5 w-3.5" />

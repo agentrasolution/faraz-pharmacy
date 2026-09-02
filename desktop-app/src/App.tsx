@@ -48,6 +48,8 @@ function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const isPosWindow = new URLSearchParams(location.search).has("pos");
+
   const [reprintOpen, setReprintOpen] = useState(false);
   const [reprintData, setReprintData] = useState<unknown>(null);
 
@@ -139,34 +141,57 @@ function AppShell() {
     return <Login />;
   }
 
+  const routes = (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Navigate to="/pos" replace />} />
+        <Route path="/dashboard" element={<AnimatedPage><Dashboard /></AnimatedPage>} />
+        <Route path="/pos" element={<AnimatedPage><POS /></AnimatedPage>} />
+        <Route path="/products" element={<AnimatedPage><Products /></AnimatedPage>} />
+        <Route path="/customers" element={<AnimatedPage><Customers /></AnimatedPage>} />
+        <Route path="/customers/:id" element={<AnimatedPage><CustomerDetail /></AnimatedPage>} />
+        <Route path="/arrears" element={<AnimatedPage><Arrears /></AnimatedPage>} />
+        <Route path="/stock" element={<AnimatedPage><Stock /></AnimatedPage>} />
+        <Route path="/distributors" element={<AnimatedPage><Distributors /></AnimatedPage>} />
+        <Route path="/companies" element={<AnimatedPage><Companies /></AnimatedPage>} />
+        <Route path="/barcodes" element={<AnimatedPage><Barcodes /></AnimatedPage>} />
+        <Route path="/returns" element={<AnimatedPage><Returns /></AnimatedPage>} />
+        <Route path="/expenses" element={<AnimatedPage><Expenses /></AnimatedPage>} />
+        <Route path="/reports" element={<AnimatedPage><Reports /></AnimatedPage>} />
+        <Route path="/invoices" element={<AnimatedPage><Invoices /></AnimatedPage>} />
+        <Route path="/settings" element={<AnimatedPage><Settings /></AnimatedPage>} />
+      </Routes>
+    </AnimatePresence>
+  );
+
+  if (isPosWindow) {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <OfflineBanner />
+          <main className="flex-1 overflow-y-auto p-5 lg:p-6">{routes}</main>
+        </div>
+        <PrintPreviewDialog
+          open={reprintOpen}
+          onOpenChange={(v) => {
+            setReprintOpen(v);
+            if (!v) setReprintData(null);
+          }}
+          title="Receipt Preview"
+          htmlGenerator={generateReprintHtml}
+          onPrint={handleReprint}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar />
         <OfflineBanner />
-        <main className="flex-1 overflow-y-auto p-5 lg:p-6">
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Navigate to="/pos" replace />} />
-              <Route path="/dashboard" element={<AnimatedPage><Dashboard /></AnimatedPage>} />
-              <Route path="/pos" element={<AnimatedPage><POS /></AnimatedPage>} />
-              <Route path="/products" element={<AnimatedPage><Products /></AnimatedPage>} />
-              <Route path="/customers" element={<AnimatedPage><Customers /></AnimatedPage>} />
-              <Route path="/customers/:id" element={<AnimatedPage><CustomerDetail /></AnimatedPage>} />
-              <Route path="/arrears" element={<AnimatedPage><Arrears /></AnimatedPage>} />
-              <Route path="/stock" element={<AnimatedPage><Stock /></AnimatedPage>} />
-              <Route path="/distributors" element={<AnimatedPage><Distributors /></AnimatedPage>} />
-              <Route path="/companies" element={<AnimatedPage><Companies /></AnimatedPage>} />
-              <Route path="/barcodes" element={<AnimatedPage><Barcodes /></AnimatedPage>} />
-              <Route path="/returns" element={<AnimatedPage><Returns /></AnimatedPage>} />
-              <Route path="/expenses" element={<AnimatedPage><Expenses /></AnimatedPage>} />
-              <Route path="/reports" element={<AnimatedPage><Reports /></AnimatedPage>} />
-              <Route path="/invoices" element={<AnimatedPage><Invoices /></AnimatedPage>} />
-              <Route path="/settings" element={<AnimatedPage><Settings /></AnimatedPage>} />
-            </Routes>
-          </AnimatePresence>
-        </main>
+        <main className="flex-1 overflow-y-auto p-5 lg:p-6">{routes}</main>
       </div>
       <PrintPreviewDialog
         open={reprintOpen}

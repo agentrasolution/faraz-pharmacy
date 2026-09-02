@@ -24,6 +24,9 @@ interface CheckoutPanelProps {
   subtotal: number;
   total: number;
   customerId?: string;
+  notes?: string;
+  amountPaid?: string;
+  addToArrears?: boolean;
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onIncrementBy: (productId: string, amount: number) => void;
   onRemoveItem: (productId: string) => void;
@@ -32,18 +35,25 @@ interface CheckoutPanelProps {
   onClearCart: () => void;
   onCheckout: (amountPaid: number, discount: number) => Promise<void>;
   onCustomerChange: (customerId?: string, customerName?: string) => void;
+  onNotesChange?: (notes: string) => void;
+  onAmountPaidChange?: (amountPaid: string) => void;
+  onAddToArrearsChange?: (addToArrears: boolean) => void;
   error?: string;
 }
 
 export default function CheckoutPanel({
-  items, discount, discountValue, discountType, subtotal, total, customerId,
+  items, discount, discountValue, discountType, subtotal, total, customerId, notes,
+  amountPaid = "", addToArrears = false,
   onUpdateQuantity, onIncrementBy, onRemoveItem, onDiscountChange, onToggleDiscountType,
-  onClearCart, onCheckout, onCustomerChange, error,
+  onClearCart, onCheckout, onCustomerChange, onNotesChange, onAmountPaidChange,
+  onAddToArrearsChange, error,
 }: CheckoutPanelProps) {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickName, setQuickName] = useState("");
   const [quickPhone, setQuickPhone] = useState("");
   const [quickAddress, setQuickAddress] = useState("");
+  const [quickFatherName, setQuickFatherName] = useState("");
+  const [quickFatherPhone, setQuickFatherPhone] = useState("");
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
@@ -52,7 +62,7 @@ export default function CheckoutPanel({
 
   const queryClient = useQueryClient();
   const quickAddMutation = useMutation({
-    mutationFn: () => api.customers.create({ name: quickName, phone: quickPhone, address: quickAddress }),
+    mutationFn: () => api.customers.create({ name: quickName, phone: quickPhone, address: quickAddress, fatherName: quickFatherName, fatherPhone: quickFatherPhone }),
     onSuccess: (customer) => {
       toast.success("Customer added");
       queryClient.invalidateQueries({ queryKey: ["customers"] });
@@ -61,14 +71,14 @@ export default function CheckoutPanel({
       setQuickName("");
       setQuickPhone("");
       setQuickAddress("");
+      setQuickFatherName("");
+      setQuickFatherPhone("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
     },
   });
-  const [amountPaid, setAmountPaid] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [addToArrears, setAddToArrears] = useState(false);
 
   const numPaid = Number(amountPaid) || 0;
   const change = Math.max(0, numPaid - total);
@@ -82,8 +92,6 @@ export default function CheckoutPanel({
       await onCheckout(numPaid, discount);
       toast.success("Sale completed");
       onClearCart();
-      setAmountPaid("");
-      setAddToArrears(false);
     } catch {
       toast.error("Checkout failed");
       console.error("Checkout failed");
@@ -170,6 +178,14 @@ export default function CheckoutPanel({
                   <Input value={quickPhone} onChange={(e) => setQuickPhone(e.target.value)} />
                 </div>
                 <div className="space-y-1">
+                  <Label>Father Name</Label>
+                  <Input value={quickFatherName} onChange={(e) => setQuickFatherName(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Father Phone No</Label>
+                  <Input value={quickFatherPhone} onChange={(e) => setQuickFatherPhone(e.target.value)} />
+                </div>
+                <div className="space-y-1">
                   <Label>Address</Label>
                   <Input value={quickAddress} onChange={(e) => setQuickAddress(e.target.value)} />
                 </div>
@@ -180,6 +196,18 @@ export default function CheckoutPanel({
             </DialogContent>
           </Dialog>
           
+          <div>
+            <Label className="text-[10px] text-text-secondary mb-1 block">Notes</Label>
+            <textarea
+              id="pos-notes"
+              value={notes || ""}
+              onChange={(e) => onNotesChange?.(e.target.value)}
+              rows={2}
+              placeholder="Sale notes (optional)"
+              className="w-full h-auto rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 resize-none"
+            />
+          </div>
+
           <div>
             <div className="flex items-center gap-2">
               <button
@@ -228,7 +256,7 @@ export default function CheckoutPanel({
               type="number"
               placeholder="Amount paid"
               value={amountPaid}
-              onChange={(e) => setAmountPaid(e.target.value)}
+              onChange={(e) => onAmountPaidChange?.(e.target.value)}
               className="h-10 text-base font-mono font-bold text-center"
             />
             {change > 0 && (
@@ -245,7 +273,7 @@ export default function CheckoutPanel({
                 <Checkbox
                   id="add-to-arrears"
                   checked={addToArrears}
-                  onCheckedChange={(val) => setAddToArrears(val === true)}
+                  onCheckedChange={(val) => onAddToArrearsChange?.(val === true)}
                 />
                 <Label htmlFor="add-to-arrears" className="text-[11px] cursor-pointer text-text-secondary">
                   Add remaining to arrears

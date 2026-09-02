@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BarcodeInput from "@/components/pos/BarcodeInput";
 import ProductCard from "@/components/pos/ProductCard";
 import CheckoutPanel from "@/components/pos/CheckoutPanel";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
-import { useCart } from "@/hooks/useCart";
+import { useMultiSale } from "@/hooks/useMultiSale";
 import { useDebounce } from "@/hooks/useDebounce";
 import { api } from "@/lib/api";
 import {
@@ -21,14 +22,17 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { setLastReceipt } from "@/lib/receiptStore";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import type { Product, PrinterConfig, ProductPrice } from "@/types";
 
 export default function POS() {
+  const location = useLocation();
+  const isPosWindow = new URLSearchParams(location.search).has("pos");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const debouncedSearch = useDebounce(search, 200);
-  const cart = useCart();
+  const cart = useMultiSale();
   const queryClient = useQueryClient();
 
   const [pricePickerOpen, setPricePickerOpen] = useState(false);
@@ -164,6 +168,17 @@ export default function POS() {
     promptPriceTier(product);
   };
 
+  const handleNewSale = async () => {
+    if (typeof window.openPosWindow === "function") {
+      const result = await window.openPosWindow();
+      if (!result.success) {
+        toast.error(result.error || "Could not open new sale window");
+      }
+      return;
+    }
+    window.open(`${window.location.origin}${window.location.pathname}#/pos?pos=1`, "_blank");
+  };
+
   const handleCheckout = async (amountPaid: number, discount: number) => {
     setError("");
     try {
@@ -231,7 +246,17 @@ export default function POS() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-7rem)]">
+    <div className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-7rem)]"}`}>
+      <div className="flex justify-end shrink-0">
+        <button
+          onClick={handleNewSale}
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium bg-accent text-accent-foreground hover:bg-accent-hover transition-colors shrink-0"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          New Sale
+        </button>
+      </div>
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
       <div className="flex-1 flex flex-col min-h-0">
         <BarcodeInput value={search} onChange={setSearch} onSubmit={handleBarcodeSubmit} />
         <div className="flex-1 overflow-y-auto mt-3">
@@ -260,7 +285,7 @@ export default function POS() {
         </div>
       </div>
       <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
-        <div className="lg:sticky lg:top-16 bg-surface border border-border rounded-lg p-4 h-full max-h-[calc(100vh-7.5rem)] flex flex-col">
+        <div className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-16 max-h-[calc(100vh-8.5rem)]"}`}>
           <CheckoutPanel
             items={cart.items}
             discount={cart.discount}
@@ -269,6 +294,9 @@ export default function POS() {
             subtotal={cart.subtotal}
             total={cart.total}
             customerId={cart.customerId}
+            notes={cart.notes}
+            amountPaid={cart.amountPaid}
+            addToArrears={cart.addToArrears}
             onUpdateQuantity={cart.updateQuantity}
             onIncrementBy={cart.incrementBy}
             onRemoveItem={cart.removeItem}
@@ -277,9 +305,13 @@ export default function POS() {
             onClearCart={cart.clearCart}
             onCheckout={handleCheckout}
             onCustomerChange={cart.setCustomer}
+            onNotesChange={cart.setNotes}
+            onAmountPaidChange={cart.setAmountPaid}
+            onAddToArrearsChange={cart.setAddToArrears}
             error={error}
           />
         </div>
+      </div>
       </div>
 
       <AlertDialog open={pricePickerOpen} onOpenChange={(v) => { if (!v) { setPendingProduct(null); setPricePickerOpen(false); } }}>
