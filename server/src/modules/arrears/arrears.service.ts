@@ -1,5 +1,5 @@
 import { prisma } from "../../services/prisma";
-import { NotFoundError, UnauthorizedError } from "../../utils/errors";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "../../utils/errors";
 import { Prisma } from "../../generated/prisma/client";
 import { authService } from "../auth/auth.service";
 
@@ -33,6 +33,9 @@ export const arrearsService = {
 
   async create(data: { customerId: string; totalBill: number; amountPaid?: number; saleId?: string }) {
     const amountPaid = data.amountPaid ?? 0;
+    if (amountPaid < 0 || amountPaid > data.totalBill) {
+      throw new BadRequestError("Amount paid cannot exceed total bill");
+    }
     const balanceDue = data.totalBill - amountPaid;
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const arrear = await tx.arrear.create({
@@ -72,6 +75,10 @@ export const arrearsService = {
       include: { customer: { select: { name: true } } },
     });
     if (!arrear) throw new NotFoundError("Arrear");
+
+    if (amount > arrear.balanceDue) {
+      throw new BadRequestError(`Payment cannot exceed the balance due of ${arrear.balanceDue}`);
+    }
 
     const newPaid = arrear.amountPaid + amount;
     const newBalance = Math.max(0, arrear.totalBill - newPaid);

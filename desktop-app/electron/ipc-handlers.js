@@ -59,6 +59,14 @@ function registerHandlers() {
 
   ipcMain.handle("server:ip", () => getLocalIp());
 
+  ipcMain.handle("window:toggle-fullscreen", () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win) return { success: false };
+    const next = !win.isFullScreen();
+    win.setFullScreen(next);
+    return { success: true, fullscreen: next };
+  });
+
   ipcMain.handle("printers:list", async () => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return [];

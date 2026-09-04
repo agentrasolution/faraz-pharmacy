@@ -113,6 +113,7 @@ export default function Barcodes() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary pointer-events-none" />
           <Input
             ref={inputRef}
+            autoFocus
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by barcode or product name..."

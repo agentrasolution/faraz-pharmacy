@@ -7,8 +7,9 @@ import type {
 import type { BackupResult, BackupEntry, GDriveConfig } from "@/types/electron";
 
 function getApiUrl(): string {
-  if (window.appConfig?.serverUrl) return window.appConfig.serverUrl;
-  return import.meta.env.VITE_API_URL || "http://localhost:3001";
+  const cfg = window.appConfig?.serverUrl?.trim();
+  if (cfg) return cfg;
+  return import.meta.env.VITE_API_URL?.trim() || "http://localhost:3001";
 }
 
 function getToken(): string | null {

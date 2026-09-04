@@ -60,6 +60,8 @@ export interface Customer {
   name: string;
   phone: string;
   address: string;
+  father_name?: string;
+  father_phone?: string;
   created_at: string;
   total_purchases?: number;
   outstanding_arrear?: number;
@@ -72,6 +74,8 @@ export interface CustomerInput {
   name: string;
   phone?: string;
   address?: string;
+  fatherName?: string;
+  fatherPhone?: string;
 }
 
 export interface Sale {
@@ -96,6 +100,7 @@ export interface SaleItem {
   product_name: string;
   barcode: string;
   quantity: number;
+  returned_qty?: number;
   unit_price: number;
   subtotal: number;
 }

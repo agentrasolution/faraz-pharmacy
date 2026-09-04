@@ -557,74 +557,1188 @@ table.items tbody tr:last-child td { border-bottom: none; }
 </html>`;
 }
 
-function generateReturnReceiptHTML(returnData, sale, paperSize) {
+// return Recipt start
+
+function generateReturnReceiptHTML(returnData, sale) {
   const items = returnData.items || [];
+
   const now = new Date();
+
   const dateStr = now.toLocaleDateString("en-PK", {
-    day: "numeric",
+    day: "2-digit",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 
-  const isThermal = paperSize === "thermal";
-  const pageCSS = isThermal
-    ? "@page { margin: 0; size: 80mm 297mm; }"
-    : "@page { margin: 5mm; size: A5; }";
+  const timeStr = now.toLocaleTimeString("en-PK", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 
-  const baseStyle = isThermal
-    ? `body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; padding: 4mm 3mm; line-height: 1.3; } .receipt { width: 100%; }`
-    : `body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #000; }`;
+  const totalRefund = Number(returnData.refund_amount || 0);
+
+  const invoiceNo = sale?.id || "N/A";
+
+  const customerName =
+    sale?.customer_name || "Walk-in Customer";
 
   const itemsHTML = items
-    .map((i) => {
-      const reasonStr = i.reason ? ` (${i.reason})` : "";
-      const amt = i.refund_amount ?? i.subtotal ?? 0;
-      return `<tr><td>${i.product_name} × ${i.quantity}${reasonStr}</td><td style="text-align:right">${amt.toFixed(0)}</td></tr>`;
+    .map((item) => {
+      const quantity = Number(item.quantity || 0);
+
+      const refund = Number(
+        item.refund_amount ??
+        item.subtotal ??
+        0
+      );
+
+      const price = Number(
+        item.price ??
+        item.unit_price ??
+        (quantity > 0 ? refund / quantity : 0)
+      );
+
+      return `
+        <tr>
+          <td class="item-name">
+            ${item.product_name || "Unknown Item"}
+            ${
+              item.reason
+                ? `<div class="item-reason">${item.reason}</div>`
+                : ""
+            }
+          </td>
+
+          <td class="qty">
+            ${quantity}
+          </td>
+
+          <td class="price">
+            ${price.toFixed(0)}
+          </td>
+
+          <td class="refund">
+            ${refund.toFixed(0)}
+          </td>
+        </tr>
+      `;
     })
     .join("");
 
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8">
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
 <style>
-${pageCSS}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-${isThermal ? "html, body { height: 100%; }" : ""}
-${baseStyle}
-h1 { text-align: center; margin-bottom: 4px; font-size: ${isThermal ? "20px" : "20px"}; letter-spacing: 1px; font-weight: 800; }
-.sub { text-align: center; font-size: ${isThermal ? "10px" : "11px"}; margin-bottom: 6px; color: #333; font-weight: 600; }
-.badge { text-align: center; font-size: ${isThermal ? "13px" : "14px"}; font-weight: 800; color: #c00; margin: 6px 0; letter-spacing: 1px; }
-hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
-hr.dashed { border-top: 1px dashed #888; }
-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-th { text-align: left; font-size: 11px; border-bottom: 1px solid #000; padding: 3px 0; font-weight: 700; }
-td { font-size: ${isThermal ? "11px" : "13px"}; padding: 2px 0; font-weight: 600; }
-td:last-child { text-align: right; }
-.big td { font-weight: 800; font-size: ${isThermal ? "13px" : "15px"}; padding-top: 4px; border-top: 1px solid #000; }
-.ftr { text-align: center; font-size: ${isThermal ? "10px" : "11px"}; margin-top: 6px; color: #555; font-weight: 600; }
-</style></head><body>
-<div class="receipt">
-<h1>FARAZ PHARMACY</h1>
-<p class="sub">${dateStr}</p>
-<p class="badge">** RETURN RECEIPT **</p>
-<p class="sub">Sale: ${sale?.id?.slice(0, 8) || "N/A"}</p>
-<hr>
-<table>
-<thead><tr><th>Item</th><th style="text-align:right">Refund</th></tr></thead>
-<tbody>${itemsHTML}</tbody>
-</table>
-<hr class="dashed">
-<table>
-<tr class="big"><td>Total Refund</td><td style="text-align:right">${returnData.refund_amount.toFixed(0)}</td></tr>
-</table>
-<p class="sub" style="margin-top:6px">Reason: ${returnData.reason}</p>
-<hr>
-<p class="ftr">Return processed successfully</p>
-<p class="ftr">--- Powered by Faraz Pharmacy ---</p>
-</div>
-</body></html>`;
+
+@page {
+  size: 75mm auto;
+  margin: 0;
 }
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 70mm;
+  margin: 5;
+  padding: 5;
+}
+
+body {
+  font-family:Arial,sans-serif;
+  font-size: 12px;
+  color: #000;
+  background: #fff;
+   width: 70mm;
+  margin: 5;
+  padding: 5;
+}
+
+.receipt {
+  width: 70mm;
+  margin: 0 auto;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.header {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.pharmacy-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+.address {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.contact {
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+/* =========================================
+   RETURN RECEIPT TITLE
+========================================= */
+
+.return-title {
+  text-align: center;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.return-title-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.return-title-line {
+  width: 40px;
+  margin: 3px auto 0;
+  border-top: 2px solid #000;
+}
+
+/* =========================================
+   INFO
+========================================= */
+
+.info {
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  line-height: 1.0;
+  font-weight: 650;
+   font-size: 11px;
+}
+
+.info-row {
+
+  align-items: center;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.info-label {
+  font-weight: 700;
+}
+
+.info-value {
+  text-align: leftt;
+  max-width: 48%;
+  word-break: break-word;
+}
+
+/* =========================================
+   DOTTED LINE
+========================================= */
+
+.dotted {
+  width: 100%;
+  border-top: 1px dashed #000;
+  height: 1px;
+  margin: 5px 0;
+}
+
+/* =========================================
+   ITEMS TABLE
+========================================= */
+
+.items {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.items th {
+  font-size: 11px;
+  font-weight: 700;
+
+  padding: 3px 1px;
+  white-space: nowrap;
+}
+
+.items th:nth-child(1) {
+  width: 42%;
+  text-align: left;
+}
+
+.items th:nth-child(2) {
+  width: 12%;
+  text-align: center;
+}
+
+.items th:nth-child(3) {
+  width: 21%;
+  text-align: right;
+}
+
+.items th:nth-child(4) {
+  width: 25%;
+  text-align: right;
+}
+
+.items td {
+  font-size: 12px;
+  padding: 4px 2px;
+  vertical-align: top;
+}
+
+.item-name {
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.2;
+  font-size: 10px;
+  word-break: break-word;
+}
+
+.item-reason {
+  font-size: 10px;
+  color: #555;
+  margin-top: 1px;
+}
+
+.qty {
+  text-align: center;
+}
+
+.price {
+  text-align: center;
+}
+
+.refund {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* =========================================
+   TOTAL
+========================================= */
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  margin: 5px;
+  font-weight: 700;
+}
+
+.total-label {
+  font-size: 10px;
+}
+
+.total-value {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================================
+   REASON
+========================================= */
+
+.reason {
+  font-size: 8px;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.reason-label {
+  font-weight: 700;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.footer {
+  text-align: center;
+  margin-top: 6px;
+}
+
+.footer-message {
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.footer-line {
+  margin: 3px 0;
+  border-top: 1px dashed #000;
+}
+
+.footer-developed {
+  font-size: 8px;
+}
+
+.footer-website {
+  font-weight: 700;
+}
+
+/* =========================================
+   PRINT
+========================================= */
+
+@media print {
+
+  html,
+  body {
+    width: 70mm;
+  }
+
+  .receipt {
+    width: 70mm;
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="receipt">
+
+  <!-- =====================================
+       HEADER
+  ====================================== -->
+
+  <div class="header">
+
+    <div class="pharmacy-name">
+      FARAZ PHARMACY
+    </div>
+
+    <div class="address">
+     Beside Luqman Clinical Laboratory Barikot, Swat
+    </div>
+
+    <div class="contact">
+      Phone: 0346-9383792  |  0344-9006940
+    </div>
+
+  </div>
+
+
+  <!-- =====================================
+       RETURN RECEIPT
+  ====================================== -->
+
+  <div class="return-title">
+
+    <div class="return-title-text">
+      RETURN RECEIPT
+    </div>
+
+    <div class="return-title-line"></div>
+
+  </div>
+
+
+  <!-- =====================================
+       INVOICE INFORMATION
+  ====================================== -->
+
+  <div class="info">
+
+    <div class="info-row">
+      <div>
+        Refund No : ${invoiceNo} 
+      </div>
+      <div>
+        Date :  ${dateStr},  ${timeStr}
+      </div>
+         <div>
+        Customer :  ${customerName}
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DOTTED LINE -->
+
+  <div class="dotted"></div>
+
+
+  <!-- =====================================
+       TABLE HEADER
+  ====================================== -->
+
+  <table class="items">
+
+    <thead>
+      <tr>
+        <th>
+          Returned Item
+        </th>
+        <th>
+          Qty
+        </th>
+        <th>
+          Price
+        </th>
+        <th>
+          Refund
+        </th>
+
+      </tr>
+
+    </thead>
+
+  </table>
+
+
+  <!-- DOTTED LINE -->
+
+  <div class="dotted"></div>
+
+
+  <!-- =====================================
+       RETURN ITEMS
+  ====================================== -->
+
+  <table class="items">
+
+    <tbody>
+
+      ${itemsHTML}
+
+    </tbody>
+
+  </table>
+
+
+  <!-- DOTTED LINE -->
+
+  <div class="dotted"></div>
+
+
+  <!-- =====================================
+       TOTAL REFUND
+  ====================================== -->
+
+  <div class="total">
+
+    <span class="total-label">
+      Total Refund :
+    </span>
+
+    <span class="total-value">
+      Rs ${totalRefund.toFixed(0)}
+    </span>
+
+  </div>
+
+
+  <!-- RETURN REASON -->
+
+  ${
+    returnData.reason
+      ? `
+        <div class="reason">
+          <span class="reason-label">
+            Reason:
+          </span>
+          ${returnData.reason}
+        </div>
+      `
+      : ""
+  }
+
+
+  <!-- =====================================
+       FOOTER
+  ====================================== -->
+
+  <div class="footer">
+
+    <div class="footer-line"></div>
+
+    <div class="footer-developed">
+      Developed by
+      <span class="footer-website">
+        www.farsightsystem.com
+      </span>
+    </div>
+
+    <div class="footer-line"></div>
+
+  </div>
+
+
+</div>
+
+</body>
+</html>
+`;
+}
+
+// function generateReturnReceiptHTML(returnData, sale, paperSize) {
+//   const items = returnData.items || [];
+//   const now = new Date();
+
+//   const dateStr = now.toLocaleDateString("en-PK", {
+//     day: "2-digit",
+//     month: "short",
+//     year: "numeric",
+//   });
+
+//   const timeStr = now.toLocaleTimeString("en-PK", {
+//     hour: "2-digit",
+//     minute: "2-digit",
+//     hour12: true,
+//   });
+
+//   const isThermal = paperSize === "thermal";
+
+//   const pageCSS = isThermal
+//     ? `
+//       @page {
+//         size: 80mm auto;
+//         margin: 0;
+//       }
+//     `
+//     : `
+//       @page {
+//         size: A5 portrait;
+//         margin: 7mm;
+//       }
+//     `;
+
+//   const itemsHTML = items
+//     .map((item) => {
+//       const amount = Number(
+//         item.refund_amount ?? item.subtotal ?? 0
+//       );
+
+//       return `
+//         <tr>
+//           <td class="item">
+//             <div class="item-name">
+//               ${item.product_name}
+//             </div>
+
+//             <div class="item-details">
+//               ${item.quantity} × returned
+//               ${
+//                 item.reason
+//                   ? ` • ${item.reason}`
+//                   : ""
+//               }
+//             </div>
+//           </td>
+
+//           <td class="price">
+//             ${amount.toFixed(0)}
+//           </td>
+//         </tr>
+//       `;
+//     })
+//     .join("");
+
+//   const refundAmount = Number(
+//     returnData.refund_amount || 0
+//   );
+
+//   return `
+// <!DOCTYPE html>
+
+// <html>
+
+// <head>
+
+// <meta charset="UTF-8">
+
+// <style>
+
+// ${pageCSS}
+
+// /* =====================================================
+//    RESET
+// ===================================================== */
+
+// * {
+//   margin: 0;
+//   padding: 0;
+//   box-sizing: border-box;
+// }
+
+// html,
+// body {
+//   width:70mm;
+//     margin:5;
+//     padding:5;
+//     font-family:Arial,sans-serif;
+// }
+
+// body {
+//   background: #fff;
+//   color: #111;
+//   width:70mm;
+//     margin:5;
+//     padding:5;
+//     font-family:Arial,sans-serif;
+// }
+
+// /* =====================================================
+//    MAIN
+// ===================================================== */
+
+// .receipt {
+//   width: 100%;
+//   margin: auto;
+// }
+
+// /* =====================================================
+//    HEADER
+// ===================================================== */
+
+// .header {
+//   text-align: center;
+//   padding-bottom: 10px;
+//   border-bottom: 2px solid #111;
+// }
+
+// .logo {
+//   width: ${isThermal ? "55px" : "65px"};
+//   height: ${isThermal ? "55px" : "65px"};
+//   object-fit: contain;
+//   margin-bottom: 5px;
+// }
+
+// .pharmacy-name {
+//   font-size: ${isThermal ? "21px" : "27px"};
+//   font-weight: 800;
+//   letter-spacing: 1.5px;
+// }
+
+// .pharmacy-sub {
+//   margin-top: 3px;
+//   font-size: ${isThermal ? "9px" : "10px"};
+//   color: #666;
+//   letter-spacing: .4px;
+// }
+
+// /* =====================================================
+//    RETURN TITLE
+// ===================================================== */
+
+// .return-header {
+//   text-align: center;
+//   padding: ${isThermal ? "9px 0" : "13px 0"};
+// }
+
+// .return-title {
+//   font-size: ${isThermal ? "14px" : "17px"};
+//   font-weight: 800;
+//   letter-spacing: 1.8px;
+// }
+
+// .return-line {
+//   width: ${isThermal ? "45px" : "60px"};
+//   height: 2px;
+//   background: #111;
+//   margin: 5px auto;
+// }
+
+// .return-subtitle {
+//   font-size: ${isThermal ? "9px" : "10px"};
+//   color: #777;
+// }
+
+// /* =====================================================
+//    META
+// ===================================================== */
+
+// .meta {
+//   display: flex;
+//   justify-content: space-between;
+//   align-items: flex-start;
+
+//   padding: ${isThermal ? "6px 0" : "8px 0"};
+
+//   border-top: 1px solid #ddd;
+//   border-bottom: 1px solid #ddd;
+// }
+
+// .meta-block {
+//   width: 50%;
+// }
+
+// .meta-block:last-child {
+//   text-align: right;
+// }
+
+// .meta-label {
+//   font-size: ${isThermal ? "8px" : "9px"};
+//   color: #777;
+//   text-transform: uppercase;
+//   letter-spacing: .7px;
+//   margin-bottom: 3px;
+// }
+
+// .meta-value {
+//   font-size: ${isThermal ? "10px" : "11px"};
+//   font-weight: 600;
+// }
+
+// /* =====================================================
+//    ITEMS
+// ===================================================== */
+
+// .items {
+//   width: 100%;
+//   border-collapse: collapse;
+//   margin-top: ${isThermal ? "9px" : "13px"};
+// }
+
+// .items thead th {
+//   padding-bottom: 5px;
+
+//   font-size: ${isThermal ? "8px" : "9px"};
+//   text-transform: uppercase;
+//   letter-spacing: .8px;
+
+//   color: #666;
+
+//   border-bottom: 1px solid #111;
+// }
+
+// .items thead th:first-child {
+//   text-align: left;
+// }
+
+// .items thead th:last-child {
+//   text-align: right;
+// }
+
+// .items tbody tr {
+//   border-bottom: 1px solid #eee;
+// }
+
+// .items td {
+//   padding: ${isThermal ? "6px 0" : "8px 0"};
+//   vertical-align: top;
+// }
+
+// .item {
+//   width: 75%;
+// }
+
+// .item-name {
+//   font-size: ${isThermal ? "10px" : "11px"};
+//   font-weight: 600;
+//   line-height: 1.3;
+// }
+
+// .item-details {
+//   margin-top: 2px;
+//   color: #777;
+//   font-size: ${isThermal ? "8px" : "9px"};
+// }
+
+// .price {
+//   width: 25%;
+//   text-align: right;
+//   font-size: ${isThermal ? "10px" : "11px"};
+//   font-weight: 600;
+//   white-space: nowrap;
+// }
+
+// /* =====================================================
+//    REFUND AREA
+// ===================================================== */
+
+// .refund-section {
+//   margin-top: ${isThermal ? "10px" : "14px"};
+//   border-top: 2px solid #111;
+//   border-bottom: 2px solid #111;
+
+//   padding: ${isThermal ? "8px 0" : "11px 0"};
+
+//   display: flex;
+//   justify-content: space-between;
+//   align-items: center;
+// }
+
+// .refund-label {
+//   font-size: ${isThermal ? "9px" : "10px"};
+//   text-transform: uppercase;
+//   letter-spacing: 1px;
+//   font-weight: 700;
+// }
+
+// .refund-value {
+//   font-size: ${isThermal ? "19px" : "23px"};
+//   font-weight: 800;
+// }
+
+// /* =====================================================
+//    REASON
+// ===================================================== */
+
+// .reason {
+//   margin-top: ${isThermal ? "8px" : "11px"};
+// }
+
+// .reason-label {
+//   font-size: ${isThermal ? "8px" : "9px"};
+//   color: #777;
+//   text-transform: uppercase;
+//   letter-spacing: .7px;
+// }
+
+// .reason-text {
+//   margin-top: 3px;
+//   font-size: ${isThermal ? "9px" : "10px"};
+// }
+
+// /* =====================================================
+//    STATUS
+// ===================================================== */
+
+// .status {
+//   text-align: center;
+
+//   margin-top: ${isThermal ? "11px" : "16px"};
+
+//   font-size: ${isThermal ? "9px" : "10px"};
+//   font-weight: 700;
+//   letter-spacing: .5px;
+// }
+
+// /* =====================================================
+//    FOOTER
+// ===================================================== */
+
+// .footer {
+//   margin-top: ${isThermal ? "10px" : "17px"};
+
+//   padding-top: ${isThermal ? "7px" : "9px"};
+
+//   border-top: 1px solid #ddd;
+
+//   text-align: center;
+// }
+
+// .footer-main {
+//   font-size: ${isThermal ? "9px" : "10px"};
+//   font-weight: 600;
+// }
+
+// .footer-sub {
+//   margin-top: 3px;
+//   font-size: ${isThermal ? "8px" : "9px"};
+//   color: #888;
+// }
+
+// /* =====================================================
+//    THERMAL
+// ===================================================== */
+
+// ${isThermal ? `
+// body {
+//   width: 70mm;
+//   padding: 5mm 4mm;
+// }
+
+// .receipt {
+//   max-width: 72mm;
+// }
+// ` : `
+// body {
+//   padding: 0;
+//    max-width: 65mm;
+// }
+
+// .receipt {
+//   max-width: 140mm;
+// }
+// `}
+
+// </style>
+
+// </head>
+
+// <body>
+
+// <div class="receipt">
+
+//   <!-- ================================================
+//        HEADER
+//   ================================================= -->
+
+//   <div class="header">
+
+//     ${
+//       sale?.logoBase64
+//         ? `
+//         <img
+//           src="${sale.logoBase64}"
+//           class="logo"
+//         />
+//         `
+//         : ""
+//     }
+
+//     <div class="pharmacy-name">
+//       FARAZ PHARMACY
+//     </div>
+
+//     <div class="pharmacy-sub">
+//       Quality Care For Everyone
+//     </div>
+
+//   </div>
+
+
+//   <!-- ================================================
+//        RETURN TITLE
+//   ================================================= -->
+
+//   <div class="return-header">
+
+//     <div class="return-title">
+//       RETURN RECEIPT
+//     </div>
+
+//     <div class="return-line"></div>
+
+//     <div class="return-subtitle">
+//       Merchandise Return & Refund
+//     </div>
+
+//   </div>
+
+
+//   <!-- ================================================
+//        META INFORMATION
+//   ================================================= -->
+
+//   <div class="meta">
+
+//     <div class="meta-block">
+
+//       <div class="meta-label">
+//         Original Sale
+//       </div>
+
+//       <div class="meta-value">
+//         #${sale?.id ? sale.id.slice(0, 10) : "N/A"}
+//       </div>
+
+//     </div>
+
+
+//     <div class="meta-block">
+
+//       <div class="meta-label">
+//         Return Date
+//       </div>
+
+//       <div class="meta-value">
+//         ${dateStr}<br>
+//         ${timeStr}
+//       </div>
+
+//     </div>
+
+//   </div>
+
+
+//   <!-- ================================================
+//        ITEMS
+//   ================================================= -->
+
+//   <table class="items">
+
+//     <thead>
+
+//       <tr>
+
+//         <th>
+//           Returned Item
+//         </th>
+
+//         <th>
+//           Refund
+//         </th>
+
+//       </tr>
+
+//     </thead>
+
+//     <tbody>
+
+//       ${itemsHTML}
+
+//     </tbody>
+
+//   </table>
+
+
+//   <!-- ================================================
+//        REFUND TOTAL
+//   ================================================= -->
+
+//   <div class="refund-section">
+
+//     <div class="refund-label">
+//       Total Refund
+//     </div>
+
+//     <div class="refund-value">
+//       Rs ${refundAmount.toFixed(0)}
+//     </div>
+
+//   </div>
+
+
+//   <!-- ================================================
+//        REASON
+//   ================================================= -->
+
+//   ${
+//     returnData.reason
+//       ? `
+//       <div class="reason">
+
+//         <div class="reason-label">
+//           Return Reason
+//         </div>
+
+//         <div class="reason-text">
+//           ${returnData.reason}
+//         </div>
+
+//       </div>
+//       `
+//       : ""
+//   }
+
+
+//   <!-- ================================================
+//        STATUS
+//   ================================================= -->
+
+//   <div class="status">
+//     RETURN PROCESSED SUCCESSFULLY
+//   </div>
+
+
+//   <!-- ================================================
+//        FOOTER
+//   ================================================= -->
+
+//   <div class="footer">
+
+//     <div class="footer-main">
+//       Thank you for choosing Faraz Pharmacy
+//     </div>
+
+//     <div class="footer-sub">
+//       Powered by Faraz Pharmacy POS
+//     </div>
+
+//   </div>
+
+// </div>
+
+// </body>
+// </html>
+// `;
+// }
+
+// function generateReturnReceiptHTML(returnData, sale, paperSize) {
+//   const items = returnData.items || [];
+//   const now = new Date();
+//   const dateStr = now.toLocaleDateString("en-PK", {
+//     day: "numeric",
+//     month: "short",
+//     year: "numeric",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//   });
+
+//   const isThermal = paperSize === "thermal";
+//   const pageCSS = isThermal
+//     ? "@page { margin: 0; size: 80mm 297mm; }"
+//     : "@page { margin: 5mm; size: A5; }";
+
+//   const baseStyle = isThermal
+//     ? `body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; padding: 4mm 3mm; line-height: 1.3; } .receipt { width: 100%; }`
+//     : `body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #000; }`;
+
+//   const itemsHTML = items
+//     .map((i) => {
+//       const reasonStr = i.reason ? ` (${i.reason})` : "";
+//       const amt = i.refund_amount ?? i.subtotal ?? 0;
+//       return `<tr><td>${i.product_name} × ${i.quantity}${reasonStr}</td><td style="text-align:right">${amt.toFixed(0)}</td></tr>`;
+//     })
+//     .join("");
+
+//   return `<!DOCTYPE html>
+// <html><head><meta charset="utf-8">
+// <style>
+// ${pageCSS}
+// * { margin: 0; padding: 0; box-sizing: border-box; }
+// ${isThermal ? "html, body { height: 100%; }" : ""}
+// ${baseStyle}
+// h1 { text-align: center; margin-bottom: 4px; font-size: ${isThermal ? "20px" : "20px"}; letter-spacing: 1px; font-weight: 800; }
+// .sub { text-align: center; font-size: ${isThermal ? "10px" : "11px"}; margin-bottom: 6px; color: #333; font-weight: 600; }
+// .badge { text-align: center; font-size: ${isThermal ? "13px" : "14px"}; font-weight: 800; color: #c00; margin: 6px 0; letter-spacing: 1px; }
+// hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+// hr.dashed { border-top: 1px dashed #888; }
+// table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+// th { text-align: left; font-size: 11px; border-bottom: 1px solid #000; padding: 3px 0; font-weight: 700; }
+// td { font-size: ${isThermal ? "11px" : "13px"}; padding: 2px 0; font-weight: 600; }
+// td:last-child { text-align: right; }
+// .big td { font-weight: 800; font-size: ${isThermal ? "13px" : "15px"}; padding-top: 4px; border-top: 1px solid #000; }
+// .ftr { text-align: center; font-size: ${isThermal ? "10px" : "11px"}; margin-top: 6px; color: #555; font-weight: 600; }
+// </style></head><body>
+// <div class="receipt">
+// <h1>FARAZ PHARMACY</h1>
+// <p class="sub">${dateStr}</p>
+// <p class="badge">** RETURN RECEIPT **</p>
+// <p class="sub">Sale: ${sale?.id || "N/A"}</p>
+// <hr>
+// <table>
+// <thead><tr><th>Item</th><th style="text-align:right">Refund</th></tr></thead>
+// <tbody>${itemsHTML}</tbody>
+// </table>
+// <hr class="dashed">
+// <table>
+// <tr class="big"><td>Total Refund</td><td style="text-align:right">${returnData.refund_amount.toFixed(0)}</td></tr>
+// </table>
+// <p class="sub" style="margin-top:6px">Reason: ${returnData.reason}</p>
+// <hr>
+// <p class="ftr">Return processed successfully</p>
+// <p class="ftr">--- Powered by Faraz Pharmacy ---</p>
+// </div>
+// </body></html>`;
+// }
+
+// return Recipt end
+
+
 
 function getPrintOptions(printerConfig) {
   const paperSize = printerConfig?.paperSize || "thermal";
@@ -828,7 +1942,7 @@ function generateESCPOSReturnReceipt(returnData, sale) {
   parts.push(escposBold(1));
   parts.push(escposText("** RETURN RECEIPT **"));
   parts.push(escposBold(0));
-  parts.push(escposText("Sale: " + (sale?.id?.slice(0, 8) || "N/A")));
+  parts.push(escposText("Sale: " + (sale?.id || "N/A")));
   parts.push(escposLine("-", L));
   parts.push(escposAlign(0));
   const colName = 44;

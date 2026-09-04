@@ -58,7 +58,7 @@ export default function Invoices() {
         <div className="flex-1 min-w-[200px] max-w-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-            <Input placeholder="Search by invoice ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input autoFocus placeholder="Search by invoice ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
         </div>
         <div className="flex items-center gap-2">

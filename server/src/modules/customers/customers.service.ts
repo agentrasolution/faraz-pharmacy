@@ -17,7 +17,7 @@ const customerStatsSelect = `
 export const customersService = {
   async list() {
     return prisma.$queryRawUnsafe<unknown[]>(
-      `SELECT c.id, c.name, c.phone, c.address, c.created_at,
+      `SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
         ${customerStatsSelect}
        FROM customers c
        ORDER BY c.name ASC`,
@@ -27,10 +27,10 @@ export const customersService = {
   async search(query: string) {
     const q = `%${query}%`;
     return prisma.$queryRawUnsafe<unknown[]>(
-      `SELECT c.id, c.name, c.phone, c.address, c.created_at,
+      `SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
         ${customerStatsSelect}
        FROM customers c
-       WHERE c.name ILIKE $1 OR c.phone ILIKE $1
+       WHERE c.name ILIKE $1 OR c.phone ILIKE $1 OR c.father_name ILIKE $1 OR c.father_phone ILIKE $1
        ORDER BY c.name LIMIT 20`,
       q,
     );
@@ -66,6 +66,8 @@ export const customersService = {
       name: customer.name,
       phone: customer.phone,
       address: customer.address,
+      father_name: customer.fatherName,
+      father_phone: customer.fatherPhone,
       created_at: customer.createdAt.toISOString(),
       total_purchases: stats?.total_purchases ?? 0,
       outstanding_arrear: stats?.outstanding_arrear ?? 0,
@@ -116,6 +118,8 @@ export const customersService = {
         name: data.name,
         phone: data.phone ?? "",
         address: data.address ?? "",
+        fatherName: data.fatherName ?? "",
+        fatherPhone: data.fatherPhone ?? "",
       },
     });
   },
@@ -130,6 +134,8 @@ export const customersService = {
         name: data.name,
         phone: data.phone ?? "",
         address: data.address ?? "",
+        fatherName: data.fatherName ?? "",
+        fatherPhone: data.fatherPhone ?? "",
       },
     });
   },
