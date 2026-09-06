@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import logoSrc from "@/asset/image/logo.png";
 
 const navItems = [
@@ -34,6 +35,33 @@ export default function Sidebar() {
   const { logout, user } = useAuth();
   const pathname = location.pathname;
   const [collapsed, setCollapsed] = useState(false);
+  const [posWindowCount, setPosWindowCount] = useState(0);
+
+  const fetchWindowCount = useCallback(async () => {
+    try {
+      const count = await window.getPosWindowCount();
+      setPosWindowCount(count);
+    } catch {
+      // Not in Electron or not available
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWindowCount();
+    const interval = setInterval(fetchWindowCount, 2000);
+    return () => clearInterval(interval);
+  }, [fetchWindowCount]);
+
+  const handleNewSale = async () => {
+    try {
+      const result = await window.openPosWindow();
+      if (!result.success) {
+        toast.error(result.error || "Could not open new sale window");
+      }
+    } catch {
+      navigate("/pos");
+    }
+  };
 
   return (
     <aside
@@ -66,9 +94,9 @@ export default function Sidebar() {
 
       <div className={cn("px-2 pb-2.5", collapsed && "px-1")}>
         <button
-          onClick={() => navigate("/pos")}
+          onClick={handleNewSale}
           className={cn(
-            "flex items-center w-full rounded-md transition-all duration-150 text-xs font-medium",
+            "flex items-center w-full rounded-md transition-all duration-150 text-xs font-medium relative",
             "bg-accent text-accent-foreground hover:bg-accent-hover shadow-xs",
             collapsed ? "justify-center h-7" : "gap-2 px-2.5 h-7"
           )}
@@ -81,6 +109,18 @@ export default function Sidebar() {
               </motion.span>
             )}
           </AnimatePresence>
+          {posWindowCount > 0 && (
+            <span
+              className={cn(
+                "absolute flex items-center justify-center rounded-full bg-background text-[9px] font-bold text-text-primary border border-border",
+                collapsed
+                  ? "-top-1 -right-1 h-4 min-w-4 px-1"
+                  : "right-2 h-4 min-w-4 px-1"
+              )}
+            >
+              {posWindowCount}
+            </span>
+          )}
         </button>
       </div>
 

@@ -16,6 +16,10 @@ export interface ElectronAPI {
     gdriveGetConfig(): Promise<GDriveConfig>;
     gdriveSaveConfig(cfg: GDriveConfig): Promise<{ success: boolean }>;
   };
+  pos: {
+    openWindow(): Promise<{ success: boolean; windowId?: number; error?: string }>;
+    getWindowCount(): Promise<number>;
+  };
 }
 
 export interface AppConfig {
@@ -62,6 +66,7 @@ declare global {
     generateReceiptHTML: (sale: unknown, paperSize?: string) => Promise<{ success: boolean; html: string; error?: string }>;
     generateReturnReceiptHTML: (returnData: unknown, sale: unknown, paperSize?: string) => Promise<{ success: boolean; html: string; error?: string }>;
     toggleFullscreen: () => Promise<{ success: boolean; fullscreen?: boolean }>;
-    openPosWindow: () => Promise<{ success: boolean; error?: string }>;
+    openPosWindow: () => Promise<{ success: boolean; windowId?: number; error?: string }>;
+    getPosWindowCount: () => Promise<number>;
   }
 }

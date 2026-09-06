@@ -18,6 +18,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
     gdriveGetConfig: () => ipcRenderer.invoke("settings:gdrive-get-config"),
     gdriveSaveConfig: (cfg) => ipcRenderer.invoke("settings:gdrive-save-config", cfg),
   },
+  pos: {
+    openWindow: () => ipcRenderer.invoke("pos:open-window"),
+    getWindowCount: () => ipcRenderer.invoke("pos:window-count"),
+  },
 });
 
 contextBridge.exposeInMainWorld("saveConfig", (cfg) => ipcRenderer.invoke("config:save", cfg));
@@ -29,3 +33,4 @@ contextBridge.exposeInMainWorld("generateReceiptHTML", (sale, paperSize) => ipcR
 contextBridge.exposeInMainWorld("generateReturnReceiptHTML", (returnData, sale, paperSize) => ipcRenderer.invoke("print:generate-return-receipt-html", returnData, sale, paperSize));
 contextBridge.exposeInMainWorld("toggleFullscreen", () => ipcRenderer.invoke("window:toggle-fullscreen"));
 contextBridge.exposeInMainWorld("openPosWindow", () => ipcRenderer.invoke("pos:open-window"));
+contextBridge.exposeInMainWorld("getPosWindowCount", () => ipcRenderer.invoke("pos:window-count"));
