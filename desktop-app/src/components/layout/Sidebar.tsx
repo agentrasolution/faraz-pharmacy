@@ -12,20 +12,20 @@ import { toast } from "sonner";
 import logoSrc from "@/asset/image/logo.png";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/pos", label: "POS / Sales", icon: ShoppingCart },
-  { href: "/invoices", label: "Invoices", icon: Receipt },
-  { href: "/returns", label: "Returns", icon: Undo2 },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/arrears", label: "Arrears", icon: CreditCard },
-  { href: "/products", label: "Products", icon: Package },
-  { href: "/stock", label: "Stock", icon: Boxes },
-  { href: "/barcodes", label: "Barcodes", icon: Barcode },
-  { href: "/distributors", label: "Distributors", icon: Factory },
-  { href: "/companies", label: "Companies", icon: Building2 },
-  { href: "/expenses", label: "Expenses", icon: Wallet },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "F12" },
+  { href: "/pos", label: "POS / Sales", icon: ShoppingCart, shortcut: "⌘S" },
+  { href: "/invoices", label: "Invoices", icon: Receipt, shortcut: "⌘I" },
+  { href: "/returns", label: "Returns", icon: Undo2, shortcut: "⌘R" },
+  { href: "/customers", label: "Customers", icon: Users, shortcut: "⌘C" },
+  { href: "/arrears", label: "Arrears", icon: CreditCard, shortcut: "⌘A" },
+  { href: "/products", label: "Products", icon: Package, shortcut: "⌘P" },
+  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "⌘K" },
+  { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "⌘B" },
+  { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "⌘D" },
+  { href: "/companies", label: "Companies", icon: Building2, shortcut: "⌘M" },
+  { href: "/expenses", label: "Expenses", icon: Wallet, shortcut: "⌘E" },
+  { href: "/reports", label: "Reports", icon: BarChart3, shortcut: "⌘H" },
+  { href: "/settings", label: "Settings", icon: Settings, shortcut: "F10" },
 ];
 
 export default function Sidebar() {
@@ -188,12 +188,17 @@ export default function Sidebar() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="text-[13px] font-medium relative truncate"
+                      className="text-[13px] font-medium relative truncate flex-1"
                     >
                       {item.label}
                     </motion.span>
                   )}
                 </AnimatePresence>
+                {isExpanded && (
+                  <span className="text-[10px] text-sidebar-foreground/30 font-mono ml-auto shrink-0">
+                    {item.shortcut}
+                  </span>
+                )}
               </button>
             </motion.div>
           );
