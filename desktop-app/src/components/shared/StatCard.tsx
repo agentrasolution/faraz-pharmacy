@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -11,6 +11,8 @@ interface StatCardProps {
   subtitle?: string;
   loading?: boolean;
   delay?: number;
+  href?: string;
+  onClick?: () => void;
 }
 
 function useCountUp(end: number, duration = 500) {
@@ -36,10 +38,11 @@ function useCountUp(end: number, duration = 500) {
   return count;
 }
 
-export default function StatCard({ title, value, icon, trend, subtitle, loading, delay = 0 }: StatCardProps) {
+export default function StatCard({ title, value, icon, trend, subtitle, loading, delay = 0, href, onClick }: StatCardProps) {
   const numValue = typeof value === "number" ? value : 0;
   const isCurrency = title.toLowerCase().includes("revenue") || title.toLowerCase().includes("arrear");
   const animatedValue = useCountUp(numValue, 500);
+  const isClickable = !!(href || onClick);
 
   if (loading) {
     return (
@@ -55,8 +58,12 @@ export default function StatCard({ title, value, icon, trend, subtitle, loading,
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35, ease: "easeOut" }}
-      whileHover={{ y: -1 }}
-      className="group rounded-xl border border-border bg-surface p-4 relative overflow-hidden hover:shadow-sm transition-all duration-200"
+      whileHover={isClickable ? { y: -2, scale: 1.01 } : { y: -1 }}
+      whileTap={isClickable ? { scale: 0.98 } : undefined}
+      onClick={onClick}
+      className={`group rounded-xl border border-border bg-surface p-4 relative overflow-hidden transition-all duration-200 ${
+        isClickable ? "cursor-pointer hover:shadow-md hover:border-accent/30" : "hover:shadow-sm"
+      }`}
     >
       <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-accent/20 group-hover:bg-accent transition-colors duration-200" />
       <div className="flex items-start justify-between">
@@ -72,8 +79,13 @@ export default function StatCard({ title, value, icon, trend, subtitle, loading,
           </div>
           {subtitle && <p className="text-[10px] text-text-secondary">{subtitle}</p>}
         </div>
-        <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent group-hover:scale-105 group-hover:bg-accent/15 transition-all duration-200">
-          {icon}
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent group-hover:scale-105 group-hover:bg-accent/15 transition-all duration-200">
+            {icon}
+          </div>
+          {isClickable && (
+            <ArrowRight className="h-3.5 w-3.5 text-text-secondary/40 group-hover:text-accent group-hover:translate-x-0.5 transition-all duration-200" />
+          )}
         </div>
       </div>
       {trend && (
