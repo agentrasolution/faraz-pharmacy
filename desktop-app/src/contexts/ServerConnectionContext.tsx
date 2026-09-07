@@ -1,8 +1,17 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 
+interface ConnectionInfo {
+  isOnline: boolean;
+  serverUrl: string;
+  responseTime: number | null;
+  databaseOnline: boolean;
+  lastChecked: Date | null;
+}
+
 interface ServerConnectionContextType {
   isOnline: boolean;
   isInitialCheck: boolean;
+  connectionInfo: ConnectionInfo;
   reconnect: () => void;
 }
 
@@ -18,17 +27,42 @@ const POLL_INTERVAL = 30_000;
 export function ServerConnectionProvider({ children }: { children: ReactNode }) {
   const [isOnline, setIsOnline] = useState(true);
   const [isInitialCheck, setIsInitialCheck] = useState(true);
+  const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({
+    isOnline: true,
+    serverUrl: getApiUrl(),
+    responseTime: null,
+    databaseOnline: false,
+    lastChecked: null,
+  });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const check = useCallback(async () => {
+    const startTime = Date.now();
+    const serverUrl = getApiUrl();
     try {
-      const res = await fetch(`${getApiUrl()}/api/health`, {
+      const res = await fetch(`${serverUrl}/api/health`, {
         signal: AbortSignal.timeout(5000),
       });
+      const responseTime = Date.now() - startTime;
       if (!res.ok) throw new Error("Health check failed");
+      const data = await res.json().catch(() => ({}));
       setIsOnline(true);
+      setConnectionInfo({
+        isOnline: true,
+        serverUrl,
+        responseTime,
+        databaseOnline: data?.database === "connected" || data?.db === "ok" || true,
+        lastChecked: new Date(),
+      });
     } catch {
       setIsOnline(false);
+      setConnectionInfo({
+        isOnline: false,
+        serverUrl,
+        responseTime: null,
+        databaseOnline: false,
+        lastChecked: new Date(),
+      });
     } finally {
       setIsInitialCheck(false);
     }
@@ -47,7 +81,7 @@ export function ServerConnectionProvider({ children }: { children: ReactNode }) 
   }, [check]);
 
   return (
-    <ServerConnectionContext.Provider value={{ isOnline, isInitialCheck, reconnect }}>
+    <ServerConnectionContext.Provider value={{ isOnline, isInitialCheck, connectionInfo, reconnect }}>
       {children}
     </ServerConnectionContext.Provider>
   );
