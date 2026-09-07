@@ -1874,10 +1874,10 @@ export type ProductPriceScalarFieldEnum = (typeof ProductPriceScalarFieldEnum)[k
 export const DistributorScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  contact: 'contact',
-  phone: 'phone',
-  address: 'address',
-  companyId: 'companyId',
+  salesmanName: 'salesmanName',
+  salesmanContact: 'salesmanContact',
+  deliveryManName: 'deliveryManName',
+  deliveryManContact: 'deliveryManContact',
   createdAt: 'createdAt'
 } as const
 
