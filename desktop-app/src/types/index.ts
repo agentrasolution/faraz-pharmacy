@@ -36,6 +36,7 @@ export interface Product {
   stock_qty: number;
   pack_size: number;
   expiry?: string;
+  batch_no?: string;
   active: number;
   created_at: string;
   prices?: ProductPrice[];
@@ -88,6 +89,9 @@ export interface Sale {
   amount_paid: number;
   change: number;
   status: string;
+  payment_method?: string;
+  invoice_no?: string;
+  profit?: number;
   created_at: string;
   return_count?: number;
   items?: SaleItem[];
@@ -129,10 +133,12 @@ export interface Arrear {
   sale_id: string;
   customer_id: string;
   customer_name?: string;
+  invoice_no?: string;
   total_bill: number;
   amount_paid: number;
   balance_due: number;
   status: string;
+  last_payment_date?: string;
   created_at: string;
   payments?: ArrearPayment[];
 }
@@ -159,12 +165,20 @@ export interface StockPurchase {
   distributor_name?: string;
   company_id?: string;
   company_name?: string;
+  invoice_no?: string;
   invoice_number: string;
   quantity: number;
   purchase_price: number;
   sale_price: number;
   expiry?: string;
   total_value: number;
+  subtotal?: number;
+  discount?: number;
+  total_amount: number;
+  amount_paid: number;
+  payment_status?: string;
+  date: string;
+  items?: any[];
   active?: number;
   created_at: string;
 }
@@ -247,8 +261,11 @@ export interface Expense {
   title: string;
   category: string;
   amount: number;
+  description?: string;
   notes: string;
   date: string;
+  payment_method?: string;
+  status?: string;
   created_at: string;
 }
 

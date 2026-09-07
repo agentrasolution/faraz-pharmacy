@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Search, Plus, Pencil, Trash2, Download, LayoutGrid, List, MapPin } from "lucide-react";
+import { Building2, Search, Plus, Pencil, Trash2, Download, LayoutGrid, List, MapPin, Package } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
