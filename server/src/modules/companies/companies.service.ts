@@ -14,10 +14,7 @@ export const companiesService = {
     return prisma.company.create({
       data: {
         name: data.name,
-        phone: data.phone ?? "",
-        contact: data.contact ?? "",
         address: data.address ?? "",
-        secondNumber: data.second_number ?? "",
       },
     });
   },
@@ -29,10 +26,7 @@ export const companiesService = {
       where: { id },
       data: {
         name: data.name,
-        phone: data.phone ?? "",
-        contact: data.contact ?? "",
         address: data.address ?? "",
-        secondNumber: data.second_number ?? "",
       },
     });
   },

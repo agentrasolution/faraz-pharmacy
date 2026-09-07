@@ -5,9 +5,6 @@ function normalizeCompany(c: Record<string, unknown>): Record<string, unknown> {
   return {
     id: c.id,
     name: c.name,
-    contact: c.contact,
-    phone: c.phone,
-    second_number: c.secondNumber ?? "",
     address: c.address,
     created_at: c.createdAt,
     product_count: (c as any)._count?.distributors ?? 0,

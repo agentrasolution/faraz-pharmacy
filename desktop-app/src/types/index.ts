@@ -199,18 +199,14 @@ export interface DistributorInput {
 export interface Company {
   id: string;
   name: string;
-  phone: string;
   address: string;
-  second_number: string;
   created_at: string;
   product_count?: number;
 }
 
 export interface CompanyInput {
   name: string;
-  phone: string;
   address?: string;
-  second_number?: string;
 }
 
 export interface ReturnEntry {

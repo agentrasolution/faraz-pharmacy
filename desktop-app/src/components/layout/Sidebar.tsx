@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, ShoppingCart, Package, Boxes, Tags, Users, CreditCard,
   Factory, Building2, Undo2, Wallet, BarChart3, Receipt, Barcode, Settings,
-  LogOut, PanelLeftClose,
+  LogOut, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,10 +20,9 @@ const navItems = [
   { href: "/arrears", label: "Arrears", icon: CreditCard },
   { href: "/products", label: "Products", icon: Package },
   { href: "/stock", label: "Stock", icon: Boxes },
-   { href: "/barcodes", label: "Barcodes", icon: Barcode },
+  { href: "/barcodes", label: "Barcodes", icon: Barcode },
   { href: "/distributors", label: "Distributors", icon: Factory },
   { href: "/companies", label: "Companies", icon: Building2 },
- 
   { href: "/expenses", label: "Expenses", icon: Wallet },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -35,7 +34,9 @@ export default function Sidebar() {
   const { logout, user } = useAuth();
   const pathname = location.pathname;
   const [collapsed, setCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [posWindowCount, setPosWindowCount] = useState(0);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchWindowCount = useCallback(async () => {
     try {
@@ -63,22 +64,50 @@ export default function Sidebar() {
     }
   };
 
+  const handleMouseEnter = () => {
+    if (!collapsed) return;
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!collapsed) return;
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const isExpanded = !collapsed || isHovered;
+
   return (
     <aside
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
-        "h-full bg-sidebar-background flex flex-col shrink-0 transition-all duration-300 ease-out relative select-none",
-        collapsed ? "w-[68px]" : "w-[240px]"
+        "h-full bg-sidebar-background flex flex-col shrink-0 transition-all duration-300 ease-out relative select-none z-40",
+        isExpanded ? "w-[240px]" : "w-[68px]"
       )}
     >
       <div className={cn(
         "flex items-center h-14 relative",
-        collapsed ? "justify-center" : "px-4 gap-3"
+        isExpanded ? "px-4 gap-3" : "justify-center"
       )}>
         <div className="flex items-center justify-center rounded-lg h-9 w-9 bg-sidebar-primary/10 shrink-0 overflow-hidden">
           <img src={logoSrc} alt="Faraz Pharmacy" className="h-6 w-6 object-contain" />
         </div>
         <AnimatePresence>
-          {!collapsed && (
+          {isExpanded && (
             <motion.div
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: "auto" }}
@@ -92,18 +121,18 @@ export default function Sidebar() {
         </AnimatePresence>
       </div>
 
-      <div className={cn("px-3 pb-3", collapsed && "px-2")}>
+      <div className={cn("px-3 pb-3", !isExpanded && "px-2")}>
         <button
           onClick={handleNewSale}
           className={cn(
             "flex items-center w-full rounded-lg transition-all duration-150 text-sm font-medium relative",
             "bg-accent text-accent-foreground hover:bg-accent-hover shadow-xs",
-            collapsed ? "justify-center h-9" : "gap-2.5 px-3 h-9"
+            !isExpanded ? "justify-center h-9" : "gap-2.5 px-3 h-9"
           )}
         >
           <ShoppingCart className="h-4 w-4" />
           <AnimatePresence>
-            {!collapsed && (
+            {isExpanded && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 New Sale
               </motion.span>
@@ -113,7 +142,7 @@ export default function Sidebar() {
             <span
               className={cn(
                 "absolute flex items-center justify-center rounded-full bg-background text-[10px] font-bold text-text-primary border border-border",
-                collapsed
+                !isExpanded
                   ? "-top-1 -right-1 h-5 min-w-5 px-1"
                   : "right-3 h-5 min-w-5 px-1"
               )}
@@ -139,22 +168,22 @@ export default function Sidebar() {
                 onClick={() => navigate(item.href)}
                 className={cn(
                   "group relative flex items-center w-full rounded-lg transition-all duration-150",
-                  collapsed ? "justify-center h-9" : "gap-3 px-3 pl-4 h-9",
+                  !isExpanded ? "justify-center h-9" : "gap-3 px-3 pl-4 h-9",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 )}
               >
-                {isActive && !collapsed && (
+                {isActive && isExpanded && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-sidebar-primary" />
                 )}
                 <Icon className={cn(
                   "shrink-0 relative",
-                  collapsed ? "h-4 w-4" : "h-4 w-4",
+                  "h-4 w-4",
                   isActive ? "text-sidebar-primary" : ""
                 )} />
                 <AnimatePresence>
-                  {!collapsed && (
+                  {isExpanded && (
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -171,10 +200,10 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border px-3 pt-3 pb-4 space-y-1.5">
+      <div className={cn("border-t border-sidebar-border pt-3 pb-4 space-y-1.5", isExpanded ? "px-3" : "px-2")}>
         <div className={cn(
           "flex items-center rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-colors cursor-pointer",
-          collapsed && "justify-center px-0"
+          !isExpanded && "justify-center px-0"
         )}>
           <div className="h-8 w-8 rounded-lg bg-sidebar-primary/10 flex items-center justify-center shrink-0">
             <span className="text-[11px] font-bold text-sidebar-primary">
@@ -182,7 +211,7 @@ export default function Sidebar() {
             </span>
           </div>
           <AnimatePresence>
-            {!collapsed && (
+            {isExpanded && (
               <motion.div
                 initial={{ opacity: 0, width: 0 }}
                 animate={{ opacity: 1, width: "auto" }}
@@ -199,12 +228,12 @@ export default function Sidebar() {
           onClick={logout}
           className={cn(
             "flex items-center rounded-lg transition-all duration-150 text-sidebar-foreground/40 hover:text-danger",
-            collapsed ? "justify-center h-9" : "gap-3 px-3 h-9 w-full text-xs"
+            !isExpanded ? "justify-center h-9" : "gap-3 px-3 h-9 w-full text-xs"
           )}
         >
           <LogOut className="h-4 w-4 shrink-0" />
           <AnimatePresence>
-            {!collapsed && (
+            {isExpanded && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 Sign out
               </motion.span>
@@ -221,7 +250,7 @@ export default function Sidebar() {
           collapsed && "rotate-180"
         )}
       >
-        <PanelLeftClose className="h-3 w-3" />
+        {collapsed ? <PanelLeftOpen className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
       </button>
     </aside>
   );

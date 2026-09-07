@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Phone, Package, Search, Plus, Pencil, Trash2, Download, LayoutGrid, List } from "lucide-react";
+import { Building2, Search, Plus, Pencil, Trash2, Download, LayoutGrid, List, MapPin } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,13 @@ export default function Companies() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", address: "", second_number: "" });
+  const [form, setForm] = useState({ name: "", address: "" });
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const { data: companies = [], isLoading } = useQuery({ queryKey: ["companies"], queryFn: api.companies.list });
 
   const filtered = companies.filter((c: Company) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search)
+    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.address?.toLowerCase().includes(search.toLowerCase())
   );
 
   const createMutation = useMutation({
@@ -37,7 +37,7 @@ export default function Companies() {
       toast.success("Company created");
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       setOpen(false);
-      setForm({ name: "", phone: "", address: "", second_number: "" });
+      setForm({ name: "", address: "" });
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -49,7 +49,7 @@ export default function Companies() {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       setOpen(false);
       setEditingId(null);
-      setForm({ name: "", phone: "", address: "", second_number: "" });
+      setForm({ name: "", address: "" });
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -69,13 +69,13 @@ export default function Companies() {
 
   function openAdd() {
     setEditingId(null);
-    setForm({ name: "", phone: "", address: "", second_number: "" });
+    setForm({ name: "", address: "" });
     setOpen(true);
   }
 
   function openEdit(c: Company) {
     setEditingId(c.id);
-    setForm({ name: c.name, phone: c.phone, address: c.address, second_number: c.second_number });
+    setForm({ name: c.name, address: c.address });
     setOpen(true);
   }
 
@@ -87,10 +87,10 @@ export default function Companies() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input autoFocus placeholder="Search companies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button variant="outline" size="sm" onClick={() => downloadCSV(`companies_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Company Contact","Contact #2","Address","Products"], filtered.map((c: Company) => [c.name, c.phone, c.second_number||"", c.address, c.product_count||0]))}>
+        <Button variant="outline" size="sm" onClick={() => downloadCSV(`companies_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Address","Products"], filtered.map((c: Company) => [c.name, c.address || "", c.product_count||0]))}>
           <Download className="h-4 w-4 mr-1" /> CSV
         </Button>
-        <Button variant="outline" size="sm" onClick={() => downloadPDF(`companies_${new Date().toISOString().split("T")[0]}.pdf`, "Companies List", ["Name","Company Contact","Contact #2","Address","Products"], filtered.map((c: Company) => [c.name, c.phone, c.second_number||"", c.address, c.product_count||0]))}>
+        <Button variant="outline" size="sm" onClick={() => downloadPDF(`companies_${new Date().toISOString().split("T")[0]}.pdf`, "Companies List", ["Name","Address","Products"], filtered.map((c: Company) => [c.name, c.address || "", c.product_count||0]))}>
           <Download className="h-4 w-4 mr-1" /> PDF
         </Button>
         <div className="flex items-center border border-border rounded-lg overflow-hidden">
@@ -107,8 +107,7 @@ export default function Companies() {
           <DataTable
             columns={[
               { key: "name", header: "Name", cell: (c: Company) => <span className="font-medium text-text-primary">{c.name}</span> },
-              { key: "phone", header: "Contact", cell: (c: Company) => <span className="font-mono text-[11px]">{c.phone}</span> },
-              { key: "second_number", header: "Contact #2", cell: (c: Company) => <span className="font-mono text-[11px] text-text-secondary">{c.second_number || "\u2014"}</span> },
+              { key: "address", header: "Address", cell: (c: Company) => <span className="text-xs text-text-secondary">{c.address || "—"}</span> },
               { key: "product_count", header: "Products", cell: (c: Company) => <span className="font-mono">{c.product_count ?? 0}</span> },
               {
                 key: "actions", header: "", cell: (c: Company) => (
@@ -146,10 +145,14 @@ export default function Companies() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-medium text-text-primary truncate">{comp.name}</h3>
-                      <div className="space-y-1 mt-2">
-                        <div className="flex items-center gap-1 text-xs text-text-secondary"><Phone className="h-3 w-3 shrink-0" />{comp.phone}</div>
-                        {comp.second_number && <div className="flex items-center gap-1 text-xs text-text-secondary"><Phone className="h-3 w-3 shrink-0" />{comp.second_number}</div>}
-                        <div className="flex items-center gap-1 text-xs text-text-secondary"><Package className="h-3 w-3 shrink-0" />{comp.product_count ?? 0} products</div>
+                      {comp.address && (
+                        <div className="flex items-center gap-1 text-xs text-text-secondary mt-1">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{comp.address}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-xs text-text-secondary mt-1">
+                        <Package className="h-3 w-3 shrink-0" />{comp.product_count ?? 0} products
                       </div>
                     </div>
                   </div>
@@ -179,18 +182,8 @@ export default function Companies() {
               <Label>Company Name</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Company Contact</Label>
-                <Input inputMode="numeric" pattern="[0-9]*" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 11) })} />
-              </div>
-              <div>
-                <Label>Contact #2</Label>
-                <Input inputMode="numeric" pattern="[0-9]*" value={form.second_number} onChange={(e) => setForm({ ...form, second_number: e.target.value.replace(/\D/g, "").slice(0, 11) })} />
-              </div>
-            </div>
             <div>
-              <Label>Address (optional)</Label>
+              <Label>Address</Label>
               <textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} rows={3} className="flex w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:cursor-not-allowed disabled:opacity-50 resize-none" />
             </div>
             <Button className="w-full" disabled={!form.name || createMutation.isPending || updateMutation.isPending}
