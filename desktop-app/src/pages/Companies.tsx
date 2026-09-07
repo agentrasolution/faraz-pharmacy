@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Search, Plus, Pencil, Trash2, Download, LayoutGrid, List, MapPin, Package } from "lucide-react";
+import { Building2, Search, Plus, Pencil, Trash2, LayoutGrid, List, MapPin, Package } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
+import ExportButton from "@/components/shared/ExportButton";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import type { Company } from "@/types";
 
 export default function Companies() {
@@ -24,6 +26,7 @@ export default function Companies() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", address: "" });
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const { data: companies = [], isLoading } = useQuery({ queryKey: ["companies"], queryFn: api.companies.list });
 
@@ -79,20 +82,29 @@ export default function Companies() {
     setOpen(true);
   }
 
+  function handleExportPDF() {
+    downloadPDF(`companies_${new Date().toISOString().split("T")[0]}.pdf`, "Companies List",
+      ["Name","Address","Products"],
+      filtered.map((c: Company) => [c.name, c.address || "", c.product_count||0]));
+  }
+  function handleExportCSV() {
+    downloadCSV(`companies_${new Date().toISOString().split("T")[0]}.csv`,
+      ["Name","Address","Products"],
+      filtered.map((c: Company) => [c.name, c.address || "", c.product_count||0]));
+  }
+
+  useModuleShortcuts({ onAdd: openAdd, onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+
   return (
     <div>
-      <PageHeader title="Companies" description="Manage pharmaceutical companies" action={{ label: "Add Company", onClick: openAdd }} />
+      <PageHeader title="Companies" description="Manage pharmaceutical companies" action={{ label: "Add Company", onClick: openAdd, shortcut: "Mod+N" }} />
       <div className="flex items-center gap-2 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input autoFocus placeholder="Search companies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input autoFocus ref={searchRef} placeholder="Search companies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button variant="outline" size="sm" onClick={() => downloadCSV(`companies_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Address","Products"], filtered.map((c: Company) => [c.name, c.address || "", c.product_count||0]))}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => downloadPDF(`companies_${new Date().toISOString().split("T")[0]}.pdf`, "Companies List", ["Name","Address","Products"], filtered.map((c: Company) => [c.name, c.address || "", c.product_count||0]))}>
-          <Download className="h-4 w-4 mr-1" /> PDF
-        </Button>
+        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
         <div className="flex items-center border border-border rounded-lg overflow-hidden">
           <button onClick={() => setViewMode("grid")} className={cn("p-2 transition-colors", viewMode === "grid" ? "bg-accent text-white" : "text-text-secondary hover:bg-surface-2")}>
             <LayoutGrid className="h-4 w-4" />

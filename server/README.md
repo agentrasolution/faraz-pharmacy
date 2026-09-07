@@ -175,6 +175,13 @@ All routes prefixed with `/api`. Auth required on marked routes.
 | PUT | `/api/distributors/:id` | Update distributor |
 | DELETE | `/api/distributors/:id` | Delete distributor |
 
+**Distributor Fields:**
+- `name` - Proprietor/company name
+- `salesmanName` - Salesman name
+- `salesmanContact` - Salesman phone
+- `deliveryManName` - Delivery person name
+- `deliveryManContact` - Delivery person phone
+
 ### Companies
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -254,7 +261,7 @@ All routes prefixed with `/api`. Auth required on marked routes.
 - **Product** - Medicine/product catalog
 - **Barcode** - Product barcodes
 - **ProductPrice** - Multiple price tiers
-- **Distributor** - Product suppliers
+- **Distributor** - Suppliers (proprietor, salesman, delivery man)
 - **Company** - Distributor companies
 - **Customer** - Pharmacy customers
 - **Sale** - Sales transactions

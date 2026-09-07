@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { api } from "@/lib/api";
 import { cn, renderBarcode } from "@/lib/utils";
+import { downloadPDF, downloadCSV } from "@/lib/export";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import { ShortcutHint } from "@/components/shared/Kbd";
+import ExportButton from "@/components/shared/ExportButton";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
 import type { BarcodeEntry } from "@/types";
 
@@ -35,8 +39,13 @@ export default function Barcodes() {
   const [printTarget, setPrintTarget] = useState<string | undefined>(undefined);
   const [printOpen, setPrintOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BarcodeEntry | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const { searchRef } = useModuleShortcuts({
+    onAdd: openGenerate,
+    onSearch: () => searchRef.current?.focus(),
+    onExportPDF: handleExportPDF,
+    onExportCSV: handleExportCSV,
+  });
 
   const { data: barcodes, isLoading } = useQuery({
     queryKey: ["barcodes"],
@@ -59,8 +68,27 @@ export default function Barcodes() {
     );
   }, [barcodes, search]);
 
+  const exportRows = useMemo(() => {
+    if (!filtered) return [];
+    return filtered.map((b) => [
+      b.code,
+      b.product?.name || "Unassigned",
+      b.product?.active != null && b.product.active > 0 ? "Active" : "Inactive",
+    ]);
+  }, [filtered]);
+
+  const exportHeaders = ["Code", "Product", "Status"];
+
+  function handleExportPDF() {
+    downloadPDF("barcodes.pdf", "Barcodes", exportHeaders, exportRows);
+  }
+
+  function handleExportCSV() {
+    downloadCSV("barcodes.csv", exportHeaders, exportRows);
+  }
+
   useEffect(() => {
-    inputRef.current?.focus();
+    searchRef.current?.focus();
   }, []);
 
   const getBarcodeId = useCallback(() => {
@@ -112,7 +140,7 @@ export default function Barcodes() {
         <div className="flex items-center gap-2 relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary pointer-events-none" />
           <Input
-            ref={inputRef}
+            ref={searchRef}
             autoFocus
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -145,9 +173,11 @@ export default function Barcodes() {
               <List className="h-3.5 w-3.5" />
             </button>
           </div>
+          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
+          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
           <Button size="sm" onClick={openGenerate} className="h-8 gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" />
-            Generate Barcode
+            Generate Barcode <ShortcutHint shortcut="Mod+N" />
           </Button>
         </div>
       </div>

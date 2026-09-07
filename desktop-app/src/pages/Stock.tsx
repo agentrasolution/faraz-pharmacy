@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, RotateCcw, Eye, EyeOff, Barcode, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, RotateCcw, Eye, EyeOff, Barcode, Search, Download } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { downloadCSV, downloadPDF, downloadExcel } from "@/lib/export";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import ExportButton from "@/components/shared/ExportButton";
+import { ShortcutHint } from "@/components/shared/Kbd";
 import type { StockPurchase, Product, Company, Distributor } from "@/types";
 
 export default function Stock() {
@@ -30,6 +34,33 @@ export default function Stock() {
     invoiceNumber: "", packs: "1", quantity: "", expiry: "",
   });
   const [qtyLocked, setQtyLocked] = useState(true);
+
+  const stockHeaders = ["Invoice", "Date", "Supplier", "Product", "Qty", "Purchase Price", "Total", "Status"];
+  const stockExportRows = (data: StockPurchase[]) => data.map((s) => [
+    s.invoice_number || "—",
+    formatDate(s.created_at),
+    s.distributor_name || "—",
+    s.product_name,
+    s.quantity,
+    formatCurrency(s.purchase_price),
+    formatCurrency(s.total_value),
+    s.active !== 0 ? "Active" : "Archived",
+  ]);
+
+  function handleExportPDF() {
+    downloadPDF(`stock_${new Date().toISOString().split("T")[0]}.pdf`, "Stock / Purchases", stockHeaders, stockExportRows(searched));
+  }
+
+  function handleExportCSV() {
+    downloadCSV(`stock_${new Date().toISOString().split("T")[0]}.csv`, "Stock / Purchases", stockHeaders, stockExportRows(searched));
+  }
+
+  const { searchRef } = useModuleShortcuts({
+    onAdd: openAdd,
+    onSearch: () => searchRef.current?.focus(),
+    onExportPDF: handleExportPDF,
+    onExportCSV: handleExportCSV,
+  });
 
   const { data: stockEntries = [], isLoading } = useQuery({ queryKey: ["stock"], queryFn: api.stock.list });
   const filtered = showArchived ? stockEntries : stockEntries.filter((s: StockPurchase) => s.active !== 0);
@@ -191,7 +222,7 @@ export default function Stock() {
 
   return (
     <div>
-      <PageHeader title="Stock / Purchases" description="Track inventory purchases and stock levels" action={{ label: "New Purchase", onClick: openAdd }} />
+      <PageHeader title="Stock / Purchases" description="Track inventory purchases and stock levels" action={{ label: <><span>New Purchase</span><ShortcutHint shortcut="Mod+N" /></>, onClick: openAdd }} />
       
       <div className="mb-5">
         <Card>
@@ -214,9 +245,11 @@ export default function Stock() {
       <div className="flex items-center gap-2 mb-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input autoFocus placeholder="Search by product, company, distributor, invoice..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input ref={searchRef} autoFocus placeholder="Search by product, company, distributor, invoice..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex-1" />
+        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
+        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
         <button
           onClick={() => setShowArchived(!showArchived)}
           className={`text-xs flex items-center gap-1 px-2.5 h-7 rounded-md transition-colors ${showArchived ? "bg-accent/10 text-accent" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"}`}
@@ -225,7 +258,7 @@ export default function Stock() {
           Show archived
         </button>
       </div>
-      <div className="rounded-lg border border-border">
+      <div className="rounded-xl border border-border">
         <DataTable columns={columns} data={searched} loading={isLoading} keyExtractor={(s: StockPurchase) => s.id} />
       </div>
 
@@ -270,7 +303,7 @@ export default function Stock() {
               <div className="space-y-1">
                 <Label>Distributor</Label>
                 <SearchableSelect
-                  options={distributors.map((d: Distributor) => ({ value: d.id, label: d.name }))}
+                  options={distributors.map((d: Distributor) => ({ value: d.id, label: d.name || "Unnamed" }))}
                   value={form.distributorId}
                   onChange={(v) => setForm({ ...form, distributorId: v })}
                   placeholder="Select distributor"

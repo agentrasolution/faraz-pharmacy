@@ -1,14 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Calendar, Download, FileText } from "lucide-react";
+import { Search, Calendar } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import ExportButton from "@/components/shared/ExportButton";
 import DataTable from "@/components/shared/DataTable";
 import InvoiceDetailDialog from "@/components/shared/InvoiceDetailDialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import StatusBadge from "@/components/shared/StatusBadge";
 import type { Sale } from "@/types";
 
@@ -41,6 +42,8 @@ export default function Invoices() {
     downloadPDF(`invoices_${dateFrom || "all"}_${dateTo || "all"}.pdf`, "Invoices & Billing", headers, exportData());
   }, [exportData, dateFrom, dateTo]);
 
+  const { searchRef } = useModuleShortcuts({ onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+
   const columns = [
     { key: "created_at", header: "Date", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(s.created_at)}</span> },
     { key: "id", header: "Invoice ID", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{s.id}</span> },
@@ -58,7 +61,7 @@ export default function Invoices() {
         <div className="flex-1 min-w-[200px] max-w-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-            <Input autoFocus placeholder="Search by invoice ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input ref={searchRef} autoFocus placeholder="Search by invoice ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -67,12 +70,8 @@ export default function Invoices() {
           <span className="text-text-secondary text-sm">to</span>
           <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-36" />
         </div>
-        <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={sales.length === 0}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={sales.length === 0}>
-          <FileText className="h-4 w-4 mr-1" /> PDF
-        </Button>
+        <ExportButton type="csv" onClick={handleExportCSV} disabled={sales.length === 0} showShortcut />
+        <ExportButton type="pdf" onClick={handleExportPDF} disabled={sales.length === 0} showShortcut />
       </div>
       <div className="rounded-xl border border-border">
         <DataTable

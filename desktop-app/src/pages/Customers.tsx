@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Plus, Phone, MapPin, Pencil, Trash2, Download, Lock, AlertTriangle, LayoutGrid, List } from "lucide-react";
+import { Search, Plus, Phone, MapPin, Pencil, Trash2, Lock, AlertTriangle, LayoutGrid, List } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,9 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import ExportButton from "@/components/shared/ExportButton";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import { ShortcutHint } from "@/components/shared/Kbd";
 import type { Customer } from "@/types";
 
 export default function Customers() {
@@ -35,6 +38,7 @@ export default function Customers() {
   const [deleteInfo, setDeleteInfo] = useState<{ salesCount: number; arrearsCount: number } | null>(null);
   const [adminPassword, setAdminPassword] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
@@ -187,20 +191,27 @@ export default function Customers() {
     },
   ];
 
+  function handleExportPDF() {
+    downloadPDF(`customers_${new Date().toISOString().split("T")[0]}.pdf`, "Customers List",
+      ["Name","Phone","Father Name","Father Phone","Address","Purchases","Arrear","Last Purchase"],
+      filtered.map((c: Customer) => [c.name, c.phone, c.father_name||"", c.father_phone||"", c.address, c.total_purchases||0, c.outstanding_arrear||0, c.last_purchase||""]));
+  }
+  function handleExportCSV() {
+    downloadCSV(`customers_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Phone","Father Name","Father Phone","Address","Purchases","Arrear","Last Purchase"], filtered.map((c: Customer) => [c.name, c.phone, c.father_name||"", c.father_phone||"", c.address, c.total_purchases||0, c.outstanding_arrear||0, c.last_purchase||""]));
+  }
+
+  useModuleShortcuts({ onAdd: openAdd, onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+
   return (
     <div>
-      <PageHeader title="Customers" description="Manage your customer relationships" action={{ label: "Add Customer", onClick: openAdd }} />
+      <PageHeader title="Customers" description="Manage your customer relationships" action={{ label: <><span>Add Customer</span><ShortcutHint shortcut="Mod+N" /></>, onClick: openAdd }} />
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input autoFocus placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input autoFocus ref={searchRef} placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button variant="outline" size="sm" onClick={() => downloadCSV(`customers_${new Date().toISOString().split("T")[0]}.csv`, ["Name","Phone","Father Name","Father Phone","Address","Purchases","Arrear","Last Purchase"], filtered.map((c: Customer) => [c.name, c.phone, c.father_name||"", c.father_phone||"", c.address, c.total_purchases||0, c.outstanding_arrear||0, c.last_purchase||""]))}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => downloadPDF(`customers_${new Date().toISOString().split("T")[0]}.pdf`, "Customers List", ["Name","Phone","Father Name","Father Phone","Address","Purchases","Arrear","Last Purchase"], filtered.map((c: Customer) => [c.name, c.phone, c.father_name||"", c.father_phone||"", c.address, c.total_purchases||0, c.outstanding_arrear||0, c.last_purchase||""]))}>
-          <Download className="h-4 w-4 mr-1" /> PDF
-        </Button>
+        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
         <div className="flex items-center border border-border rounded-lg overflow-hidden">
           <button onClick={() => setViewMode("grid")} className={cn("p-2 transition-colors", viewMode === "grid" ? "bg-accent text-white" : "text-text-secondary hover:bg-surface-2")}>
             <LayoutGrid className="h-4 w-4" />
@@ -305,23 +316,23 @@ export default function Customers() {
           <div className="px-5 pb-5 space-y-3">
             <div>
               <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Customer name" />
             </div>
             <div>
               <Label>Phone</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" />
             </div>
             <div>
               <Label>Father Name</Label>
-              <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} />
+              <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} placeholder="Father name (optional)" />
             </div>
             <div>
               <Label>Father Phone No</Label>
-              <Input value={fatherPhone} onChange={(e) => setFatherPhone(e.target.value)} />
+              <Input value={fatherPhone} onChange={(e) => setFatherPhone(e.target.value)} placeholder="Father phone (optional)" />
             </div>
             <div>
               <Label>Address</Label>
-              <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address (optional)" />
             </div>
             <Button className="w-full" disabled={!name || createMutation.isPending || updateMutation.isPending}
               onClick={() => editingId ? updateMutation.mutate() : createMutation.mutate()}>

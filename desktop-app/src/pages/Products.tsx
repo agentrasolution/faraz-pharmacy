@@ -13,8 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatCurrency, generateBarcode } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import ExportButton from "@/components/shared/ExportButton";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
+import { ShortcutHint } from "@/components/shared/Kbd";
 import type { Product, ProductPriceInput, Category } from "@/types";
 
 interface CsvRow {
@@ -514,6 +517,17 @@ export default function Products() {
     },
   ];
 
+  function handleExportPDF() {
+    downloadPDF(`products_${new Date().toISOString().split("T")[0]}.pdf`, "Products List",
+      ["Barcode","Name","Company","Category","Location","Sale Price","Purchase Price","Stock","Expiry","Status"],
+      filtered.map((p: Product) => [p.barcode, p.name, p.company, p.category, p.location, p.sale_price, p.purchase_price, p.stock_qty, p.expiry||"", p.active?"Active":"Archived"]));
+  }
+  function handleExportCSV() {
+    downloadCSV(`products_${new Date().toISOString().split("T")[0]}.csv`, ["Barcode","Name","Company","Category","Location","Sale Price","Purchase Price","Stock","Expiry","Status"],
+      filtered.map((p: Product) => [p.barcode, p.name, p.company, p.category, p.location, p.sale_price, p.purchase_price, p.stock_qty, p.expiry||"", p.active?"Active":"Archived"]));
+  }
+  useModuleShortcuts({ onAdd: () => setOpen(true), onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
@@ -526,7 +540,7 @@ export default function Products() {
             <Tags className="h-3.5 w-3.5 mr-1" /> Categories
           </Button>
           <Button onClick={openAdd} className="gap-1.5" size="sm">
-            <Plus className="h-3.5 w-3.5" /> Add Product
+            <Plus className="h-3.5 w-3.5" /> Add Product <ShortcutHint shortcut="N" />
           </Button>
         </div>
       </div>
@@ -550,7 +564,7 @@ export default function Products() {
       )}
 
       <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary" />
           <Input
             ref={searchRef}
@@ -567,20 +581,17 @@ export default function Products() {
                 }
               }
             }}
-            className="pl-8"
+            className="pl-9"
           />
+          <span className="text-xs text-text-secondary ml-2">Search</span><ShortcutHint shortcut="Mod+F" />
         </div>
         <div className="flex items-center gap-1.5 ml-auto">
           <Button variant="outline" size="sm" className={showArchived ? "border-accent text-accent" : ""} onClick={() => setShowArchived(!showArchived)}>
             <Archive className="h-3.5 w-3.5 mr-1" />
             Archived
           </Button>
-          <Button variant="outline" size="sm" onClick={() => downloadCSV(`products_${new Date().toISOString().split("T")[0]}.csv`, ["Barcode","Name","Company","Category","Location","Sale Price","Purchase Price","Stock","Expiry","Status"], filtered.map((p: Product) => [p.barcode, p.name, p.company, p.category, p.location, p.sale_price, p.purchase_price, p.stock_qty, p.expiry||"", p.active?"Active":"Archived"]))}>
-            <Download className="h-3.5 w-3.5 mr-1" /> CSV
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => downloadPDF(`products_${new Date().toISOString().split("T")[0]}.pdf`, "Products List", ["Barcode","Name","Company","Category","Location","Sale Price","Purchase Price","Stock","Expiry","Status"], filtered.map((p: Product) => [p.barcode, p.name, p.company, p.category, p.location, p.sale_price, p.purchase_price, p.stock_qty, p.expiry||"", p.active?"Active":"Archived"]))}>
-            <Download className="h-3.5 w-3.5 mr-1" /> PDF
-          </Button>
+          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
           <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
           <Button variant="primary" size="sm" onClick={() => { setImportOpen(true); setImportRows([]); }}>
             <Upload className="h-3.5 w-3.5 mr-1" /> Import CSV
@@ -591,7 +602,7 @@ export default function Products() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-xl border border-border">
         <DataTable columns={columns} data={filtered} loading={isLoading} keyExtractor={(p: Product) => p.id} />
       </div>
 

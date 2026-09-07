@@ -52,16 +52,17 @@ desktop-app/
 │   │   ├── layout/              # Sidebar, Topbar
 │   │   ├── pos/                 # POS-specific components
 │   │   ├── dashboard/           # Chart components
-│   │   ├── shared/              # Reusable components
+│   │   ├── shared/              # Reusable components (ExportButton, Kbd, etc.)
 │   │   └── ui/                  # Radix UI primitives
 │   ├── contexts/                # React contexts
 │   │   ├── AuthContext.tsx       # Authentication state
 │   │   └── ServerConnectionContext.tsx
-│   ├── hooks/                   # Custom hooks
+│   ├── hooks/                   # Custom hooks (useModuleShortcuts)
 │   ├── lib/                     # Utilities
 │   │   ├── api.ts               # API client
 │   │   ├── utils.ts             # Helper functions
-│   │   ├── export.ts            # Export functionality
+│   │   ├── export.ts            # PDF/CSV export
+│   │   ├── os.ts                # OS detection (Cmd vs Ctrl)
 │   │   └── receiptStore.ts      # Receipt caching
 │   ├── types/                   # TypeScript declarations
 │   └── asset/                   # Static assets
@@ -118,34 +119,47 @@ Build output directory: `dist-electron/`
 - **Multi-window** - Open separate POS window
 - **Thermal Printer** - Receipt printing support
 - **Offline Mode** - Works without server connection
-- **Keyboard Shortcuts** - F1-F12 for quick navigation
+- **Keyboard Shortcuts** - Cmd/Ctrl + letter for quick navigation
+- **Export** - PDF (red) and CSV (green) export on all modules
+- **Global Search** - Cmd/Ctrl + K for quick actions
+- **Dark Mode** - Full dark mode support
 
 ## Keyboard Shortcuts
 
+### Global Navigation (Cmd/Ctrl + Letter)
 | Key | Action |
 |-----|--------|
-| F1 | POS |
-| F2 | Invoices |
-| F3 | Returns |
-| F4 | Customers |
-| F5 | Arrears |
-| F6 | Products |
-| F7 | Stock |
-| F8 | Barcodes |
-| F9 | Expenses |
-| F10 | Settings |
-| F11 | Toggle Fullscreen |
-| F12 | Dashboard |
-| Ctrl+R | Returns |
-| Ctrl+N | New POS |
-| Ctrl+P / Alt+T | Reprint Receipt |
-| Alt+P | Products |
-| Alt+S | Stock |
-| Alt+C | Customers |
-| Alt+D | Distributors |
-| Alt+E | Expenses |
-| Alt+H | Reports |
-| Alt+L | Logout |
+| Cmd/Ctrl + S | POS / Sales |
+| Cmd/Ctrl + I | Invoices |
+| Cmd/Ctrl + R | Returns |
+| Cmd/Ctrl + C | Customers |
+| Cmd/Ctrl + A | Arrears |
+| Cmd/Ctrl + P | Products |
+| Cmd/Ctrl + K | Stock |
+| Cmd/Ctrl + B | Barcodes |
+| Cmd/Ctrl + D | Distributors |
+| Cmd/Ctrl + M | Companies |
+| Cmd/Ctrl + E | Expenses |
+| Cmd/Ctrl + H | Reports |
+| Cmd/Ctrl + , | Settings |
+| Cmd/Ctrl + O | New POS Window |
+| Cmd/Ctrl + Shift + P | Settings |
+| Cmd/Ctrl + Q | Logout |
+
+### Module Shortcuts (Within Each Page)
+| Key | Action |
+|-----|--------|
+| Cmd/Ctrl + N | Add new item |
+| Cmd/Ctrl + F | Focus search |
+| Cmd/Ctrl + Shift + P | Export PDF |
+| Cmd/Ctrl + Shift + E | Export CSV |
+
+### Other
+| Key | Action |
+|-----|--------|
+| F1-F12 | Legacy navigation |
+| Cmd/Ctrl + K | Global search |
+| Escape | Close dialogs |
 
 ## Architecture
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { modKey } from "@/lib/os";
 import {
   LayoutDashboard, ShoppingCart, Package, Boxes, Tags, Users, CreditCard,
   Factory, Building2, Undo2, Wallet, BarChart3, Receipt, Barcode, Settings,
@@ -12,20 +13,20 @@ import { toast } from "sonner";
 import logoSrc from "@/asset/image/logo.png";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "F12" },
-  { href: "/pos", label: "POS / Sales", icon: ShoppingCart, shortcut: "⌘S" },
-  { href: "/invoices", label: "Invoices", icon: Receipt, shortcut: "⌘I" },
-  { href: "/returns", label: "Returns", icon: Undo2, shortcut: "⌘R" },
-  { href: "/customers", label: "Customers", icon: Users, shortcut: "⌘C" },
-  { href: "/arrears", label: "Arrears", icon: CreditCard, shortcut: "⌘A" },
-  { href: "/products", label: "Products", icon: Package, shortcut: "⌘P" },
-  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "⌘K" },
-  { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "⌘B" },
-  { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "⌘D" },
-  { href: "/companies", label: "Companies", icon: Building2, shortcut: "⌘M" },
-  { href: "/expenses", label: "Expenses", icon: Wallet, shortcut: "⌘E" },
-  { href: "/reports", label: "Reports", icon: BarChart3, shortcut: "⌘H" },
-  { href: "/settings", label: "Settings", icon: Settings, shortcut: "F10" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "F12", key: "F12" },
+  { href: "/pos", label: "POS / Sales", icon: ShoppingCart, shortcut: "Mod+S", key: "S" },
+  { href: "/invoices", label: "Invoices", icon: Receipt, shortcut: "Mod+I", key: "I" },
+  { href: "/returns", label: "Returns", icon: Undo2, shortcut: "Mod+R", key: "R" },
+  { href: "/customers", label: "Customers", icon: Users, shortcut: "Mod+C", key: "C" },
+  { href: "/arrears", label: "Arrears", icon: CreditCard, shortcut: "Mod+A", key: "A" },
+  { href: "/products", label: "Products", icon: Package, shortcut: "Mod+P", key: "P" },
+  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "Mod+K", key: "K" },
+  { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "Mod+B", key: "B" },
+  { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "Mod+D", key: "D" },
+  { href: "/companies", label: "Companies", icon: Building2, shortcut: "Mod+M", key: "M" },
+  { href: "/expenses", label: "Expenses", icon: Wallet, shortcut: "Mod+E", key: "E" },
+  { href: "/reports", label: "Reports", icon: BarChart3, shortcut: "Mod+H", key: "H" },
+  { href: "/settings", label: "Settings", icon: Settings, shortcut: "F10", key: "F10" },
 ];
 
 export default function Sidebar() {
@@ -196,7 +197,7 @@ export default function Sidebar() {
                 </AnimatePresence>
                 {isExpanded && (
                   <span className="text-[10px] text-sidebar-foreground/30 font-mono ml-auto shrink-0">
-                    {item.shortcut}
+                    {item.shortcut.startsWith("Mod+") ? `${modKey()}+${item.shortcut.slice(4)}` : item.shortcut}
                   </span>
                 )}
               </button>

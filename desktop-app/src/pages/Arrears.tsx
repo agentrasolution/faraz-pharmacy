@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CreditCard, Plus, Trash2, CheckCircle, Lock, Printer, History } from "lucide-react";
+import { CreditCard, Plus, Trash2, CheckCircle, Lock, Printer, History, Search } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import ExportButton from "@/components/shared/ExportButton";
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import DataTable from "@/components/shared/DataTable";
@@ -14,12 +15,16 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { downloadPDF, downloadCSV } from "@/lib/export";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { api } from "@/lib/api";
 import type { Arrear, Customer, ArrearPayment } from "@/types";
 
 export default function Arrears() {
   const queryClient = useQueryClient();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [payingId, setPayingId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [open, setOpen] = useState(false);
@@ -120,6 +125,40 @@ export default function Arrears() {
 
   const totalOutstanding = arrears.filter((a: Arrear) => a.status === "pending").reduce((s: number, a: Arrear) => s + a.balance_due, 0);
 
+  const filtered = useMemo(() => {
+    if (!search.trim()) return arrears;
+    const q = search.toLowerCase();
+    return arrears.filter((a: Arrear) =>
+      a.customer_name?.toLowerCase().includes(q) ||
+      a.status.toLowerCase().includes(q)
+    );
+  }, [arrears, search]);
+
+  const arrearHeaders = ["Customer", "Date", "Total Bill", "Paid", "Balance Due", "Status"];
+  const arrearRows = filtered.map((a: Arrear) => [
+    a.customer_name,
+    formatDateTime(a.created_at),
+    formatCurrency(a.total_bill),
+    formatCurrency(a.amount_paid),
+    formatCurrency(a.balance_due),
+    a.status,
+  ]);
+
+  function handleExportPDF() {
+    downloadPDF("arrears.pdf", "Arrears Report", arrearHeaders, arrearRows);
+  }
+
+  function handleExportCSV() {
+    downloadCSV("arrears.csv", arrearHeaders, arrearRows);
+  }
+
+  useModuleShortcuts({
+    onAdd: () => { setForm({ customerId: "", totalBill: "", amountPaid: "" }); setOpen(true); },
+    onSearch: () => searchRef.current?.focus(),
+    onExportPDF: handleExportPDF,
+    onExportCSV: handleExportCSV,
+  });
+
   const columns = [
     { key: "customer_name", header: "Customer", cell: (a: Arrear) => <span className="font-medium text-text-primary">{a.customer_name}</span> },
     { key: "created_at", header: "Date", cell: (a: Arrear) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(a.created_at)}</span> },
@@ -175,9 +214,26 @@ export default function Arrears() {
 
   return (
     <div>
-      <PageHeader title="Arrears" description="Track and manage outstanding payments" action={{ label: "Add Arrear", onClick: () => { setForm({ customerId: "", totalBill: "", amountPaid: "" }); setOpen(true); } }} />
+      <PageHeader title="Arrears" description="Track and manage outstanding payments" action={{ label: "Add Arrear", onClick: () => { setForm({ customerId: "", totalBill: "", amountPaid: "" }); setOpen(true); }, shortcut: "Mod+N" }} />
       <div className="mb-6">
         <StatCard title="Total Outstanding" value={formatCurrency(totalOutstanding)} icon={<CreditCard className="h-5 w-5" />} />
+      </div>
+
+      <div className="flex items-center gap-2 mb-4">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary" />
+          <Input
+            ref={searchRef}
+            placeholder="Search arrears..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 h-9 text-sm"
+          />
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
+          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        </div>
       </div>
 
       <Tabs defaultValue="all" onValueChange={(v) => { setFilter(v); setPayingId(null); }}>
@@ -189,7 +245,7 @@ export default function Arrears() {
       </Tabs>
 
       <div className="rounded-xl border border-border overflow-hidden">
-        <DataTable columns={columns} data={arrears} loading={isLoading} keyExtractor={(a: Arrear) => a.id} />
+        <DataTable columns={columns} data={filtered} loading={isLoading} keyExtractor={(a: Arrear) => a.id} />
       </div>
 
       {expanded && (() => {

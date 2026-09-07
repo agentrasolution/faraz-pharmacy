@@ -5,9 +5,8 @@ import type { CreateDistributorInput } from "./suppliers.schema";
 export const suppliersService = {
   async list() {
     return prisma.distributor.findMany({
-      orderBy: { name: "asc" },
+      orderBy: { createdAt: "desc" },
       include: {
-        company: { select: { name: true } },
         _count: { select: { products: true } },
       },
     });
@@ -16,11 +15,11 @@ export const suppliersService = {
   async create(data: CreateDistributorInput) {
     return prisma.distributor.create({
       data: {
-        name: data.name,
-        phone: data.phone ?? "",
-        contact: data.contact ?? "",
-        address: data.address ?? "",
-        companyId: data.companyId ?? null,
+        name: data.name ?? "",
+        salesmanName: data.salesmanName ?? "",
+        salesmanContact: data.salesmanContact ?? "",
+        deliveryManName: data.deliveryManName ?? "",
+        deliveryManContact: data.deliveryManContact ?? "",
       },
     });
   },
@@ -31,11 +30,11 @@ export const suppliersService = {
     return prisma.distributor.update({
       where: { id },
       data: {
-        name: data.name,
-        phone: data.phone ?? "",
-        contact: data.contact ?? "",
-        address: data.address ?? "",
-        companyId: data.companyId ?? null,
+        name: data.name ?? "",
+        salesmanName: data.salesmanName ?? "",
+        salesmanContact: data.salesmanContact ?? "",
+        deliveryManName: data.deliveryManName ?? "",
+        deliveryManContact: data.deliveryManContact ?? "",
       },
     });
   },

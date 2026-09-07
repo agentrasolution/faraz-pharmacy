@@ -1,10 +1,12 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
+import { ShortcutHint } from "@/components/shared/Kbd";
 
 interface PageHeaderProps {
   title: string;
   description?: string;
-  action?: { label: string; onClick: () => void };
+  action?: { label: ReactNode; onClick: () => void; shortcut?: string };
   back?: { label: string; onClick: () => void };
 }
 
@@ -26,6 +28,7 @@ export default function PageHeader({ title, description, action, back }: PageHea
         <Button onClick={action.onClick} className="gap-1.5" size="sm">
           <Plus className="h-3.5 w-3.5" />
           {action.label}
+          {action.shortcut && <ShortcutHint shortcut={action.shortcut} />}
         </Button>
       )}
     </div>

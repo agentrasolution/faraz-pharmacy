@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Wallet, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Wallet, Pencil, Trash2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatCard from "@/components/shared/StatCard";
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { downloadPDF, downloadCSV } from "@/lib/export";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import ExportButton from "@/components/shared/ExportButton";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import type { Expense } from "@/types";
 
@@ -25,6 +28,27 @@ export default function Expenses() {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ title: "", category: "Utilities", amount: "", notes: "", date: new Date().toISOString().split("T")[0] });
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  function handleExportPDF() {
+    const headers = ["Date", "Title", "Category", "Amount", "Status"];
+    const rows = filtered.map((e: Expense) => [formatDate(e.date), e.title, e.category, formatCurrency(e.amount), e.status ?? "—"]);
+    downloadPDF("expenses-report.pdf", "Expenses Report", headers, rows);
+  }
+
+  function handleExportCSV() {
+    const headers = ["Date", "Title", "Category", "Amount", "Status"];
+    const rows = filtered.map((e: Expense) => [formatDate(e.date), e.title, e.category, formatCurrency(e.amount), e.status ?? "—"]);
+    downloadCSV("expenses-report.csv", headers, rows);
+  }
+
+  function openAdd() {
+    setEditingId(null);
+    setForm({ title: "", category: "Utilities", amount: "", notes: "", date: new Date().toISOString().split("T")[0] });
+    setOpen(true);
+  }
+
+  useModuleShortcuts({ onAdd: openAdd, onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
 
   const { data: expenses = [], isLoading } = useQuery({ queryKey: ["expenses"], queryFn: api.expenses.list });
 
@@ -75,12 +99,6 @@ export default function Expenses() {
     },
   });
 
-  function openAdd() {
-    setEditingId(null);
-    setForm({ title: "", category: "Utilities", amount: "", notes: "", date: new Date().toISOString().split("T")[0] });
-    setOpen(true);
-  }
-
   function openEdit(e: Expense) {
     setEditingId(e.id);
     setForm({ title: e.title, category: e.category, amount: String(e.amount), notes: e.notes, date: e.date });
@@ -111,14 +129,19 @@ export default function Expenses() {
 
   return (
     <div>
-      <PageHeader title="Expenses" description="Track and manage operational expenses" action={{ label: "Add Expense", onClick: openAdd }} />
+      <PageHeader title="Expenses" description="Track and manage operational expenses" action={{ label: "Add Expense", onClick: openAdd, shortcut: "Mod+N" }} />
       <div className="mb-6">
         <StatCard title="Total This Month" value={formatCurrency(totalThisMonth)} icon={<Wallet className="h-5 w-5" />} />
       </div>
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
         {categories.map((cat) => (
           <Button key={cat} variant={category === cat ? "default" : "outline"} size="sm" onClick={() => setCategory(cat)}>{cat}</Button>
         ))}
+        <div className="ml-auto flex items-center gap-2">
+          <Input ref={searchRef} placeholder="Search expenses..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-48 h-8 text-xs" />
+          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
+          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        </div>
       </div>
       <div className="rounded-xl border border-border">
         <DataTable columns={columns} data={filtered} loading={isLoading} keyExtractor={(e: Expense) => e.id} />

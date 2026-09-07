@@ -197,17 +197,20 @@ export interface StockInput {
 export interface Distributor {
   id: string;
   name: string;
-  phone: string;
-  company_id?: string;
-  company_name?: string;
+  salesman_name: string;
+  salesman_contact: string;
+  delivery_man_name: string;
+  delivery_man_contact: string;
   created_at: string;
   product_count?: number;
 }
 
 export interface DistributorInput {
   name: string;
-  phone: string;
-  companyId?: string;
+  salesmanName: string;
+  salesmanContact: string;
+  deliveryManName: string;
+  deliveryManContact: string;
 }
 
 export interface Company {

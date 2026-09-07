@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Minus, Trash2, AlertCircle, Download, Loader2 } from "lucide-react";
+import { Search, Plus, Minus, Trash2, AlertCircle, Loader2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
@@ -13,10 +13,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
+import ExportButton from "@/components/shared/ExportButton";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import type { ReturnEntry, Sale, SaleItem, PrinterConfig } from "@/types";
 
 export default function Returns() {
   const queryClient = useQueryClient();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedSaleId, setSelectedSaleId] = useState("");
@@ -160,20 +163,29 @@ export default function Returns() {
     { key: "reason", header: "Reason", cell: (r: ReturnEntry) => <span className="text-text-secondary">{r.reason}</span> },
   ];
 
+  function handleExportPDF() {
+    downloadPDF(`returns_${new Date().toISOString().split("T")[0]}.pdf`, "Returns List",
+      ["Date","Sale ID","Customer","Refund Amount","Reason"],
+      filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]));
+  }
+  function handleExportCSV() {
+    downloadCSV(`returns_${new Date().toISOString().split("T")[0]}.csv`,
+      ["Date","Sale ID","Customer","Refund Amount","Reason"],
+      filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]));
+  }
+
+  useModuleShortcuts({ onAdd: () => setOpen(true), onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+
   return (
     <div>
-      <PageHeader title="Returns" description="Process and track product returns" action={{ label: "New Return", onClick: () => setOpen(true) }} />
+      <PageHeader title="Returns" description="Process and track product returns" action={{ label: "New Return", onClick: () => setOpen(true), shortcut: "Mod+N" }} />
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input autoFocus placeholder="Search returns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input autoFocus ref={searchRef} placeholder="Search returns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button variant="outline" size="sm" onClick={() => downloadCSV(`returns_${new Date().toISOString().split("T")[0]}.csv`, ["Date","Sale ID","Customer","Refund Amount","Reason"], filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]))}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => downloadPDF(`returns_${new Date().toISOString().split("T")[0]}.pdf`, "Returns List", ["Date","Sale ID","Customer","Refund Amount","Reason"], filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]))}>
-          <Download className="h-4 w-4 mr-1" /> PDF
-        </Button>
+        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
       </div>
       <div className="rounded-xl border border-border">
         <DataTable

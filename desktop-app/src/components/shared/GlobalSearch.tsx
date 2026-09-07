@@ -9,6 +9,7 @@ import {
 import { api } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatCurrency } from "@/lib/utils";
+import { modKey } from "@/lib/os";
 
 interface SearchItem {
   id: string;
@@ -22,9 +23,9 @@ interface SearchItem {
 
 const quickActions: SearchItem[] = [
   { id: "new-sale", title: "New Sale", icon: ShoppingCart, shortcut: "F2", onClick: () => {} },
-  { id: "add-product", title: "Add Product", icon: Plus, shortcut: "⌘P", onClick: () => {} },
-  { id: "stock-adjustment", title: "Stock Adjustment", icon: Warehouse, shortcut: "⌘S", onClick: () => {} },
-  { id: "add-customer", title: "Add Customer", icon: User, shortcut: "⌘U", onClick: () => {} },
+  { id: "add-product", title: "Add Product", icon: Plus, shortcut: `${modKey()}+N`, onClick: () => {} },
+  { id: "stock-adjustment", title: "Stock Adjustment", icon: Warehouse, shortcut: `${modKey()}+K`, onClick: () => {} },
+  { id: "add-customer", title: "Add Customer", icon: User, shortcut: `${modKey()}+U`, onClick: () => {} },
 ];
 
 const navigationItems: Omit<SearchItem, "onClick">[] = [

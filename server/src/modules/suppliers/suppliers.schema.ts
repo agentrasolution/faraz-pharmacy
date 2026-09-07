@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 export const createDistributorSchema = z.object({
-  name: z.string().min(1),
-  phone: z.string().optional().default(""),
-  contact: z.string().optional().default(""),
-  address: z.string().optional().default(""),
-  companyId: z.string().optional(),
+  name: z.string().optional().default(""),
+  salesmanName: z.string().optional().default(""),
+  salesmanContact: z.string().optional().default(""),
+  deliveryManName: z.string().optional().default(""),
+  deliveryManContact: z.string().optional().default(""),
 });
 
 export const updateDistributorSchema = createDistributorSchema;
