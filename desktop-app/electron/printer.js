@@ -191,7 +191,7 @@ td{
 
 <div class="header center">
     <h1>FARAZ PHARMACY</h1>
-    <p>Beside Luqman Clinical Laboratory Barikot, Swat</p>
+    <p>Beside Numan Clinical Laboratory Barikot, Swat</p>
     <p>Phone: 0346-9383792 | 0344-9006940</p>
 </div>
 
@@ -928,7 +928,7 @@ body {
     </div>
 
     <div class="address">
-     Beside Luqman Clinical Laboratory Barikot, Swat
+     Beside Numan Clinical Laboratory Barikot, Swat
     </div>
 
     <div class="contact">

@@ -26,6 +26,7 @@ import Barcodes from "@/pages/Barcodes";
 import Expenses from "@/pages/Expenses";
 import Reports from "@/pages/Reports";
 import Invoices from "@/pages/Invoices";
+import InvoiceDetail from "@/pages/InvoiceDetail";
 import Settings from "@/pages/Settings";
 
 const pageVariants = {
@@ -143,6 +144,7 @@ function AppShell() {
         <Route path="/expenses" element={<AnimatedPage><Expenses /></AnimatedPage>} />
         <Route path="/reports" element={<AnimatedPage><Reports /></AnimatedPage>} />
         <Route path="/invoices" element={<AnimatedPage><Invoices /></AnimatedPage>} />
+        <Route path="/invoices/:id" element={<AnimatedPage><InvoiceDetail /></AnimatedPage>} />
         <Route path="/settings" element={<AnimatedPage><Settings /></AnimatedPage>} />
       </Routes>
     </AnimatePresence>

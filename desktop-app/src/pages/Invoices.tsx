@@ -1,23 +1,25 @@
 import { useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Calendar } from "lucide-react";
+import { Search, Calendar, Printer, Eye } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ExportButton from "@/components/shared/ExportButton";
 import DataTable from "@/components/shared/DataTable";
-import InvoiceDetailDialog from "@/components/shared/InvoiceDetailDialog";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import StatusBadge from "@/components/shared/StatusBadge";
-import type { Sale } from "@/types";
+import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
+import type { Sale, PrinterConfig } from "@/types";
 
 export default function Invoices() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+  const [printSale, setPrintSale] = useState<Sale | null>(null);
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ["invoices", search, dateFrom, dateTo],
@@ -28,7 +30,7 @@ export default function Invoices() {
     const headers = ["Sale ID", "Date", "Customer", "Items", "Subtotal", "Discount", "Total", "Paid", "Change", "Status"];
     return sales.map((s: Sale) => [
       s.id, s.created_at, s.customer_name || "Walk-in",
-      s.item_count ?? 0, s.subtotal, s.discount, s.total, s.amount_paid, s.change, s.status,
+      s.items?.length ?? 0, s.subtotal, s.discount, s.total, s.amount_paid, s.change, s.status,
     ]);
   }, [sales]);
 
@@ -44,14 +46,63 @@ export default function Invoices() {
 
   const { searchRef } = useModuleShortcuts({ onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
 
+  function handleQuickPrint(sale: Sale, e: React.MouseEvent) {
+    e.stopPropagation();
+    setPrintSale(sale);
+  }
+
+  const generateReceiptHtml = useCallback(async (paperSize: string): Promise<string> => {
+    if (!printSale) return "";
+    const printData = {
+      ...printSale,
+      customer_total_arrears: 0,
+      items: printSale.items?.map((i) => ({
+        product_name: i.product_name,
+        quantity: i.quantity,
+        subtotal: i.subtotal,
+      })) || [],
+    };
+    const result = await window.generateReceiptHTML(printData, paperSize);
+    return result.success ? result.html : "";
+  }, [printSale]);
+
+  async function handlePrint(config: PrinterConfig) {
+    if (!printSale) return;
+    const printData = {
+      ...printSale,
+      customer_total_arrears: 0,
+      items: printSale.items?.map((i) => ({
+        product_name: i.product_name,
+        quantity: i.quantity,
+        subtotal: i.subtotal,
+      })) || [],
+    };
+    const result = await window.printReceipt(printData, config);
+    if (!result.success) {
+      throw new Error(result.error || "Print failed");
+    }
+  }
+
   const columns = [
     { key: "created_at", header: "Date", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(s.created_at)}</span> },
-    { key: "id", header: "Invoice ID", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{s.id}</span> },
+    { key: "id", header: "Invoice ID", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{s.id.slice(0, 8)}...</span> },
     { key: "customer_name", header: "Customer", cell: (s: Sale) => <span>{s.customer_name || "Walk-in"}</span> },
-    { key: "item_count", header: "Items", cell: (s: Sale) => <span className="font-mono text-sm">{(s as any).item_count ?? s.items?.length ?? 0}</span> },
+    { key: "items", header: "Items", cell: (s: Sale) => <span className="font-mono text-sm">{s.items?.length ?? 0}</span> },
     { key: "total", header: "Total", cell: (s: Sale) => <span className="font-mono font-medium">{formatCurrency(s.total)}</span> },
     { key: "amount_paid", header: "Paid", cell: (s: Sale) => <span className="font-mono">{formatCurrency(s.amount_paid)}</span> },
     { key: "status", header: "Status", cell: (s: Sale) => <StatusBadge status={s.status} /> },
+    {
+      key: "actions", header: "", cell: (s: Sale) => (
+        <div className="flex items-center gap-1 justify-end">
+          <button onClick={(e) => { e.stopPropagation(); navigate(`/invoices/${s.id}`); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="View Details">
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={(e) => handleQuickPrint(s, e)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Print Receipt">
+            <Printer className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -79,15 +130,19 @@ export default function Invoices() {
           data={sales}
           loading={isLoading}
           keyExtractor={(s: Sale) => s.id}
-          onRowClick={(s: Sale) => setSelectedSaleId(s.id)}
+          onRowClick={(s: Sale) => navigate(`/invoices/${s.id}`)}
         />
       </div>
 
-      <InvoiceDetailDialog
-        open={!!selectedSaleId}
-        onOpenChange={(v) => { if (!v) setSelectedSaleId(null); }}
-        saleId={selectedSaleId}
-      />
+      {printSale && (
+        <PrintPreviewDialog
+          open={!!printSale}
+          onOpenChange={(v) => { if (!v) setPrintSale(null); }}
+          title="Invoice Receipt"
+          htmlGenerator={generateReceiptHtml}
+          onPrint={handlePrint}
+        />
+      )}
     </div>
   );
 }
