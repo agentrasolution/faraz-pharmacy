@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
 import { ShortcutHint } from "@/components/shared/Kbd";
@@ -92,6 +93,8 @@ export default function Products() {
   const [catName, setCatName] = useState("");
   const [catSearch, setCatSearch] = useState("");
   const [printBarcode, setPrintBarcode] = useState<{ barcode?: string } | null>(null);
+  const [archivePasswordOpen, setArchivePasswordOpen] = useState(false);
+  const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", showArchived],
@@ -503,7 +506,7 @@ export default function Products() {
               <button onClick={() => openEdit(p)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button onClick={() => archiveMutation.mutate(p.id)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/5 transition-colors" title="Archive">
+              <button onClick={() => { setArchiveTargetId(p.id); setArchivePasswordOpen(true); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/5 transition-colors" title="Archive">
                 <Archive className="h-3.5 w-3.5" />
               </button>
             </>
@@ -892,11 +895,20 @@ export default function Products() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <PasswordConfirmDialog
+        open={archivePasswordOpen}
+        onOpenChange={(v) => { if (!v) { setArchivePasswordOpen(false); setArchiveTargetId(null); } }}
+        title="Archive Product"
+        description="Enter admin password to archive this product."
+        loading={archiveMutation.isPending}
+        onConfirm={() => { if (archiveTargetId) archiveMutation.mutate(archiveTargetId); }}
+      />
+
+      <PasswordConfirmDialog
         open={!!catDeleteId}
         onOpenChange={(v) => { if (!v) setCatDeleteId(null); }}
         title="Delete Category"
-        description="Are you sure you want to delete this category? Products assigned to it will not be affected."
+        description="Enter admin password to delete this category. Products assigned to it will not be affected."
         confirmLabel="Delete"
         onConfirm={() => { if (catDeleteId) catDeleteMutation.mutate(catDeleteId); }}
         loading={catDeleteMutation.isPending}

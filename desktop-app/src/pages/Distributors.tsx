@@ -15,7 +15,7 @@ import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { ShortcutHint } from "@/components/shared/Kbd";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import type { Distributor } from "@/types";
 
@@ -236,7 +236,7 @@ export default function Distributors() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <PasswordConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title="Delete Distributor"

@@ -4,16 +4,7 @@ import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2 } from "lucide
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import { api } from "@/lib/api";
 import { cn, renderBarcode } from "@/lib/utils";
 import { downloadPDF, downloadCSV } from "@/lib/export";
@@ -297,26 +288,15 @@ export default function Barcodes() {
         barcode={printTarget}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Barcode</AlertDialogTitle>
-            <AlertDialogDescription>
-              Delete barcode <span className="font-mono font-medium">{deleteTarget?.code}</span>? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel size="sm">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              size="sm"
-              onClick={confirmDelete}
-              className="bg-danger hover:bg-danger/90 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <PasswordConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}
+        title="Delete Barcode"
+        description={<>Delete barcode <span className="font-mono font-medium">{deleteTarget?.code}</span>? This action cannot be undone.</>}
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

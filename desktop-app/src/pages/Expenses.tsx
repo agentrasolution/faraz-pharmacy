@@ -15,7 +15,7 @@ import { api } from "@/lib/api";
 import { downloadPDF, downloadCSV } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import ExportButton from "@/components/shared/ExportButton";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import type { Expense } from "@/types";
 
 const categories = ["All", "Utilities", "Salaries", "Supplies", "Rent"];
@@ -175,7 +175,7 @@ export default function Expenses() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <PasswordConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title="Delete Expense"

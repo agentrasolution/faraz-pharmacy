@@ -2,19 +2,20 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Plus, Phone, MapPin, Pencil, Trash2, Lock, AlertTriangle, LayoutGrid, List } from "lucide-react";
+import { Search, Plus, Phone, MapPin, Pencil, Trash2, LayoutGrid, List } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { ShortcutHint } from "@/components/shared/Kbd";
@@ -36,7 +37,6 @@ export default function Customers() {
   const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [deleteInfo, setDeleteInfo] = useState<{ salesCount: number; arrearsCount: number } | null>(null);
-  const [adminPassword, setAdminPassword] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -95,8 +95,6 @@ export default function Customers() {
 
   const forceDeleteMutation = useMutation({
     mutationFn: async () => {
-      const pwResult = await api.auth.verifyPassword(adminPassword);
-      if (!pwResult.valid) throw new Error("Incorrect admin password");
       return api.customers.delete(deleteTarget!.id, { force: true });
     },
     onSuccess: () => {
@@ -104,7 +102,6 @@ export default function Customers() {
       setForceDeleteOpen(false);
       setDeleteTarget(null);
       setDeleteInfo(null);
-      setAdminPassword("");
       toast.success("Customer deleted");
     },
     onError: (err) => {
@@ -116,7 +113,6 @@ export default function Customers() {
     if ((c.total_purchases ?? 0) > 0 || (c.outstanding_arrear ?? 0) > 0) {
       setDeleteTarget(c);
       setDeleteInfo({ salesCount: c.total_purchases ?? 0, arrearsCount: c.outstanding_arrear ?? 0 });
-      setAdminPassword("");
       setForceDeleteOpen(true);
     } else {
       setDeleteId(c.id);
@@ -278,36 +274,15 @@ export default function Customers() {
           )}
         </div>
       )}
-      <Dialog open={forceDeleteOpen} onOpenChange={(v) => { if (!v) { setForceDeleteOpen(false); setDeleteTarget(null); setDeleteInfo(null); setAdminPassword(""); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              Force Delete Customer
-            </DialogTitle>
-            <DialogDescription>
-              This customer has existing records. Deleting will permanently remove their data.
-            </DialogDescription>
-          </DialogHeader>
-          {deleteInfo && (
-            <div className="px-5 pb-5 space-y-2 text-sm">
-              <p className="font-medium text-text-primary">{deleteTarget?.name}</p>
-              <ul className="space-y-1 text-text-secondary">
-                {deleteInfo.salesCount > 0 && <li>• {deleteInfo.salesCount} invoice(s) — customer reference will be removed</li>}
-                {deleteInfo.arrearsCount > 0 && <li>• {deleteInfo.arrearsCount} arrear(s) — will be permanently deleted</li>}
-              </ul>
-              <div className="pt-2 space-y-2">
-                <Label className="flex items-center gap-2"><Lock className="h-4 w-4" /> Enter admin password to confirm</Label>
-                <Input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Admin password" />
-              </div>
-              <Button className="w-full mt-2" variant="destructive" disabled={!adminPassword || forceDeleteMutation.isPending}
-                onClick={() => forceDeleteMutation.mutate()}>
-                {forceDeleteMutation.isPending ? "Deleting..." : "Force Delete"}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PasswordConfirmDialog
+        open={forceDeleteOpen}
+        onOpenChange={(v) => { if (!v) { setForceDeleteOpen(false); setDeleteTarget(null); setDeleteInfo(null); } }}
+        title="Force Delete Customer"
+        description={deleteInfo ? `${deleteTarget?.name} has existing records: ${deleteInfo.salesCount} invoice(s), ${deleteInfo.arrearsCount} arrear(s). Deleting will permanently remove their data.` : undefined}
+        confirmLabel="Force Delete"
+        onConfirm={() => forceDeleteMutation.mutate()}
+        loading={forceDeleteMutation.isPending}
+      />
       <Dialog open={open} onOpenChange={(v) => { if (!v) { setEditingId(null); } setOpen(v); }}>
         <DialogContent>
           <DialogHeader>

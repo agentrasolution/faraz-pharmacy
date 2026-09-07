@@ -14,7 +14,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF, downloadExcel } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import { ShortcutHint } from "@/components/shared/Kbd";
 import type { StockPurchase, Product, Company, Distributor } from "@/types";
@@ -346,7 +346,7 @@ export default function Stock() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <PasswordConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title="Delete Stock Entry"

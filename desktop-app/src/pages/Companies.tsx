@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import ExportButton from "@/components/shared/ExportButton";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import type { Company } from "@/types";
 
@@ -206,7 +206,7 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <PasswordConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
         title="Delete Company"
