@@ -246,7 +246,7 @@ export default function POS() {
   }
 
   return (
-    <div className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-7rem)]"}`}>
+    <div className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-8rem)]"}`}>
       {isPosWindow && (
         <div
           className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-3 -mx-5 lg:-mx-6 px-5 lg:px-6 select-none"
@@ -298,7 +298,7 @@ export default function POS() {
         </div>
       </div>
       <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
-        <div className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-16 max-h-[calc(100vh-8.5rem)]"}`}>
+        <div className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-20 max-h-[calc(100vh-10rem)]"}`}>
           <CheckoutPanel
             items={cart.items}
             discount={cart.discount}

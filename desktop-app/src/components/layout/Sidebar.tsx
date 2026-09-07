@@ -67,15 +67,15 @@ export default function Sidebar() {
     <aside
       className={cn(
         "h-full bg-sidebar-background flex flex-col shrink-0 transition-all duration-300 ease-out relative select-none",
-        collapsed ? "w-[60px]" : "w-[220px]"
+        collapsed ? "w-[68px]" : "w-[240px]"
       )}
     >
       <div className={cn(
-        "flex items-center h-12 relative",
-        collapsed ? "justify-center" : "px-3 gap-2.5"
+        "flex items-center h-14 relative",
+        collapsed ? "justify-center" : "px-4 gap-3"
       )}>
-        <div className="flex items-center justify-center rounded-lg h-7 w-7 bg-sidebar-primary/10 shrink-0 overflow-hidden">
-          <img src={logoSrc} alt="Faraz Pharmacy" className="h-5 w-5 object-contain" />
+        <div className="flex items-center justify-center rounded-lg h-9 w-9 bg-sidebar-primary/10 shrink-0 overflow-hidden">
+          <img src={logoSrc} alt="Faraz Pharmacy" className="h-6 w-6 object-contain" />
         </div>
         <AnimatePresence>
           {!collapsed && (
@@ -85,23 +85,23 @@ export default function Sidebar() {
               exit={{ opacity: 0, width: 0 }}
               className="min-w-0 overflow-hidden"
             >
-              <p className="text-xs font-display font-semibold text-sidebar-foreground truncate tracking-tight">Faraz Pharmacy</p>
-              <p className="text-[8px] text-sidebar-foreground/40 truncate tracking-widest uppercase">Management</p>
+              <p className="text-sm font-display font-semibold text-sidebar-foreground truncate tracking-tight">Faraz Pharmacy</p>
+              <p className="text-[10px] text-sidebar-foreground/40 truncate tracking-widest uppercase">Management</p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className={cn("px-2 pb-2.5", collapsed && "px-1")}>
+      <div className={cn("px-3 pb-3", collapsed && "px-2")}>
         <button
           onClick={handleNewSale}
           className={cn(
-            "flex items-center w-full rounded-md transition-all duration-150 text-xs font-medium relative",
+            "flex items-center w-full rounded-lg transition-all duration-150 text-sm font-medium relative",
             "bg-accent text-accent-foreground hover:bg-accent-hover shadow-xs",
-            collapsed ? "justify-center h-7" : "gap-2 px-2.5 h-7"
+            collapsed ? "justify-center h-9" : "gap-2.5 px-3 h-9"
           )}
         >
-          <ShoppingCart className="h-3.5 w-3.5" />
+          <ShoppingCart className="h-4 w-4" />
           <AnimatePresence>
             {!collapsed && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -112,10 +112,10 @@ export default function Sidebar() {
           {posWindowCount > 0 && (
             <span
               className={cn(
-                "absolute flex items-center justify-center rounded-full bg-background text-[9px] font-bold text-text-primary border border-border",
+                "absolute flex items-center justify-center rounded-full bg-background text-[10px] font-bold text-text-primary border border-border",
                 collapsed
-                  ? "-top-1 -right-1 h-4 min-w-4 px-1"
-                  : "right-2 h-4 min-w-4 px-1"
+                  ? "-top-1 -right-1 h-5 min-w-5 px-1"
+                  : "right-3 h-5 min-w-5 px-1"
               )}
             >
               {posWindowCount}
@@ -124,7 +124,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto space-y-0.5 px-2" data-sidebar>
+      <nav className="flex-1 overflow-y-auto space-y-1 px-3" data-sidebar>
         {navItems.map((item, idx) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
@@ -138,19 +138,19 @@ export default function Sidebar() {
               <button
                 onClick={() => navigate(item.href)}
                 className={cn(
-                  "group relative flex items-center w-full rounded-md transition-all duration-150",
-                  collapsed ? "justify-center h-7" : "gap-2.5 px-2.5 pl-3 h-7",
+                  "group relative flex items-center w-full rounded-lg transition-all duration-150",
+                  collapsed ? "justify-center h-9" : "gap-3 px-3 pl-4 h-9",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 )}
               >
                 {isActive && !collapsed && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-sidebar-primary" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-sidebar-primary" />
                 )}
                 <Icon className={cn(
                   "shrink-0 relative",
-                  collapsed ? "h-3.5 w-3.5" : "h-3.5 w-3.5",
+                  collapsed ? "h-4 w-4" : "h-4 w-4",
                   isActive ? "text-sidebar-primary" : ""
                 )} />
                 <AnimatePresence>
@@ -159,7 +159,7 @@ export default function Sidebar() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="text-[11px] font-medium relative truncate"
+                      className="text-[13px] font-medium relative truncate"
                     >
                       {item.label}
                     </motion.span>
@@ -171,13 +171,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border px-2 pt-2 pb-3 space-y-1">
+      <div className="border-t border-sidebar-border px-3 pt-3 pb-4 space-y-1.5">
         <div className={cn(
-          "flex items-center rounded-md px-2 py-1.5 hover:bg-sidebar-accent/50 transition-colors cursor-pointer",
+          "flex items-center rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-colors cursor-pointer",
           collapsed && "justify-center px-0"
         )}>
-          <div className="h-6 w-6 rounded-md bg-sidebar-primary/10 flex items-center justify-center shrink-0">
-            <span className="text-[9px] font-bold text-sidebar-primary">
+          <div className="h-8 w-8 rounded-lg bg-sidebar-primary/10 flex items-center justify-center shrink-0">
+            <span className="text-[11px] font-bold text-sidebar-primary">
               {user?.username?.slice(0, 2).toUpperCase() || "AD"}
             </span>
           </div>
@@ -187,10 +187,10 @@ export default function Sidebar() {
                 initial={{ opacity: 0, width: 0 }}
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
-                className="min-w-0 overflow-hidden flex-1 ml-2"
+                className="min-w-0 overflow-hidden flex-1 ml-2.5"
               >
-                <p className="text-[11px] font-medium text-sidebar-foreground/80 truncate leading-tight">{user?.username || "Admin"}</p>
-                <p className="text-[8px] text-sidebar-foreground/40 truncate tracking-wider uppercase leading-tight">Admin</p>
+                <p className="text-xs font-medium text-sidebar-foreground/80 truncate leading-tight">{user?.username || "Admin"}</p>
+                <p className="text-[10px] text-sidebar-foreground/40 truncate tracking-wider uppercase leading-tight">Admin</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -198,11 +198,11 @@ export default function Sidebar() {
         <button
           onClick={logout}
           className={cn(
-            "flex items-center rounded-md transition-all duration-150 text-sidebar-foreground/40 hover:text-danger",
-            collapsed ? "justify-center h-7" : "gap-2.5 px-2.5 h-7 w-full text-[11px]"
+            "flex items-center rounded-lg transition-all duration-150 text-sidebar-foreground/40 hover:text-danger",
+            collapsed ? "justify-center h-9" : "gap-3 px-3 h-9 w-full text-xs"
           )}
         >
-          <LogOut className="h-3 w-3 shrink-0" />
+          <LogOut className="h-4 w-4 shrink-0" />
           <AnimatePresence>
             {!collapsed && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -216,12 +216,12 @@ export default function Sidebar() {
       <button
         onClick={() => setCollapsed(!collapsed)}
         className={cn(
-          "absolute -right-3 top-12 h-5 w-5 rounded-full border border-border bg-surface flex items-center justify-center text-text-secondary hover:text-text-primary transition-all duration-200 z-20 shadow-xs",
+          "absolute -right-3 top-14 h-6 w-6 rounded-full border border-border bg-surface flex items-center justify-center text-text-secondary hover:text-text-primary transition-all duration-200 z-20 shadow-xs",
           "hover:scale-105 active:scale-95",
           collapsed && "rotate-180"
         )}
       >
-        <PanelLeftClose className="h-2.5 w-2.5" />
+        <PanelLeftClose className="h-3 w-3" />
       </button>
     </aside>
   );
