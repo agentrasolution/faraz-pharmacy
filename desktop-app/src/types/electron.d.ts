@@ -54,6 +54,11 @@ export interface GDriveConfig {
   connected: boolean;
 }
 
+export interface AutoBackupConfig {
+  enabled: boolean;
+  time: string;
+}
+
 declare global {
   interface Window {
     electronAPI: ElectronAPI;

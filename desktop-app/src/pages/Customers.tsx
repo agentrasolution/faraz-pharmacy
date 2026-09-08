@@ -176,10 +176,10 @@ export default function Customers() {
     {
       key: "actions", header: "", cell: (c: Customer) => (
         <div className="flex items-center gap-1 justify-end">
-          <button onClick={() => openEdit(c)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
+          <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => handleDeleteClick(c)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete">
+          <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(c); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>

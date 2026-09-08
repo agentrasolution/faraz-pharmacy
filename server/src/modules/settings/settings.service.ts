@@ -71,12 +71,24 @@ function saveConfig(cfg: Record<string, unknown>) {
   fs.writeFileSync(getConfigPath(), JSON.stringify(cfg, null, 2));
 }
 
+function getConfiguredBackupDir(): string {
+  const cfg = loadConfig();
+  const custom = cfg.backupDirectory as string | undefined;
+  if (custom && custom.trim()) return path.resolve(custom);
+  return path.join(dataDir, "backups");
+}
+
+function ensureBackupDir() {
+  const dir = getConfiguredBackupDir();
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
 export const settingsService = {
   // Backups
   async createBackup() {
     ensureDataDir();
-    const backupDir = path.join(dataDir, "backups");
-    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+    const backupDir = ensureBackupDir();
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     const backupName = `faraz-pharmacy-backup-${timestamp}.sql`;
@@ -99,7 +111,7 @@ export const settingsService = {
 
   listBackups() {
     ensureDataDir();
-    const backupDir = path.join(dataDir, "backups");
+    const backupDir = getConfiguredBackupDir();
     if (!fs.existsSync(backupDir)) return [];
 
     return fs.readdirSync(backupDir)
@@ -113,14 +125,14 @@ export const settingsService = {
   },
 
   deleteBackup(name: string) {
-    const backupDir = path.join(dataDir, "backups");
+    const backupDir = getConfiguredBackupDir();
     const fp = path.join(backupDir, name);
     if (fs.existsSync(fp)) fs.unlinkSync(fp);
     return { success: true };
   },
 
   restoreBackup(name: string) {
-    const backupDir = path.join(dataDir, "backups");
+    const backupDir = getConfiguredBackupDir();
     const backupPath = path.join(backupDir, name);
     if (!fs.existsSync(backupPath)) throw new Error("Backup file not found");
 
@@ -133,7 +145,33 @@ export const settingsService = {
 
   getBackupDirectory() {
     ensureDataDir();
-    return { path: path.join(dataDir, "backups") };
+    return { path: getConfiguredBackupDir() };
+  },
+
+  setBackupDirectory(dir: string) {
+    if (!dir || !dir.trim()) throw new Error("Directory path is required");
+    const resolved = path.resolve(dir);
+    if (!fs.existsSync(resolved)) fs.mkdirSync(resolved, { recursive: true });
+    const cfg = loadConfig();
+    cfg.backupDirectory = resolved;
+    saveConfig(cfg);
+    return { success: true, path: resolved };
+  },
+
+  // Auto backup config
+  getAutoBackupConfig() {
+    const cfg = loadConfig();
+    return (cfg.autoBackup as Record<string, unknown>) || { enabled: false, time: "02:00" };
+  },
+
+  saveAutoBackupConfig(autoBackup: { enabled: boolean; time: string }) {
+    const cfg = loadConfig();
+    cfg.autoBackup = {
+      enabled: !!autoBackup.enabled,
+      time: typeof autoBackup.time === "string" ? autoBackup.time : "02:00",
+    };
+    saveConfig(cfg);
+    return { success: true };
   },
 
   // Google Drive config

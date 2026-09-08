@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Database, HardDrive, Trash2, RefreshCw, CheckCircle2, XCircle,
   Cloud, CloudOff, Loader2, Link2, Link2Off, Lock, FolderOpen, RotateCcw,
+  Clock, Save,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatDateTime, formatFileSize } from "@/lib/utils";
 import { api } from "@/lib/api";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
-import type { BackupEntry, GDriveConfig } from "@/types/electron";
+import type { BackupEntry, GDriveConfig, AutoBackupConfig } from "@/types/electron";
 
 async function verifyAdminPassword(password: string): Promise<boolean> {
   try {
@@ -51,6 +52,10 @@ export default function Settings() {
   const [backupDirectory, setBackupDirectory] = useState("");
   const [recoveryDialog, setRecoveryDialog] = useState<{ open: boolean; phrase: string }>({ open: false, phrase: "" });
   const [deleteBackup, setDeleteBackup] = useState<string | null>(null);
+  const [autoBackup, setAutoBackup] = useState<AutoBackupConfig>({ enabled: false, time: "02:00" });
+  const [dirDialog, setDirDialog] = useState(false);
+  const [dirInput, setDirInput] = useState("");
+  const [savingDir, setSavingDir] = useState(false);
 
   const { data: backups = [], isLoading: backupsLoading } = useQuery({
     queryKey: ["settings", "backups"],
@@ -74,6 +79,15 @@ export default function Settings() {
   useEffect(() => {
     if (gdriveConfig) setGdriveForm(gdriveConfig);
   }, [gdriveConfig]);
+
+  const { data: autoBackupConfig } = useQuery({
+    queryKey: ["settings", "auto-backup"],
+    queryFn: api.settings.getAutoBackupConfig,
+  });
+
+  useEffect(() => {
+    if (autoBackupConfig) setAutoBackup(autoBackupConfig);
+  }, [autoBackupConfig]);
 
   const backupMutation = useMutation({
     mutationFn: api.settings.backupCreate,
@@ -133,6 +147,54 @@ export default function Settings() {
       toast.error(err.message);
     },
   });
+
+  const saveAutoBackupMutation = useMutation({
+    mutationFn: (cfg: AutoBackupConfig) => api.settings.saveAutoBackupConfig(cfg),
+    onSuccess: () => {
+      toast.success("Auto backup settings saved");
+      queryClient.invalidateQueries({ queryKey: ["settings", "auto-backup"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  async function handleOpenDirDialog() {
+    setDirInput(backupDirectory);
+    setDirDialog(true);
+  }
+
+  async function handlePickBackupDir() {
+    // Use the native folder picker when running inside Electron, else manual entry.
+    const picker = (window as unknown as { electronAPI?: { settings?: { backupDirectoryPick?: () => Promise<{ canceled: boolean; path?: string }> } } }).electronAPI?.settings?.backupDirectoryPick;
+    if (picker) {
+      const res = await picker();
+      if (!res.canceled && res.path) {
+        setDirInput(res.path);
+        setBackupDirectory(res.path);
+      }
+      return;
+    }
+  }
+
+  async function handleSaveBackupDir() {
+    if (!dirInput.trim()) {
+      toast.error("Enter a valid directory path");
+      return;
+    }
+    setSavingDir(true);
+    try {
+      const res = await api.settings.setBackupDirectory(dirInput.trim());
+      setBackupDirectory(res.path);
+      setDirDialog(false);
+      toast.success("Backup directory updated");
+      queryClient.invalidateQueries({ queryKey: ["settings", "backups"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSavingDir(false);
+    }
+  }
 
   async function handleGenerateRecoveryKey() {
     try {
@@ -292,9 +354,63 @@ export default function Settings() {
                     readOnly
                     className="flex-1 font-mono text-sm"
                   />
-                  <Button variant="outline" disabled className="gap-2 shrink-0">
+                  <Button variant="outline" onClick={handleOpenDirDialog} className="gap-2 shrink-0">
                     <FolderOpen className="h-4 w-4" />
                     Change
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Clock className="h-5 w-5 text-accent" />
+                  Auto Backup
+                </CardTitle>
+                <CardDescription>
+                  Schedule the database to be backed up automatically every day at a set time.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">Enable auto backup</p>
+                    <p className="text-xs text-text-secondary">
+                      Automatically create a backup every day at the scheduled time.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAutoBackup({ ...autoBackup, enabled: !autoBackup.enabled })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoBackup.enabled ? "bg-accent" : "bg-border"}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoBackup.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </div>
+
+                <div className={`space-y-4 ${autoBackup.enabled ? "" : "pointer-events-none opacity-50"}`}>
+                  <div>
+                    <Label>Backup time (24-hour)</Label>
+                    <Input
+                      type="time"
+                      value={autoBackup.time}
+                      onChange={(e) => setAutoBackup({ ...autoBackup, time: e.target.value })}
+                    />
+                    <p className="text-xs text-text-secondary mt-1">
+                      Daily backup will run at {autoBackup.time || "--:--"}.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => saveAutoBackupMutation.mutate(autoBackup)}
+                    disabled={saveAutoBackupMutation.isPending || !autoBackup.time}
+                    className="gap-2"
+                  >
+                    {saveAutoBackupMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    {saveAutoBackupMutation.isPending ? "Saving..." : "Save Auto Backup Settings"}
                   </Button>
                 </div>
               </CardContent>
@@ -555,6 +671,39 @@ export default function Settings() {
             </p>
             <div className="flex justify-end">
               <Button onClick={() => setRecoveryDialog({ open: false, phrase: "" })}>I've Saved It</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={dirDialog} onOpenChange={(o) => { if (!o) setDirDialog(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="h-4 w-4" />
+              Change Backup Location
+            </DialogTitle>
+            <DialogDescription>
+              Enter the full path where backup files should be saved.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                value={dirInput}
+                onChange={(e) => setDirInput(e.target.value)}
+                placeholder="C:\path\to\backups"
+                autoFocus
+              />
+              <Button variant="outline" onClick={handlePickBackupDir} className="shrink-0" title="Browse folders">
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDirDialog(false)}>Cancel</Button>
+              <Button onClick={handleSaveBackupDir} disabled={savingDir || !dirInput.trim()}>
+                {savingDir ? "Saving..." : "Save"}
+              </Button>
             </div>
           </div>
         </DialogContent>

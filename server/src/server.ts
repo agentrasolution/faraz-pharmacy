@@ -4,6 +4,7 @@ import { app } from "./app";
 import { logger } from "./utils/logger";
 import { prisma } from "./services/prisma";
 import { initializeSocket, getIO } from "./socket";
+import { startAutoBackupScheduler, stopAutoBackupScheduler } from "./modules/settings/scheduler";
 import "./config/env.js";
 
 async function main() {
@@ -13,6 +14,8 @@ async function main() {
 
     const httpServer = http.createServer(app);
     initializeSocket(httpServer);
+
+    startAutoBackupScheduler();
 
     httpServer.listen(config.port, "0.0.0.0", () => {
       logger.info(`Faraz Pharmacy API server running on port ${config.port}`);
@@ -26,6 +29,7 @@ async function main() {
 main();
 
 function shutdown() {
+  stopAutoBackupScheduler();
   getIO()?.close();
   process.exit(0);
 }

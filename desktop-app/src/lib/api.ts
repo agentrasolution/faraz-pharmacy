@@ -4,7 +4,7 @@ import type {
   Company, CompanyInput, ReturnEntry, ReturnInput, Expense, ExpenseInput,
   Category, CategoryInput, DashboardStats, BarcodeEntry,
 } from "@/types";
-import type { BackupResult, BackupEntry, GDriveConfig } from "@/types/electron";
+import type { BackupResult, BackupEntry, GDriveConfig, AutoBackupConfig } from "@/types/electron";
 
 function getApiUrl(): string {
   const cfg = window.appConfig?.serverUrl?.trim();
@@ -148,6 +148,11 @@ const api = {
     backupRestore: (name: string): Promise<{ success: boolean; error?: string }> =>
       fetchJson("POST", "/api/settings/backup/restore", { name }),
     getBackupDirectory: (): Promise<{ path: string }> => fetchJson("GET", "/api/settings/backup/directory"),
+    setBackupDirectory: (path: string): Promise<{ success: boolean; path: string }> =>
+      fetchJson("PUT", "/api/settings/backup/directory", { path }),
+    getAutoBackupConfig: (): Promise<AutoBackupConfig> => fetchJson("GET", "/api/settings/auto-backup"),
+    saveAutoBackupConfig: (cfg: AutoBackupConfig): Promise<{ success: boolean }> =>
+      fetchJson("PUT", "/api/settings/auto-backup", cfg),
     gdriveGetConfig: (): Promise<GDriveConfig> => fetchJson("GET", "/api/settings/gdrive"),
     gdriveSaveConfig: (cfg: GDriveConfig): Promise<{ success: boolean }> =>
       fetchJson("PUT", "/api/settings/gdrive", cfg),
