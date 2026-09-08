@@ -95,6 +95,10 @@ export default function Products() {
   const [printBarcode, setPrintBarcode] = useState<{ barcode?: string } | null>(null);
   const [archivePasswordOpen, setArchivePasswordOpen] = useState(false);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
+  const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
+  const [restoreTargetId, setRestoreTargetId] = useState<string | null>(null);
+  const [hardDeletePasswordOpen, setHardDeletePasswordOpen] = useState(false);
+  const [hardDeleteTargetId, setHardDeleteTargetId] = useState<string | null>(null);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", showArchived],
@@ -187,6 +191,8 @@ export default function Products() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Product archived");
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
     },
     onError: (err) => {
       toast.error(err.message);
@@ -198,6 +204,22 @@ export default function Products() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Product restored");
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: (id: string) => api.products.hardDelete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["barcodes"] });
+      toast.success("Product permanently deleted");
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
     },
     onError: (err) => {
       toast.error(err.message);
@@ -511,9 +533,14 @@ export default function Products() {
               </button>
             </>
           ) : (
-            <button onClick={() => restoreMutation.mutate(p.id)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors" title="Restore">
-              <RotateCcw className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex items-center gap-0.5">
+              <button onClick={() => { setRestoreTargetId(p.id); setRestorePasswordOpen(true); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors" title="Restore">
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={() => { setHardDeleteTargetId(p.id); setHardDeletePasswordOpen(true); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete Permanently">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
           )}
         </div>
       ),
@@ -568,7 +595,7 @@ export default function Products() {
 
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             ref={searchRef}
             autoFocus
@@ -586,15 +613,14 @@ export default function Products() {
             }}
             className="pl-9"
           />
-          <span className="text-xs text-text-secondary ml-2">Search</span><ShortcutHint shortcut="Mod+F" />
         </div>
         <div className="flex items-center gap-1.5 ml-auto">
           <Button variant="outline" size="sm" className={showArchived ? "border-accent text-accent" : ""} onClick={() => setShowArchived(!showArchived)}>
             <Archive className="h-3.5 w-3.5 mr-1" />
             Archived
           </Button>
-          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
-          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
+          <ExportButton type="csv" onClick={handleExportCSV} />
+          <ExportButton type="pdf" onClick={handleExportPDF} />
           <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
           <Button variant="primary" size="sm" onClick={() => { setImportOpen(true); setImportRows([]); }}>
             <Upload className="h-3.5 w-3.5 mr-1" /> Import CSV
@@ -902,6 +928,26 @@ export default function Products() {
         description="Enter admin password to archive this product."
         loading={archiveMutation.isPending}
         onConfirm={() => { if (archiveTargetId) archiveMutation.mutate(archiveTargetId); }}
+      />
+
+      <PasswordConfirmDialog
+        open={restorePasswordOpen}
+        onOpenChange={(v) => { if (!v) { setRestorePasswordOpen(false); setRestoreTargetId(null); } }}
+        title="Restore Product"
+        description="Enter admin password to restore this archived product."
+        confirmLabel="Restore"
+        loading={restoreMutation.isPending}
+        onConfirm={() => { if (restoreTargetId) restoreMutation.mutate(restoreTargetId); }}
+      />
+
+      <PasswordConfirmDialog
+        open={hardDeletePasswordOpen}
+        onOpenChange={(v) => { if (!v) { setHardDeletePasswordOpen(false); setHardDeleteTargetId(null); } }}
+        title="Delete Product Permanently"
+        description="This action cannot be undone. Enter admin password to permanently delete this product."
+        confirmLabel="Delete Permanently"
+        loading={hardDeleteMutation.isPending}
+        onConfirm={() => { if (hardDeleteTargetId) hardDeleteMutation.mutate(hardDeleteTargetId); }}
       />
 
       <PasswordConfirmDialog

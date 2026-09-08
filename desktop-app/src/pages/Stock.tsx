@@ -248,8 +248,8 @@ export default function Stock() {
           <Input ref={searchRef} autoFocus placeholder="Search by product, company, distributor, invoice..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex-1" />
-        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
-        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        <ExportButton type="pdf" onClick={handleExportPDF} />
+        <ExportButton type="csv" onClick={handleExportCSV} />
         <button
           onClick={() => setShowArchived(!showArchived)}
           className={`text-xs flex items-center gap-1 px-2.5 h-7 rounded-md transition-colors ${showArchived ? "bg-accent/10 text-accent" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"}`}

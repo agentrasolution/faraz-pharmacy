@@ -110,8 +110,8 @@ export default function Distributors() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input autoFocus ref={searchRef} placeholder="Search distributors..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
-        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+        <ExportButton type="pdf" onClick={handleExportPDF} />
+        <ExportButton type="csv" onClick={handleExportCSV} />
         <div className="flex items-center border border-border rounded-lg overflow-hidden">
           <button onClick={() => setViewMode("grid")} className={cn("p-2 transition-colors", viewMode === "grid" ? "bg-accent text-white" : "text-text-secondary hover:bg-surface-2")}>
             <LayoutGrid className="h-4 w-4" />

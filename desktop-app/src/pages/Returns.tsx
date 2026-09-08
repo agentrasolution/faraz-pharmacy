@@ -184,8 +184,8 @@ export default function Returns() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input autoFocus ref={searchRef} placeholder="Search returns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
-        <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
+        <ExportButton type="csv" onClick={handleExportCSV} />
+        <ExportButton type="pdf" onClick={handleExportPDF} />
       </div>
       <div className="rounded-xl border border-border">
         <DataTable

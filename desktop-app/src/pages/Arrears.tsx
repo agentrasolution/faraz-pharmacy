@@ -55,6 +55,8 @@ export default function Arrears() {
       setPayingId(null);
       setPaymentAmount("");
       setPrintDialog({ open: true, saleId: data.paymentSaleId });
+      setPasswordDialog({ open: false, action: "pay", targetId: "" });
+      setAdminPassword("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -86,6 +88,8 @@ export default function Arrears() {
       toast.success("Arrear deleted");
       queryClient.invalidateQueries({ queryKey: ["arrears"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setPasswordDialog({ open: false, action: "pay", targetId: "" });
+      setAdminPassword("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -102,6 +106,8 @@ export default function Arrears() {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       setPrintDialog({ open: true, saleId: data.paymentSaleId });
+      setPasswordDialog({ open: false, action: "pay", targetId: "" });
+      setAdminPassword("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -119,8 +125,6 @@ export default function Arrears() {
     } else if (action === "delete") {
       deleteMutation.mutate(targetId);
     }
-    setPasswordDialog({ open: false, action: "pay", targetId: "" });
-    setAdminPassword("");
   }
 
   const totalOutstanding = arrears.filter((a: Arrear) => a.status === "pending").reduce((s: number, a: Arrear) => s + a.balance_due, 0);
@@ -231,8 +235,8 @@ export default function Arrears() {
           />
         </div>
         <div className="flex items-center gap-2 ml-auto">
-          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
-          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+          <ExportButton type="csv" onClick={handleExportCSV} />
         </div>
       </div>
 

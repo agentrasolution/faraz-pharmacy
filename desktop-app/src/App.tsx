@@ -88,7 +88,7 @@ function AppShell() {
           case "c": e.preventDefault(); navigate("/customers"); return;
           case "a": e.preventDefault(); navigate("/arrears"); return;
           case "p": e.preventDefault(); navigate("/products"); return;
-          case "k": e.preventDefault(); navigate("/stock"); return;
+          case "t": e.preventDefault(); navigate("/stock"); return;
           case "b": e.preventDefault(); navigate("/barcodes"); return;
           case "d": e.preventDefault(); navigate("/distributors"); return;
           case "m": e.preventDefault(); navigate("/companies"); return;

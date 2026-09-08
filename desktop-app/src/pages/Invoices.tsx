@@ -121,8 +121,8 @@ export default function Invoices() {
           <span className="text-text-secondary text-sm">to</span>
           <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-36" />
         </div>
-        <ExportButton type="csv" onClick={handleExportCSV} disabled={sales.length === 0} showShortcut />
-        <ExportButton type="pdf" onClick={handleExportPDF} disabled={sales.length === 0} showShortcut />
+        <ExportButton type="csv" onClick={handleExportCSV} disabled={sales.length === 0} />
+        <ExportButton type="pdf" onClick={handleExportPDF} disabled={sales.length === 0} />
       </div>
       <div className="rounded-xl border border-border">
         <DataTable

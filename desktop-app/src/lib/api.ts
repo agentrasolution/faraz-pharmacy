@@ -57,14 +57,14 @@ const api = {
   },
   products: {
     list: (): Promise<Product[]> => fetchJson("GET", "/api/products"),
+    listAll: (): Promise<Product[]> => fetchJson("GET", "/api/products?includeArchived=true"),
     search: (q: string): Promise<Product[]> => fetchJson("GET", `/api/products/search?q=${encodeURIComponent(q)}`),
     getByBarcode: (b: string): Promise<Product | null> => fetchJson("GET", `/api/products/barcode/${encodeURIComponent(b)}`),
     create: (p: ProductInput): Promise<Product> => fetchJson("POST", "/api/products", p),
     update: (id: string, p: ProductInput): Promise<Product> => fetchJson("PUT", `/api/products/${id}`, p),
-    delete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/products/${id}`),
     archive: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/products/${id}`),
     restore: (id: string): Promise<{ success: boolean }> => fetchJson("POST", `/api/products/${id}/restore`),
-    listAll: (): Promise<Product[]> => fetchJson("GET", "/api/products?includeArchived=true"),
+    hardDelete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/products/${id}/hard`),
   },
   sales: {
     create: (s: SaleInput): Promise<Sale> => fetchJson("POST", "/api/sales", s),
@@ -154,7 +154,10 @@ const api = {
   },
   barcodes: {
     list: (): Promise<BarcodeEntry[]> => fetchJson("GET", "/api/barcodes"),
+    listAll: (): Promise<BarcodeEntry[]> => fetchJson("GET", "/api/barcodes?includeArchived=true"),
     create: (code: string): Promise<BarcodeEntry> => fetchJson("POST", "/api/barcodes", { code }),
+    archive: (id: string): Promise<{ success: boolean }> => fetchJson("POST", `/api/barcodes/${id}/archive`),
+    restore: (id: string): Promise<{ success: boolean }> => fetchJson("POST", `/api/barcodes/${id}/restore`),
     delete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/barcodes/${id}`),
   },
 };

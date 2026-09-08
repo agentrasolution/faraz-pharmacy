@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2, Archive, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,9 +28,13 @@ const cardAnim = {
 export default function Barcodes() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [showArchived, setShowArchived] = useState(false);
   const [printTarget, setPrintTarget] = useState<string | undefined>(undefined);
   const [printOpen, setPrintOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BarcodeEntry | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<BarcodeEntry | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<BarcodeEntry | null>(null);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<BarcodeEntry | null>(null);
   const queryClient = useQueryClient();
   const { searchRef } = useModuleShortcuts({
     onAdd: openGenerate,
@@ -39,13 +44,46 @@ export default function Barcodes() {
   });
 
   const { data: barcodes, isLoading } = useQuery({
-    queryKey: ["barcodes"],
-    queryFn: api.barcodes.list,
+    queryKey: ["barcodes", showArchived],
+    queryFn: () => showArchived ? api.barcodes.listAll() : api.barcodes.list(),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.barcodes.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["barcodes"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["barcodes"] });
+      toast.success("Barcode deleted");
+      setDeleteTarget(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => api.barcodes.archive(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["barcodes"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product archived");
+      setArchiveTarget(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => api.barcodes.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["barcodes"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product restored");
+      setRestoreTarget(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
   });
 
   const filtered = useMemo(() => {
@@ -94,10 +132,10 @@ export default function Barcodes() {
         if (!el) return;
         renderBarcode(el, b.code, {
           width: 1.5,
-          height: 40,
+          height: 32,
           displayValue: false,
           margin: 0,
-          fontSize: 12,
+          fontSize: 10,
         });
       });
     });
@@ -115,15 +153,42 @@ export default function Barcodes() {
   }
 
   function handleDelete(b: BarcodeEntry) {
-    if (b.productId) return;
+    // Can delete if: no product linked, OR product is archived
+    if (b.productId && b.product && b.product.active === 1) return;
     setDeleteTarget(b);
   }
 
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    deleteMutation.mutate(deleteTarget.id);
-    setDeleteTarget(null);
+  function handleArchive(b: BarcodeEntry) {
+    if (!b.productId || !b.product || b.product.active !== 1) return;
+    setArchiveTarget(b);
   }
+
+  function handleRestore(b: BarcodeEntry) {
+    if (!b.productId || !b.product || b.product.active !== 0) return;
+    setRestoreTarget(b);
+  }
+
+  function handleHardDelete(b: BarcodeEntry) {
+    if (!b.productId || !b.product || b.product.active !== 0) return;
+    setHardDeleteTarget(b);
+  }
+
+  function confirmHardDelete() {
+    if (!hardDeleteTarget) return;
+    // Hard delete the product which will also delete the barcode
+    api.products.hardDelete(hardDeleteTarget.productId!).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["barcodes"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product and barcode permanently deleted");
+      setHardDeleteTarget(null);
+    }).catch((err) => {
+      toast.error(err.message);
+    });
+  }
+
+  const canDelete = (b: BarcodeEntry) => !b.productId || (b.product && b.product.active === 0);
+  const canArchive = (b: BarcodeEntry) => b.productId && b.product && b.product.active === 1;
+  const canRestore = (b: BarcodeEntry) => b.productId && b.product && b.product.active === 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -164,8 +229,17 @@ export default function Barcodes() {
               <List className="h-3.5 w-3.5" />
             </button>
           </div>
-          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
-          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("h-8", showArchived && "border-accent text-accent")}
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <Archive className="h-3.5 w-3.5 mr-1" />
+            Archived
+          </Button>
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+          <ExportButton type="csv" onClick={handleExportCSV} />
           <Button size="sm" onClick={openGenerate} className="h-8 gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" />
             Generate Barcode <ShortcutHint shortcut="Mod+N" />
@@ -194,38 +268,60 @@ export default function Barcodes() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5"
+            className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2"
           >
             {filtered.map((b) => (
               <motion.div
                 key={b.id}
                 variants={cardAnim}
-                className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border bg-surface hover:border-accent/40 transition-colors group relative"
+                className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border bg-surface hover:border-accent/40 transition-colors group relative"
               >
-                {!b.productId && (
-                  <button
-                    onClick={() => handleDelete(b)}
-                    className="absolute top-1.5 right-1.5 h-5 w-5 rounded flex items-center justify-center text-text-secondary/40 hover:text-danger hover:bg-danger/5 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                )}
-                <div className="flex items-center justify-center w-full min-h-[52px]">
-                  <svg id={`bc-${b.id}`} className="max-w-full h-[52px]" />
+                {/* Action buttons */}
+                <div className="absolute top-1 right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {canArchive(b) && (
+                    <button
+                      onClick={() => handleArchive(b)}
+                      className="h-5 w-5 rounded flex items-center justify-center text-text-secondary/40 hover:text-warning hover:bg-warning/5 transition-colors"
+                      title="Archive"
+                    >
+                      <Archive className="h-3 w-3" />
+                    </button>
+                  )}
+                  {canRestore(b) && (
+                    <button
+                      onClick={() => handleRestore(b)}
+                      className="h-5 w-5 rounded flex items-center justify-center text-text-secondary/40 hover:text-success hover:bg-success/5 transition-colors"
+                      title="Restore"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                    </button>
+                  )}
+                  {canDelete(b) && (
+                    <button
+                      onClick={() => handleDelete(b)}
+                      className="h-5 w-5 rounded flex items-center justify-center text-text-secondary/40 hover:text-danger hover:bg-danger/5 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
-                <span className="text-[10px] text-text-secondary font-mono tracking-wider text-center leading-tight break-all">
+                <div className="flex items-center justify-center w-full min-h-[40px]">
+                  <svg id={`bc-${b.id}`} className="max-w-full h-[32px]" />
+                </div>
+                <span className="text-[9px] text-text-secondary font-mono tracking-wider text-center leading-tight break-all">
                   {b.code}
                 </span>
-                <span className="text-[11px] font-medium text-text-primary text-center leading-tight line-clamp-2 min-h-[2.5em]">
-                  {b.product ? b.product.name : <span className="text-text-secondary italic text-[10px]">No product</span>}
+                <span className="text-[10px] font-medium text-text-primary text-center leading-tight line-clamp-1 min-h-[1.2em]">
+                  {b.product ? b.product.name : <span className="text-text-secondary italic text-[9px]">No product</span>}
                 </span>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => openPrint(b.code)}
-                  className="w-full h-7 text-[10px] gap-1.5 mt-auto opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                  className="w-full h-6 text-[9px] gap-1 mt-auto opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
                 >
-                  <Printer className="h-3 w-3" />
+                  <Printer className="h-2.5 w-2.5" />
                   Print
                 </Button>
               </motion.div>
@@ -262,12 +358,35 @@ export default function Barcodes() {
                           <Printer className="h-3 w-3" />
                           Print
                         </Button>
-                        {!b.productId && (
+                        {canArchive(b) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleArchive(b)}
+                            className="h-7 w-7 p-0 text-text-secondary/40 hover:text-warning hover:border-warning/30"
+                            title="Archive"
+                          >
+                            <Archive className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {canRestore(b) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRestore(b)}
+                            className="h-7 w-7 p-0 text-text-secondary/40 hover:text-success hover:border-success/30"
+                            title="Restore"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {canDelete(b) && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(b)}
                             className="h-7 w-7 p-0 text-text-secondary/40 hover:text-danger hover:border-danger/30"
+                            title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -294,8 +413,38 @@ export default function Barcodes() {
         title="Delete Barcode"
         description={<>Delete barcode <span className="font-mono font-medium">{deleteTarget?.code}</span>? This action cannot be undone.</>}
         confirmLabel="Delete"
-        onConfirm={confirmDelete}
+        onConfirm={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); }}
         loading={deleteMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={!!archiveTarget}
+        onOpenChange={(v) => { if (!v) setArchiveTarget(null); }}
+        title="Archive Product"
+        description={<>Archive product <span className="font-medium">{archiveTarget?.product?.name}</span>? This will also archive the barcode.</>}
+        confirmLabel="Archive"
+        onConfirm={() => { if (archiveTarget) archiveMutation.mutate(archiveTarget.id); }}
+        loading={archiveMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={!!restoreTarget}
+        onOpenChange={(v) => { if (!v) setRestoreTarget(null); }}
+        title="Restore Product"
+        description={<>Restore product <span className="font-medium">{restoreTarget?.product?.name}</span>? This will also restore the barcode.</>}
+        confirmLabel="Restore"
+        onConfirm={() => { if (restoreTarget) restoreMutation.mutate(restoreTarget.id); }}
+        loading={restoreMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={!!hardDeleteTarget}
+        onOpenChange={(v) => { if (!v) setHardDeleteTarget(null); }}
+        title="Delete Product Permanently"
+        description={<>Permanently delete product <span className="font-medium">{hardDeleteTarget?.product?.name}</span> and its barcode? This action cannot be undone.</>}
+        confirmLabel="Delete Permanently"
+        onConfirm={confirmHardDelete}
+        loading={false}
       />
     </div>
   );

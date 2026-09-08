@@ -139,4 +139,20 @@ export const medicinesService = {
     if (!product) throw new NotFoundError("Product");
     return prisma.product.update({ where: { id }, data: { active: 1 } });
   },
+
+  async hardDelete(id: string) {
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundError("Product");
+    
+    // Delete linked barcodes first
+    await prisma.barcode.deleteMany({ where: { productId: id } });
+    
+    // Delete price tiers
+    await prisma.productPrice.deleteMany({ where: { productId: id } });
+    
+    // Delete the product
+    await prisma.product.delete({ where: { id } });
+    
+    return { success: true };
+  },
 };

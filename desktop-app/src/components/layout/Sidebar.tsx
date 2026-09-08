@@ -20,7 +20,7 @@ const navItems = [
   { href: "/customers", label: "Customers", icon: Users, shortcut: "Mod+C", key: "C" },
   { href: "/arrears", label: "Arrears", icon: CreditCard, shortcut: "Mod+A", key: "A" },
   { href: "/products", label: "Products", icon: Package, shortcut: "Mod+P", key: "P" },
-  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "Mod+K", key: "K" },
+  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "Mod+T", key: "T" },
   { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "Mod+B", key: "B" },
   { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "Mod+D", key: "D" },
   { href: "/companies", label: "Companies", icon: Building2, shortcut: "Mod+M", key: "M" },
@@ -169,7 +169,7 @@ export default function Sidebar() {
                 onClick={() => navigate(item.href)}
                 className={cn(
                   "group relative flex items-center w-full rounded-lg transition-all duration-150",
-                  !isExpanded ? "justify-center h-9" : "gap-3 px-3 pl-4 h-9",
+                  !isExpanded ? "justify-center h-9" : "justify-between px-3 pl-4 h-9",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -178,25 +178,27 @@ export default function Sidebar() {
                 {isActive && isExpanded && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-sidebar-primary" />
                 )}
-                <Icon className={cn(
-                  "shrink-0 relative",
-                  "h-4 w-4",
-                  isActive ? "text-sidebar-primary" : ""
-                )} />
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="text-[13px] font-medium relative truncate flex-1"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon className={cn(
+                    "shrink-0 relative",
+                    "h-4 w-4",
+                    isActive ? "text-sidebar-primary" : ""
+                  )} />
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="text-[13px] font-medium relative truncate"
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
                 {isExpanded && (
-                  <span className="text-[10px] text-sidebar-foreground/30 font-mono ml-auto shrink-0">
+                  <span className="text-[10px] text-sidebar-foreground/30 font-mono shrink-0">
                     {item.shortcut.startsWith("Mod+") ? `${modKey()}+${item.shortcut.slice(4)}` : item.shortcut}
                   </span>
                 )}

@@ -139,8 +139,8 @@ export default function Expenses() {
         ))}
         <div className="ml-auto flex items-center gap-2">
           <Input ref={searchRef} placeholder="Search expenses..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-48 h-8 text-xs" />
-          <ExportButton type="pdf" onClick={handleExportPDF} showShortcut />
-          <ExportButton type="csv" onClick={handleExportCSV} showShortcut />
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+          <ExportButton type="csv" onClick={handleExportCSV} />
         </div>
       </div>
       <div className="rounded-xl border border-border">

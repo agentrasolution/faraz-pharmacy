@@ -43,14 +43,21 @@ export const medicinesController = {
 
   async archive(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await medicinesService.archive(req.params.id);
+      await medicinesService.archive(req.params.id);
       res.json({ success: true });
     } catch (err) { next(err); }
   },
 
   async restore(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await medicinesService.restore(req.params.id);
+      await medicinesService.restore(req.params.id);
+      res.json({ success: true });
+    } catch (err) { next(err); }
+  },
+
+  async hardDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      await medicinesService.hardDelete(req.params.id);
       res.json({ success: true });
     } catch (err) { next(err); }
   },

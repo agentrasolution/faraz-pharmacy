@@ -2,9 +2,10 @@ import type { Request, Response, NextFunction } from "express";
 import { barcodesService } from "./barcodes.service";
 
 export const barcodesController = {
-  async list(_req: Request, res: Response, next: NextFunction) {
+  async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const barcodes = await barcodesService.list();
+      const includeArchived = req.query.includeArchived === "true";
+      const barcodes = await barcodesService.list(includeArchived);
       res.json(barcodes);
     } catch (err) { next(err); }
   },
@@ -13,6 +14,20 @@ export const barcodesController = {
     try {
       const barcode = await barcodesService.create(req.body.code);
       res.json(barcode);
+    } catch (err) { next(err); }
+  },
+
+  async archive(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await barcodesService.archive(req.params.id);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async restore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await barcodesService.restore(req.params.id);
+      res.json(result);
     } catch (err) { next(err); }
   },
 
