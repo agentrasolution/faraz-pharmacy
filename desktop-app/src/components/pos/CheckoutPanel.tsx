@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ShoppingCart, Trash2, UserPlus } from "lucide-react";
+import { ShoppingCart, Trash2, UserPlus, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ interface CheckoutPanelProps {
   discountType: DiscountType;
   subtotal: number;
   total: number;
+  profit: number;
   customerId?: string;
   notes?: string;
   amountPaid?: string;
@@ -42,13 +43,14 @@ interface CheckoutPanelProps {
 }
 
 export default function CheckoutPanel({
-  items, discount, discountValue, discountType, subtotal, total, customerId, notes,
+  items, discount, discountValue, discountType, subtotal, total, profit, customerId, notes,
   amountPaid = "", addToArrears = false,
   onUpdateQuantity, onIncrementBy, onRemoveItem, onDiscountChange, onToggleDiscountType,
   onClearCart, onCheckout, onCustomerChange, onNotesChange, onAmountPaidChange,
   onAddToArrearsChange, error,
 }: CheckoutPanelProps) {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [showProfit, setShowProfit] = useState(false);
   const [quickName, setQuickName] = useState("");
   const [quickPhone, setQuickPhone] = useState("");
   const [quickAddress, setQuickAddress] = useState("");
@@ -196,7 +198,7 @@ export default function CheckoutPanel({
             </DialogContent>
           </Dialog>
           
-          <div>
+          {/* <div>
             <Label className="text-[10px] text-text-secondary mb-1 block">Notes</Label>
             <textarea
               id="pos-notes"
@@ -206,7 +208,7 @@ export default function CheckoutPanel({
               placeholder="Sale notes (optional)"
               className="w-full h-auto rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 resize-none"
             />
-          </div>
+          </div> */}
 
           <div>
             <div className="flex items-center gap-2">
@@ -248,6 +250,20 @@ export default function CheckoutPanel({
               <span>Total</span>
               <span className="font-mono tabular-nums">{formatCurrency(total)}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowProfit((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 rounded-md px-1.5 py-1 -mx-1.5 text-[10px] text-text-secondary/60 hover:text-text-secondary hover:bg-surface-2 transition-colors group/profit"
+              title={showProfit ? "Hide profit" : "Click to reveal profit"}
+            >
+              <span className="flex items-center gap-1 font-medium uppercase tracking-wide">
+                {showProfit ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                Profit
+              </span>
+              <span className={`font-mono font-semibold tabular-nums transition-all duration-150 ${showProfit ? profit >= 0 ? "text-success" : "text-danger" : "blur-[3px] select-none text-text-secondary/40"}`}>
+                {showProfit ? formatCurrency(profit) : "••••••"}
+              </span>
+            </button>
           </div>
 
           <div className="space-y-2">

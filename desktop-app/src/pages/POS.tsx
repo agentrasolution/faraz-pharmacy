@@ -106,12 +106,12 @@ export default function POS() {
     return allProducts.data ?? [];
   }, [debouncedSearch, products, allProducts.data]);
 
-  function addProductToCart(product: Product, salePrice: number) {
+  function addProductToCart(product: Product, salePrice: number, purchasePrice?: number) {
     if (product.stock_qty === 0) {
       setError(`${product.name} is out of stock`);
       return;
     }
-    cart.addItem({ ...product, sale_price: salePrice });
+    cart.addItem({ ...product, sale_price: salePrice, purchase_price: purchasePrice ?? product.purchase_price });
   }
 
   function promptPriceTier(product: Product) {
@@ -124,9 +124,9 @@ export default function POS() {
     }
   }
 
-  function handleTierSelect(tierSalePrice: number) {
+  function handleTierSelect(tierSalePrice: number, tierPurchasePrice?: number) {
     if (!pendingProduct) return;
-    addProductToCart(pendingProduct, tierSalePrice);
+    addProductToCart(pendingProduct, tierSalePrice, tierPurchasePrice);
     setPendingProduct(null);
     setPricePickerOpen(false);
   }
@@ -246,7 +246,7 @@ export default function POS() {
   }
 
   return (
-    <div className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-8rem)]"}`}>
+    <div className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-6.5rem)]"}`}>
       {isPosWindow && (
         <div
           className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-3 -mx-5 lg:-mx-6 px-5 lg:px-6 select-none"
@@ -261,15 +261,16 @@ export default function POS() {
         </div>
       )}
       <div className="flex justify-end shrink-0">
-        <button
+        {/* <button
           onClick={handleNewSale}
           className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium bg-accent text-accent-foreground hover:bg-accent-hover transition-colors shrink-0"
         >
           <Plus className="h-3.5 w-3.5" />
           New Sale
-        </button>
+        </button> */}
       </div>
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0">
+
       <div className="flex-1 flex flex-col min-h-0">
         <BarcodeInput value={search} onChange={setSearch} onSubmit={handleBarcodeSubmit} />
         <div className="flex-1 overflow-y-auto mt-3">
@@ -297,8 +298,11 @@ export default function POS() {
           )}
         </div>
       </div>
+
+
+
       <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
-        <div className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-20 max-h-[calc(100vh-10rem)]"}`}>
+        <div className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-0 max-h-[calc(100vh-7rem)]"}`}>
           <CheckoutPanel
             items={cart.items}
             discount={cart.discount}
@@ -306,6 +310,7 @@ export default function POS() {
             discountType={cart.discountType}
             subtotal={cart.subtotal}
             total={cart.total}
+            profit={cart.profit}
             customerId={cart.customerId}
             notes={cart.notes}
             amountPaid={cart.amountPaid}
@@ -346,7 +351,7 @@ export default function POS() {
             {pendingPrices?.map((tier) => (
               <button
                 key={tier.id}
-                onClick={() => handleTierSelect(tier.salePrice)}
+                onClick={() => handleTierSelect(tier.salePrice, tier.purchasePrice)}
                 className="w-full text-left p-2.5 rounded-lg border border-border hover:border-accent/50 transition-colors flex items-center justify-between"
               >
                 <span className="text-xs font-medium">{tier.label || "Untitled"}</span>

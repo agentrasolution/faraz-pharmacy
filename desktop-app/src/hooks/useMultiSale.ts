@@ -4,6 +4,7 @@ import type { SaleItemInput, DiscountType } from "@/types";
 export interface CartItem extends SaleItemInput {
   id: string;
   packSize: number;
+  purchasePrice: number;
 }
 
 export interface SaleState {
@@ -102,6 +103,16 @@ export function useMultiSale() {
 
   const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
 
+  const costOfGoods = useMemo(
+    () => activeSale.items.reduce((s, i) => s + i.purchasePrice * i.quantity, 0),
+    [activeSale.items]
+  );
+
+  const profit = useMemo(
+    () => Math.round(total - costOfGoods),
+    [total, costOfGoods]
+  );
+
   const toggleDiscountType = useCallback(() => {
     updateActive((s) => {
       let value = s.discountValue;
@@ -119,7 +130,7 @@ export function useMultiSale() {
   }, [updateActive, subtotal, discount]);
 
   const addItem = useCallback(
-    (product: { id: string; name: string; barcode: string; sale_price: number; pack_size?: number }) => {
+    (product: { id: string; name: string; barcode: string; sale_price: number; purchase_price?: number; pack_size?: number }) => {
       updateActive((s) => {
         const existing = s.items.find((i) => i.productId === product.id);
         if (existing) {
@@ -143,6 +154,7 @@ export function useMultiSale() {
               barcode: product.barcode,
               quantity: 1,
               unitPrice: product.sale_price,
+              purchasePrice: product.purchase_price ?? 0,
               subtotal: product.sale_price,
               packSize: product.pack_size ?? 1,
             },
@@ -242,6 +254,7 @@ export function useMultiSale() {
     discountType: activeSale.discountType,
     subtotal,
     total,
+    profit,
     customerId: activeSale.customerId,
     customerName: activeSale.customerName,
     notes: activeSale.notes,
