@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Minus, Trash2, AlertCircle, Loader2 } from "lucide-react";
+import { Search, Plus, Minus, Trash2, AlertCircle, Loader2, Calendar, Package, RotateCcw, CheckCircle2, Clock, FileText, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
@@ -10,12 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import ExportButton from "@/components/shared/ExportButton";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import type { ReturnEntry, Sale, SaleItem, PrinterConfig } from "@/types";
+
+type DateFilter = "all" | "today" | "week" | "month";
 
 export default function Returns() {
   const queryClient = useQueryClient();
@@ -34,34 +36,22 @@ export default function Returns() {
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [invoiceResults, setInvoiceResults] = useState<Sale[]>([]);
   const [searchingInvoice, setSearchingInvoice] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [customRefundAmount, setCustomRefundAmount] = useState<string>("");
+  const [isEditingRefund, setIsEditingRefund] = useState(false);
 
   const { data: returns = [], isLoading } = useQuery({ queryKey: ["returns"], queryFn: api.returns.list });
+
+  const { data: recentSales = [], isLoading: loadingRecent } = useQuery({
+    queryKey: ["sales", "recent"],
+    queryFn: () => api.sales.listRecent(10),
+  });
 
   const { data: selectedSale, isLoading: loadingSale } = useQuery({
     queryKey: ["sale", selectedSaleId],
     queryFn: () => api.sales.getById(selectedSaleId),
     enabled: !!selectedSaleId,
   });
-
-  useEffect(() => {
-    const q = invoiceSearch.trim();
-    if (!q) {
-      setInvoiceResults([]);
-      return;
-    }
-    setSearchingInvoice(true);
-    const t = setTimeout(async () => {
-      try {
-        const results = await api.sales.search(q);
-        setInvoiceResults(results);
-      } catch {
-        setInvoiceResults([]);
-      } finally {
-        setSearchingInvoice(false);
-      }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [invoiceSearch]);
 
   const filtered = returns.filter((r: ReturnEntry) =>
     !search || r.sale_id.includes(search) || r.reason.toLowerCase().includes(search.toLowerCase())
@@ -71,10 +61,67 @@ export default function Returns() {
   const fullyReturned = (selectedSale?.items?.length ?? 0) > 0 &&
     (selectedSale?.items ?? []).every((i: SaleItem) => (i.quantity - (i.returned_qty ?? 0)) <= 0);
 
+  function getDateRange(filter: DateFilter): { from?: string; to?: string } {
+    const now = new Date();
+    const to = now.toISOString().split("T")[0];
+    if (filter === "today") return { from: to, to };
+    if (filter === "week") {
+      const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString().split("T")[0];
+      return { from: weekAgo, to };
+    }
+    if (filter === "month") {
+      const monthAgo = new Date(now.getTime() - 30 * 86400000).toISOString().split("T")[0];
+      return { from: monthAgo, to };
+    }
+    return {};
+  }
+
+  const searchInvoices = useCallback(async (q: string, filter: DateFilter) => {
+    const query = q.trim();
+    if (!query && filter === "all") {
+      setInvoiceResults([]);
+      return;
+    }
+    setSearchingInvoice(true);
+    try {
+      const dateRange = getDateRange(filter);
+      if (query) {
+        const results = await api.sales.search(query);
+        let filtered = results;
+        if (dateRange.from) {
+          filtered = results.filter((s) => {
+            const d = s.created_at.split("T")[0];
+            return d >= dateRange.from! && d <= dateRange.to!;
+          });
+        }
+        setInvoiceResults(filtered);
+      } else {
+        const results = await api.sales.listAll({ dateFrom: dateRange.from, dateTo: dateRange.to });
+        setInvoiceResults(results.slice(0, 20));
+      }
+    } catch {
+      setInvoiceResults([]);
+    } finally {
+      setSearchingInvoice(false);
+    }
+  }, []);
+
+  function handleSearchChange(value: string) {
+    setInvoiceSearch(value);
+    searchInvoices(value, dateFilter);
+  }
+
+  function handleDateFilterChange(filter: DateFilter) {
+    setDateFilter(filter);
+    searchInvoices(invoiceSearch, filter);
+  }
+
   function selectSale(sale: Sale) {
     setSelectedSaleId(sale.id);
     setReturnQtys({});
     setError("");
+    setCustomRefundAmount("");
+    setIsEditingRefund(false);
   }
 
   function handleInvoiceSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -93,19 +140,44 @@ export default function Returns() {
     }
   }
 
+  function calcRefundAmount(): number {
+    if (!selectedSale?.items) return 0;
+    const discountRatio = selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
+    return Object.entries(returnQtys).reduce((sum, [id, qty]) => {
+      const item = selectedSale.items?.find((i: SaleItem) => i.product_id === id);
+      if (!item) return sum;
+      const rawAmount = item.unit_price * qty;
+      const discountedAmount = rawAmount * (1 - discountRatio);
+      return sum + Math.round(discountedAmount);
+    }, 0);
+  }
+
+  function calcRawRefundAmount(): number {
+    if (!selectedSale?.items) return 0;
+    return Object.entries(returnQtys).reduce((sum, [id, qty]) => {
+      const item = selectedSale.items?.find((i: SaleItem) => i.product_id === id);
+      return sum + (item?.unit_price || 0) * qty;
+    }, 0);
+  }
+
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!selectedSale?.items) throw new Error("Sale items not loaded");
       const saleItems = selectedSale.items;
+      const discountRatio = selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
       const items = Object.entries(returnQtys)
         .filter(([_, qty]) => qty > 0)
         .map(([productId, quantity]) => {
           const item = saleItems.find((i: SaleItem) => i.product_id === productId);
-          return { productId, productName: item?.product_name || "", quantity, refundAmount: (item?.unit_price || 0) * quantity };
+          const rawAmount = (item?.unit_price || 0) * quantity;
+          const discountedAmount = rawAmount * (1 - discountRatio);
+          return { productId, productName: item?.product_name || "", quantity, refundAmount: Math.round(discountedAmount) };
         });
+      const calculatedRefund = items.reduce((s, i) => s + i.refundAmount, 0);
+      const finalRefund = customRefundAmount ? Number(customRefundAmount) : calculatedRefund;
       return api.returns.create({
         saleId: selectedSaleId,
-        refundAmount: items.reduce((s, i) => s + i.refundAmount, 0),
+        refundAmount: finalRefund,
         reason,
         items,
       });
@@ -114,6 +186,7 @@ export default function Returns() {
       toast.success("Return processed");
       queryClient.invalidateQueries({ queryKey: ["returns"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
 
       setPendingReturnData(returnData);
       if (selectedSale) setPendingSale(selectedSale);
@@ -165,20 +238,38 @@ export default function Returns() {
 
   function handleExportPDF() {
     downloadPDF(`returns_${new Date().toISOString().split("T")[0]}.pdf`, "Returns List",
-      ["Date","Sale ID","Customer","Refund Amount","Reason"],
+      ["Date", "Sale ID", "Customer", "Refund Amount", "Reason"],
       filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]));
   }
   function handleExportCSV() {
     downloadCSV(`returns_${new Date().toISOString().split("T")[0]}.csv`,
-      ["Date","Sale ID","Customer","Refund Amount","Reason"],
+      ["Date", "Sale ID", "Customer", "Refund Amount", "Reason"],
       filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]));
   }
 
   useModuleShortcuts({ onAdd: () => setOpen(true), onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
 
+  function openDialog() {
+    setOpen(true);
+    setSelectedSaleId("");
+    setInvoiceSearch("");
+    setInvoiceResults([]);
+    setReturnQtys({});
+    setReason("");
+    setError("");
+    setCustomRefundAmount("");
+    setIsEditingRefund(false);
+  }
+
+  function getStatusBadge(sale: Sale) {
+    const rc = sale.return_count ?? 0;
+    if (rc === 0) return <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium"><CheckCircle2 className="h-2.5 w-2.5" /> Full</span>;
+    return <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium"><RotateCcw className="h-2.5 w-2.5" /> Partial</span>;
+  }
+
   return (
     <div>
-      <PageHeader title="Returns" description="Process and track product returns" action={{ label: "New Return", onClick: () => setOpen(true), shortcut: "Mod+N" }} />
+      <PageHeader title="Returns" description="Process and track product returns" action={{ label: "New Return", onClick: openDialog, shortcut: "Mod+N" }} />
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
@@ -197,6 +288,7 @@ export default function Returns() {
         />
       </div>
 
+      {/* New Return Dialog */}
       <Dialog open={open} onOpenChange={(v) => {
         if (!v) {
           setSelectedSaleId("");
@@ -205,22 +297,31 @@ export default function Returns() {
           setInvoiceSearch("");
           setInvoiceResults([]);
           setError("");
+          setCustomRefundAmount("");
+          setIsEditingRefund(false);
         }
         setOpen(v);
       }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>New Return</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Process Return
+            </DialogTitle>
+          </DialogHeader>
           <div className="px-5 pb-5 space-y-4">
+            {/* Search Bar */}
             <div>
-              <Label>Search Invoice</Label>
+              <Label className="mb-1.5 block">Find Invoice</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
                 <Input
-                  placeholder="Search invoice ID, customer or product..."
+                  placeholder="Search by invoice ID, customer name, or product name..."
                   value={invoiceSearch}
-                  onChange={(e) => setInvoiceSearch(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onKeyDown={handleInvoiceSearchKeyDown}
                   className="pl-9"
+                  autoFocus
                 />
               </div>
               {searchingInvoice && (
@@ -228,116 +329,281 @@ export default function Returns() {
                   <Loader2 className="h-3 w-3 animate-spin" /> Searching invoices...
                 </p>
               )}
-              {!searchingInvoice && invoiceSearch.trim() && invoiceResults.length > 0 && (
-                <div className="mt-1 border border-border rounded-lg max-h-48 overflow-y-auto divide-y divide-border">
-                  {invoiceResults.map((s: Sale) => {
-                    const isReturned = (s.return_count ?? 0) > 0;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => { selectSale(s); setInvoiceSearch(""); setInvoiceResults([]); }}
-                        className="w-full text-left px-3 py-2 hover:bg-surface-2 flex items-center justify-between gap-2 disabled:opacity-50"
-                      >
-                        <span className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono text-xs">{s.id}</span>
-                          <span className="text-xs text-text-secondary truncate">{s.customer_name || "Walk-in"}</span>
-                        </span>
-                        <span className="flex items-center gap-2 shrink-0">
-                          <span className="font-mono text-xs">{formatCurrency(s.total)}</span>
-                          {isReturned && <span className="text-xs text-danger">[Returned]</span>}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {!searchingInvoice && invoiceSearch.trim() && invoiceResults.length === 0 && (
-                <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> No invoices found for "{invoiceSearch}"
-                </p>
-              )}
             </div>
 
+            {/* Date Filters */}
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3.5 w-3.5 text-text-secondary" />
+              {(["all", "today", "week", "month"] as DateFilter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => handleDateFilterChange(f)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    dateFilter === f
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-surface-3"
+                  }`}
+                >
+                  {f === "all" ? "All Time" : f === "today" ? "Today" : f === "week" ? "This Week" : "This Month"}
+                </button>
+              ))}
+            </div>
+
+            {/* No Search: Show Recent Sales */}
+            {!invoiceSearch.trim() && dateFilter === "all" && !selectedSaleId && (
+              <div>
+                <Label className="mb-2 block text-text-secondary">Recent Sales (click to select)</Label>
+                {loadingRecent ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+                  </div>
+                ) : recentSales.length === 0 ? (
+                  <p className="text-sm text-text-secondary text-center py-6">No recent sales found.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                    {recentSales.map((sale: Sale) => (
+                      <button
+                        key={sale.id}
+                        type="button"
+                        onClick={() => selectSale(sale)}
+                        className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4 text-text-secondary" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-medium">{sale.id}</span>
+                                {getStatusBadge(sale)}
+                              </div>
+                              <p className="text-xs text-text-secondary truncate">{sale.customer_name || "Walk-in"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <p className="font-mono text-sm font-medium">{formatCurrency(sale.total)}</p>
+                              <p className="text-[10px] text-text-secondary">{formatDate(sale.created_at)}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-accent transition-colors" />
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Search Results */}
+            {invoiceSearch.trim() && !selectedSaleId && (
+              <div>
+                {invoiceResults.length > 0 ? (
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                    {invoiceResults.map((sale: Sale) => (
+                      <button
+                        key={sale.id}
+                        type="button"
+                        onClick={() => { selectSale(sale); setInvoiceSearch(""); setInvoiceResults([]); }}
+                        className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4 text-text-secondary" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-medium">{sale.id}</span>
+                                {getStatusBadge(sale)}
+                              </div>
+                              <p className="text-xs text-text-secondary truncate">{sale.customer_name || "Walk-in"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <p className="font-mono text-sm font-medium">{formatCurrency(sale.total)}</p>
+                              <p className="text-[10px] text-text-secondary">{formatDate(sale.created_at)}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-accent transition-colors" />
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-text-secondary text-center py-4 flex items-center justify-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> No invoices found for "{invoiceSearch}"
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Date Filter Results (no search query) */}
+            {!invoiceSearch.trim() && dateFilter !== "all" && !selectedSaleId && (
+              <div>
+                {invoiceResults.length > 0 ? (
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                    {invoiceResults.map((sale: Sale) => (
+                      <button
+                        key={sale.id}
+                        type="button"
+                        onClick={() => { selectSale(sale); setInvoiceSearch(""); setInvoiceResults([]); }}
+                        className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4 text-text-secondary" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-medium">{sale.id}</span>
+                                {getStatusBadge(sale)}
+                              </div>
+                              <p className="text-xs text-text-secondary truncate">{sale.customer_name || "Walk-in"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <p className="font-mono text-sm font-medium">{formatCurrency(sale.total)}</p>
+                              <p className="text-[10px] text-text-secondary">{formatDate(sale.created_at)}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-accent transition-colors" />
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-text-secondary text-center py-4 flex items-center justify-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> No invoices found for this period
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Selected Sale Detail */}
             {selectedSaleId && (
               loadingSale ? (
-                <div className="flex items-center justify-center py-8">
-                  <Skeleton className="h-20 w-full" />
+                <div className="space-y-3">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-32 w-full" />
                 </div>
               ) : selectedSale ? (
                 <div className="space-y-4">
-                  <div className="rounded-lg border border-border p-3 text-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-text-secondary shrink-0">Invoice:</span>
-                      <span className="font-mono font-medium truncate">{selectedSale.id}</span>
+                  {/* Invoice Header Card */}
+                  <div className="rounded-lg border border-border bg-surface-2/50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-sm font-semibold">{selectedSale.id}</span>
+                          {getStatusBadge(selectedSale)}
+                        </div>
+                        <p className="text-sm text-text-primary">{selectedSale.customer_name || "Walk-in Customer"}</p>
+                        <p className="text-xs text-text-secondary mt-0.5">{formatDateTime(selectedSale.created_at)}</p>
+                      </div>
+                      <button
+                        onClick={() => { setSelectedSaleId(""); setReturnQtys({}); }}
+                        className="text-xs text-text-secondary hover:text-danger transition-colors shrink-0"
+                      >
+                        Change
+                      </button>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-xs text-text-secondary mt-1">
-                      <span className="truncate">{selectedSale.customer_name || "Walk-in"}</span>
-                      <span className="shrink-0">{formatDateTime(selectedSale.created_at)}</span>
-                      <span className="font-mono shrink-0">{formatCurrency(selectedSale.total)}</span>
+
+                    {/* Invoice Totals */}
+                    <div className="mt-3 pt-3 border-t border-border space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Subtotal</span>
+                        <span className="font-mono">{formatCurrency(selectedSale.subtotal)}</span>
+                      </div>
+                      {selectedSale.discount > 0 && (
+                        <div className="flex justify-between text-danger">
+                          <span>Discount</span>
+                          <span className="font-mono">-{formatCurrency(selectedSale.discount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-medium pt-1 border-t border-border">
+                        <span>Total</span>
+                        <span className="font-mono">{formatCurrency(selectedSale.total)}</span>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Return Status */}
                   {hasReturns && (
-                    <p className={`text-xs flex items-center gap-1 ${fullyReturned ? "text-danger" : "text-accent"}`}>
-                      <AlertCircle className="h-3 w-3" />
+                    <div className={`rounded-lg border p-3 text-sm flex items-center gap-2 ${fullyReturned ? "border-danger/20 bg-danger/5 text-danger" : "border-accent/20 bg-accent/5 text-accent"}`}>
+                      <AlertCircle className="h-4 w-4 shrink-0" />
                       {fullyReturned
-                        ? "This invoice has already been fully returned"
-                        : "This invoice has partial returns — you can return the remaining items"}
-                    </p>
+                        ? "This invoice has been fully returned. No items left to return."
+                        : "This invoice has partial returns. You can return the remaining items."}
+                    </div>
                   )}
 
+                  {/* Items to Return */}
                   {selectedSale.items && selectedSale.items.length > 0 && !fullyReturned && (
                     <div>
-                      <Label className="mb-2 block">Items to Return</Label>
-                      <div className="max-h-48 overflow-y-auto space-y-2 border border-border rounded-lg p-3">
-                        {selectedSale.items.map((item: SaleItem) => {
-                          const returnedQty = item.returned_qty ?? 0;
-                          const remaining = item.quantity - returnedQty;
-                          const qty = returnQtys[item.product_id] || 0;
-                          const showDelete = qty > 0;
-                          return (
-                            <div key={item.product_id} className="flex items-center gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm truncate">{item.product_name}</p>
-                                <p className="text-xs text-text-secondary font-mono">
-                                  {formatCurrency(item.unit_price)} × {item.quantity}
+                      <Label className="mb-2 block">Select Items to Return</Label>
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        {/* Header */}
+                        <div className="grid grid-cols-[1fr_60px_60px_80px_40px] gap-2 px-3 py-2 bg-surface-2 text-[10px] text-text-secondary uppercase tracking-wider font-medium">
+                          <span>Product</span>
+                          <span className="text-center">Bought</span>
+                          <span className="text-center">Return</span>
+                          <span className="text-right">Unit Price</span>
+                          <span></span>
+                        </div>
+                        {/* Items */}
+                        <div className="divide-y divide-border">
+                          {selectedSale.items.map((item: SaleItem) => {
+                            const returnedQty = item.returned_qty ?? 0;
+                            const remaining = item.quantity - returnedQty;
+                            const qty = returnQtys[item.product_id] || 0;
+                            return (
+                              <div key={item.product_id} className="grid grid-cols-[1fr_60px_60px_80px_40px] gap-2 items-center px-3 py-2.5 hover:bg-surface-2/50">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">{item.product_name}</p>
                                   {returnedQty > 0 && (
-                                    <span className="text-accent"> ({returnedQty} returned, {remaining} left)</span>
+                                    <p className="text-[10px] text-success">{returnedQty} already returned</p>
                                   )}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.max(0, (prev[item.product_id] || 0) - 1) }))}
-                                  className="h-7 w-7 rounded-md bg-surface-2 flex items-center justify-center hover:bg-border"
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </button>
-                                <span className="w-6 text-center text-sm font-mono">{qty}</span>
-                                <button
-                                  onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(remaining, (prev[item.product_id] || 0) + 1) }))}
-                                  disabled={remaining <= 0}
-                                  className={`h-7 w-7 rounded-md flex items-center justify-center ${remaining <= 0 ? "opacity-40 cursor-not-allowed" : "bg-surface-2 hover:bg-border"}`}
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </button>
-                                {showDelete && (
+                                </div>
+                                <div className="text-center">
+                                  <span className="font-mono text-sm">{item.quantity}</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-0.5">
                                   <button
-                                    onClick={() => {
-                                      const next = { ...returnQtys };
-                                      delete next[item.product_id];
-                                      setReturnQtys(next);
-                                    }}
-                                    className="h-7 w-7 rounded-md bg-danger/10 flex items-center justify-center hover:bg-danger/20 ml-1"
+                                    onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.max(0, (prev[item.product_id] || 0) - 1) }))}
+                                    className="h-6 w-6 rounded bg-surface-2 flex items-center justify-center hover:bg-border transition-colors"
                                   >
-                                    <Trash2 className="h-3 w-3 text-danger" />
+                                    <Minus className="h-3 w-3" />
                                   </button>
-                                )}
+                                  <span className="w-6 text-center text-sm font-mono font-medium">{qty}</span>
+                                  <button
+                                    onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(remaining, (prev[item.product_id] || 0) + 1) }))}
+                                    disabled={remaining <= 0}
+                                    className={`h-6 w-6 rounded flex items-center justify-center transition-colors ${remaining <= 0 ? "opacity-30 cursor-not-allowed bg-surface-2" : "bg-surface-2 hover:bg-border"}`}
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </button>
+                                </div>
+                                <div className="text-right">
+                                  <span className="font-mono text-sm">{formatCurrency(item.unit_price)}</span>
+                                </div>
+                                <div>
+                                  {qty > 0 && (
+                                    <button
+                                      onClick={() => { const next = { ...returnQtys }; delete next[item.product_id]; setReturnQtys(next); }}
+                                      className="h-6 w-6 rounded bg-danger/10 flex items-center justify-center hover:bg-danger/20 transition-colors"
+                                    >
+                                      <Trash2 className="h-3 w-3 text-danger" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -353,15 +619,69 @@ export default function Returns() {
                         <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Damaged, Expired, Wrong item" />
                       </div>
 
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-text-secondary">Total Refund:</span>
-                        <span className="font-mono font-bold text-danger">
-                          {formatCurrency(Object.entries(returnQtys).reduce((s, [id, qty]) => {
-                            const item = selectedSale.items?.find((i: SaleItem) => i.product_id === id);
-                            return s + (item?.unit_price || 0) * qty;
-                          }, 0))}
-                        </span>
-                      </div>
+                      {/* Refund Summary */}
+                      {Object.values(returnQtys).some(q => q > 0) && (() => {
+                        const rawTotal = calcRawRefundAmount();
+                        const calculatedRefund = calcRefundAmount();
+                        const discountApplied = rawTotal - calculatedRefund;
+                        const discountRatio = selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
+                        const hasDiscount = selectedSale.discount > 0;
+                        const finalRefund = customRefundAmount ? Number(customRefundAmount) : calculatedRefund;
+                        return (
+                          <div className="rounded-lg border border-danger/20 bg-danger/5 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-text-secondary">Items Subtotal</span>
+                              <span className="font-mono text-sm">{formatCurrency(rawTotal)}</span>
+                            </div>
+                            {hasDiscount && discountApplied > 0 && (
+                              <>
+                                <div className="flex items-center justify-between text-danger">
+                                  <span className="text-sm">Discount ({(discountRatio * 100).toFixed(1)}%)</span>
+                                  <span className="font-mono text-sm">-{formatCurrency(discountApplied)}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px] text-text-secondary">
+                                  <span>Discount is distributed proportionally across returned items</span>
+                                </div>
+                              </>
+                            )}
+                            <div className="pt-2 border-t border-danger/10">
+                              {isEditingRefund ? (
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-sm font-medium text-text-primary">Refund Amount</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-sm text-text-secondary">PKR</span>
+                                    <input
+                                      type="number"
+                                      value={customRefundAmount}
+                                      onChange={(e) => setCustomRefundAmount(e.target.value)}
+                                      className="w-28 font-mono font-bold text-lg text-danger bg-transparent border-b-2 border-accent outline-none text-right"
+                                      autoFocus
+                                    />
+                                    <button
+                                      onClick={() => { setIsEditingRefund(false); setCustomRefundAmount(""); }}
+                                      className="text-[10px] text-accent hover:underline ml-1"
+                                    >
+                                      Reset
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div
+                                  className="flex items-center justify-between cursor-pointer hover:bg-danger/5 -mx-1 px-1 py-0.5 rounded transition-colors"
+                                  onClick={() => { setCustomRefundAmount(String(calculatedRefund)); setIsEditingRefund(true); }}
+                                  title="Click to edit refund amount"
+                                >
+                                  <span className="text-sm font-medium text-text-primary">Refund Amount</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-mono font-bold text-lg text-danger">{formatCurrency(finalRefund)}</span>
+                                    <span className="text-[10px] text-text-secondary">(click to edit)</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </>
                   )}
 
@@ -389,6 +709,7 @@ export default function Returns() {
         </DialogContent>
       </Dialog>
 
+      {/* Print Preview */}
       {showPrintPreview && pendingReturnData && pendingSale && (
         <PrintPreviewDialog
           open={showPrintPreview}
@@ -405,6 +726,7 @@ export default function Returns() {
         />
       )}
 
+      {/* Return Detail Dialog */}
       <Dialog open={!!selectedReturn} onOpenChange={(v) => { if (!v) setSelectedReturn(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Return Details</DialogTitle></DialogHeader>
