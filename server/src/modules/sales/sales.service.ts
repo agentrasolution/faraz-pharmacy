@@ -146,14 +146,28 @@ export const salesService = {
       ];
     }
 
-    return prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: 500,
       include: {
         customer: { select: { name: true } },
+        items: {
+          include: { product: { select: { purchasePrice: true } } },
+        },
         _count: { select: { items: true, returns: true } },
       },
+    });
+
+    return sales.map((sale) => {
+      const rawProfit = sale.items.reduce((sum, item) => {
+        const purchasePrice = item.product?.purchasePrice ?? 0;
+        return sum + (item.unitPrice - purchasePrice) * item.quantity;
+      }, 0);
+      const discountRatio = sale.subtotal > 0 ? sale.discount / sale.subtotal : 0;
+      const adjustedProfit = rawProfit * (1 - discountRatio);
+      const { items, ...rest } = sale;
+      return { ...rest, profit: Math.round(adjustedProfit) };
     });
   },
 
@@ -162,12 +176,23 @@ export const salesService = {
       where: { id },
       include: {
         customer: { select: { name: true } },
-        items: true,
+        items: {
+          include: { product: { select: { purchasePrice: true } } },
+        },
         returns: { include: { items: true } },
         _count: { select: { returns: true } },
       },
     });
     if (!sale) throw new NotFoundError("Sale");
-    return sale;
+
+    const rawProfit = sale.items.reduce((sum, item) => {
+      const purchasePrice = item.product?.purchasePrice ?? 0;
+      return sum + (item.unitPrice - purchasePrice) * item.quantity;
+    }, 0);
+    const discountRatio = sale.subtotal > 0 ? sale.discount / sale.subtotal : 0;
+    const adjustedProfit = rawProfit * (1 - discountRatio);
+
+    const { items, ...rest } = sale;
+    return { ...rest, items, profit: Math.round(adjustedProfit) };
   },
 };

@@ -79,7 +79,7 @@ export default function Categories() {
   return (
     <div>
       <PageHeader title="Categories" description="Manage product categories" action={{ label: "Add Category", onClick: openAdd }} />
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input autoFocus placeholder="Search categories..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
@@ -131,7 +131,7 @@ export default function Categories() {
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Category" : "Add Category"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="px-5 pb-5 space-y-3">
             <div>
               <Label>Category Name</Label>
               <Input

@@ -30,6 +30,24 @@ export function normalizeProductList(products: any[]): any[] {
   return products.map(normalizeProduct);
 }
 
+export function normalizeDistributor(distributor: any): any {
+  if (!distributor) return null;
+  return {
+    id: distributor.id,
+    name: distributor.name ?? "",
+    salesman_name: distributor.salesmanName ?? "",
+    salesman_contact: distributor.salesmanContact ?? "",
+    delivery_man_name: distributor.deliveryManName ?? "",
+    delivery_man_contact: distributor.deliveryManContact ?? "",
+    created_at: distributor.createdAt?.toISOString?.() ?? distributor.createdAt,
+    product_count: distributor._count?.products ?? 0,
+  };
+}
+
+export function normalizeDistributorList(distributors: any[]): any[] {
+  return distributors.map(normalizeDistributor);
+}
+
 export function normalizeStockPurchase(purchase: any): any {
   if (!purchase) return null;
   return {
@@ -53,4 +71,38 @@ export function normalizeStockPurchase(purchase: any): any {
 
 export function normalizeStockPurchaseList(purchases: any[]): any[] {
   return purchases.map(normalizeStockPurchase);
+}
+
+export function normalizeSale(sale: any): any {
+  if (!sale) return null;
+  return {
+    id: sale.id,
+    customer_id: sale.customerId ?? null,
+    customer_name: sale.customer?.name ?? null,
+    subtotal: sale.subtotal ?? 0,
+    discount: sale.discount ?? 0,
+    total: sale.total ?? 0,
+    amount_paid: sale.amountPaid ?? 0,
+    change: sale.change ?? 0,
+    status: sale.status ?? "paid",
+    payment_method: sale.paymentMethod ?? null,
+    invoice_no: sale.invoiceNo ?? null,
+    profit: sale.profit ?? 0,
+    return_count: sale._count?.returns ?? 0,
+    created_at: sale.createdAt?.toISOString?.() ?? sale.createdAt,
+    items: sale.items?.map((i: any) => ({
+      id: i.id,
+      sale_id: i.saleId,
+      product_id: i.productId,
+      product_name: i.productName,
+      barcode: i.barcode,
+      quantity: i.quantity,
+      unit_price: i.unitPrice,
+      subtotal: i.subtotal,
+    })) ?? [],
+  };
+}
+
+export function normalizeSaleList(sales: any[]): any[] {
+  return sales.map(normalizeSale);
 }

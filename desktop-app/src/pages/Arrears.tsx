@@ -219,19 +219,19 @@ export default function Arrears() {
   return (
     <div>
       <PageHeader title="Arrears" description="Track and manage outstanding payments" action={{ label: "Add Arrear", onClick: () => { setForm({ customerId: "", totalBill: "", amountPaid: "" }); setOpen(true); }, shortcut: "Mod+N" }} />
-      <div className="mb-6">
+      <div className="mb-4">
         <StatCard title="Total Outstanding" value={formatCurrency(totalOutstanding)} icon={<CreditCard className="h-5 w-5" />} />
       </div>
 
       <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary" />
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             ref={searchRef}
             placeholder="Search arrears..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9 text-sm"
+            className="pl-9"
           />
         </div>
         <div className="flex items-center gap-2 ml-auto">
@@ -310,11 +310,11 @@ export default function Arrears() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Total Bill</Label>
-                <Input type="number" value={form.totalBill} onChange={(e) => setForm({ ...form, totalBill: e.target.value })} />
+                <Input type="number" placeholder="0" value={form.totalBill} onChange={(e) => setForm({ ...form, totalBill: e.target.value })} />
               </div>
               <div>
                 <Label>Amount Paid (optional)</Label>
-                <Input type="number" value={form.amountPaid} onChange={(e) => setForm({ ...form, amountPaid: e.target.value })} />
+                <Input type="number" placeholder="0" value={form.amountPaid} onChange={(e) => setForm({ ...form, amountPaid: e.target.value })} />
               </div>
             </div>
             <Button className="w-full" disabled={!form.customerId || !form.totalBill || createMutation.isPending} onClick={() => createMutation.mutate()}>

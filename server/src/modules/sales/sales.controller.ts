@@ -23,6 +23,9 @@ function normalizeSale(s: Record<string, unknown> | null): Record<string, unknow
     amount_paid: s.amountPaid,
     change: s.change,
     status: s.status,
+    payment_method: (s as any).paymentMethod ?? null,
+    invoice_no: (s as any).invoiceNo ?? null,
+    profit: (s as any).profit ?? 0,
     created_at: s.createdAt,
     items: items.map((i: any) => ({
       id: i.id,

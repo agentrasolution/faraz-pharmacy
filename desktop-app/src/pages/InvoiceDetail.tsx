@@ -15,6 +15,7 @@ export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showPreview, setShowPreview] = useState(false);
+  const [showProfit, setShowProfit] = useState(false);
 
   const { data: sale, isLoading } = useQuery({
     queryKey: ["sale", id],
@@ -205,6 +206,15 @@ export default function InvoiceDetail() {
                   </span>
                 </div>
               )}
+              <button
+                onClick={() => setShowProfit(!showProfit)}
+                className="flex justify-between pt-2 border-t border-border w-full cursor-pointer hover:bg-surface-2 -mx-5 px-5 -mb-5 pb-5 rounded-b-lg transition-colors"
+              >
+                <span className="text-text-secondary">Profit</span>
+                <span className={`font-mono font-medium tabular-nums ${(sale.profit ?? 0) >= 0 ? "text-success" : "text-danger"}`}>
+                  {showProfit ? formatCurrency(sale.profit ?? 0) : "••••"}
+                </span>
+              </button>
             </div>
           </CardContent>
         </Card>

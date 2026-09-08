@@ -193,15 +193,15 @@ export default function Barcodes() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary pointer-events-none" />
+        <div className="flex items-center gap-2 relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary pointer-events-none" />
           <Input
             ref={searchRef}
             autoFocus
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by barcode or product name..."
-            className="h-8 pl-8 text-xs"
+            className="pl-9 h-8 text-xs"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -340,8 +340,8 @@ export default function Barcodes() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((b) => (
-                  <tr key={b.id} className="border-b border-border last:border-0 hover:bg-surface-2/50 transition-colors">
+                {filtered.map((b, idx) => (
+                  <tr key={b.id} className={`border-b border-border last:border-0 hover:bg-surface-2/50 transition-colors ${idx % 2 === 0 ? "bg-surface" : "bg-surface-2/50"}`}>
                     <td className="px-3 py-2.5">
                       <span className="font-mono text-[11px] text-text-primary tracking-wider">{b.code}</span>
                     </td>

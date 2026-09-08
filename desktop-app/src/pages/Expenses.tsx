@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Wallet, Pencil, Trash2 } from "lucide-react";
+import { Plus, Wallet, Pencil, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatCard from "@/components/shared/StatCard";
@@ -130,7 +130,7 @@ export default function Expenses() {
   return (
     <div>
       <PageHeader title="Expenses" description="Track and manage operational expenses" action={{ label: "Add Expense", onClick: openAdd, shortcut: "Mod+N" }} />
-      <div className="mb-6">
+      <div className="mb-4">
         <StatCard title="Total This Month" value={formatCurrency(totalThisMonth)} icon={<Wallet className="h-5 w-5" />} />
       </div>
       <div className="flex gap-2 mb-4 flex-wrap items-center">
@@ -138,7 +138,10 @@ export default function Expenses() {
           <Button key={cat} variant={category === cat ? "default" : "outline"} size="sm" onClick={() => setCategory(cat)}>{cat}</Button>
         ))}
         <div className="ml-auto flex items-center gap-2">
-          <Input ref={searchRef} placeholder="Search expenses..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-48 h-8 text-xs" />
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary pointer-events-none" />
+            <Input ref={searchRef} placeholder="Search expenses..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs" />
+          </div>
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
         </div>
@@ -149,8 +152,8 @@ export default function Expenses() {
       <Dialog open={open} onOpenChange={(v) => { if (!v) { setEditingId(null); } setOpen(v); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editingId ? "Edit Expense" : "Add Expense"}</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+          <div className="px-5 pb-5 space-y-3">
+            <div><Label>Title</Label><Input placeholder="Expense title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
             <div>
               <Label>Category</Label>
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
@@ -163,10 +166,10 @@ export default function Expenses() {
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Amount</Label><Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
+              <div><Label>Amount</Label><Input type="number" placeholder="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
               <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
             </div>
-            <div><Label>Notes (optional)</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div><Label>Notes (optional)</Label><Input placeholder="Additional notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <Button className="w-full" disabled={!form.title || !form.amount || createMutation.isPending || updateMutation.isPending}
               onClick={() => editingId ? updateMutation.mutate() : createMutation.mutate()}>
               {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingId ? "Update Expense" : "Add Expense"}

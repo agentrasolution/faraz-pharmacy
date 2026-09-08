@@ -177,7 +177,10 @@ export default function CheckoutPanel({
                 </div>
                 <div className="space-y-1">
                   <Label>Phone</Label>
-                  <Input value={quickPhone} onChange={(e) => setQuickPhone(e.target.value)} />
+                  <div className="flex items-center">
+                    <span className="h-9 px-2 flex items-center justify-center rounded-l-md border border-r-0 border-border bg-surface-2 text-text-secondary text-sm font-mono">+92</span>
+                    <Input inputMode="numeric" pattern="[0-9]*" value={quickPhone.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setQuickPhone(num ? `+92${num}` : ""); }} placeholder="3001234567" className="rounded-l-none" />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Father Name</Label>
@@ -185,7 +188,10 @@ export default function CheckoutPanel({
                 </div>
                 <div className="space-y-1">
                   <Label>Father Phone No</Label>
-                  <Input value={quickFatherPhone} onChange={(e) => setQuickFatherPhone(e.target.value)} />
+                  <div className="flex items-center">
+                    <span className="h-9 px-2 flex items-center justify-center rounded-l-md border border-r-0 border-border bg-surface-2 text-text-secondary text-sm font-mono">+92</span>
+                    <Input inputMode="numeric" pattern="[0-9]*" value={quickFatherPhone.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setQuickFatherPhone(num ? `+92${num}` : ""); }} placeholder="3001234567" className="rounded-l-none" />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Address</Label>

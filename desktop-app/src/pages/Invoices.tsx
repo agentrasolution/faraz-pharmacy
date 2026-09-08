@@ -20,6 +20,7 @@ export default function Invoices() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [printSale, setPrintSale] = useState<Sale | null>(null);
+  const [showProfitId, setShowProfitId] = useState<string | null>(null);
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ["invoices", search, dateFrom, dateTo],
@@ -87,9 +88,19 @@ export default function Invoices() {
     { key: "created_at", header: "Date", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(s.created_at)}</span> },
     { key: "id", header: "Invoice ID", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{s.id.slice(0, 8)}...</span> },
     { key: "customer_name", header: "Customer", cell: (s: Sale) => <span>{s.customer_name || "Walk-in"}</span> },
-    { key: "items", header: "Items", cell: (s: Sale) => <span className="font-mono text-sm">{s.items?.length ?? 0}</span> },
+    { key: "items", header: "Items", cell: (s: Sale) => <span className="font-mono text-sm">{(s as any).item_count ?? s.items?.length ?? 0}</span> },
     { key: "total", header: "Total", cell: (s: Sale) => <span className="font-mono font-medium">{formatCurrency(s.total)}</span> },
     { key: "amount_paid", header: "Paid", cell: (s: Sale) => <span className="font-mono">{formatCurrency(s.amount_paid)}</span> },
+    {
+      key: "profit", header: "Profit", cell: (s: Sale) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowProfitId(showProfitId === s.id ? null : s.id); }}
+          className={`font-mono font-medium cursor-pointer hover:underline ${(s.profit ?? 0) >= 0 ? "text-success" : "text-danger"}`}
+        >
+          {showProfitId === s.id ? formatCurrency(s.profit ?? 0) : "••••"}
+        </button>
+      ),
+    },
     { key: "status", header: "Status", cell: (s: Sale) => <StatusBadge status={s.status} /> },
     {
       key: "actions", header: "", cell: (s: Sale) => (

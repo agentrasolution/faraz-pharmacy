@@ -1,13 +1,12 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Factory, User, Search, Pencil, Trash2, LayoutGrid, List } from "lucide-react";
+import { Search, Pencil, Trash2, LayoutGrid, List } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -105,7 +104,7 @@ export default function Distributors() {
   return (
     <div>
       <PageHeader title="Distributors" description="Manage your supplier network" action={{ label: <><span>Add Distributor</span><ShortcutHint shortcut="Mod+N" /></>, onClick: openAdd }} />
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input autoFocus ref={searchRef} placeholder="Search distributors..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
@@ -151,49 +150,44 @@ export default function Distributors() {
           />
         </div>
       ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
         ) : filtered.length === 0 ? (
           <div className="col-span-full text-center py-12 text-sm text-text-secondary">No distributors found</div>
         ) : (
           filtered.map((dist: Distributor) => (
-            <Card key={dist.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      <Factory className="h-5 w-5 text-accent" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-medium text-text-primary truncate">{dist.name || "Unnamed Distributor"}</h3>
-                      <div className="space-y-1 mt-2">
-                        {dist.salesman_name && (
-                          <div className="flex items-center gap-1 text-xs text-text-secondary">
-                            <User className="h-3 w-3 shrink-0" />Salesman: {dist.salesman_name}
-                            {dist.salesman_contact && <span className="font-mono ml-1">({dist.salesman_contact})</span>}
-                          </div>
-                        )}
-                        {dist.delivery_man_name && (
-                          <div className="flex items-center gap-1 text-xs text-text-secondary">
-                            <User className="h-3 w-3 shrink-0" />Delivery: {dist.delivery_man_name}
-                            {dist.delivery_man_contact && <span className="font-mono ml-1">({dist.delivery_man_contact})</span>}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => openEdit(dist)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button onClick={() => setDeleteId(dist.id)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+            <div key={dist.id} className="rounded-xl border border-border bg-surface p-4 hover:border-accent/30 hover:shadow-sm transition-all group">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-semibold text-sm text-text-primary truncate pr-2">{dist.name || "Unnamed Distributor"}</h3>
+                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => openEdit(dist)} className="h-6 w-6 rounded flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => setDeleteId(dist.id)} className="h-6 w-6 rounded flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div>
+                  <p className="text-[10px] text-text-secondary uppercase tracking-wider mb-0.5">Salesman</p>
+                  <p className="text-xs text-text-primary font-medium truncate">{dist.salesman_name || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-text-secondary uppercase tracking-wider mb-0.5">Salesman Contact</p>
+                  <p className="text-xs text-text-primary font-mono truncate">{dist.salesman_contact || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-text-secondary uppercase tracking-wider mb-0.5">Delivery Man</p>
+                  <p className="text-xs text-text-primary font-medium truncate">{dist.delivery_man_name || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-text-secondary uppercase tracking-wider mb-0.5">Delivery Contact</p>
+                  <p className="text-xs text-text-primary font-mono truncate">{dist.delivery_man_contact || "—"}</p>
+                </div>
+              </div>
+            </div>
           ))
         )}
       </div>)}
@@ -215,7 +209,10 @@ export default function Distributors() {
               </div>
               <div>
                 <Label>Salesman Contact</Label>
-                <Input inputMode="numeric" pattern="[0-9]*" value={form.salesmanContact} onChange={(e) => setForm({ ...form, salesmanContact: e.target.value.replace(/\D/g, "").slice(0, 11) })} placeholder="Phone number" />
+                <div className="flex">
+                  <span className="flex items-center justify-center px-2 bg-muted border border-r-0 border-border rounded-l-md text-xs text-text-secondary">+92</span>
+                  <Input inputMode="numeric" pattern="[0-9]*" value={form.salesmanContact.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setForm({ ...form, salesmanContact: num ? `+92${num}` : "" }); }} placeholder="3001234567" className="rounded-l-none" />
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -225,7 +222,10 @@ export default function Distributors() {
               </div>
               <div>
                 <Label>Delivery Man Contact</Label>
-                <Input inputMode="numeric" pattern="[0-9]*" value={form.deliveryManContact} onChange={(e) => setForm({ ...form, deliveryManContact: e.target.value.replace(/\D/g, "").slice(0, 11) })} placeholder="Phone number" />
+                <div className="flex">
+                  <span className="flex items-center justify-center px-2 bg-muted border border-r-0 border-border rounded-l-md text-xs text-text-secondary">+92</span>
+                  <Input inputMode="numeric" pattern="[0-9]*" value={form.deliveryManContact.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setForm({ ...form, deliveryManContact: num ? `+92${num}` : "" }); }} placeholder="3001234567" className="rounded-l-none" />
+                </div>
               </div>
             </div>
             <Button className="w-full" disabled={createMutation.isPending || updateMutation.isPending}

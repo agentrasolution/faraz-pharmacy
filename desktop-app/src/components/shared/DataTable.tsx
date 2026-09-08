@@ -61,10 +61,13 @@ export default function DataTable<T>({ columns, data, loading, keyExtractor, onR
             </TableCell>
           </TableRow>
         ) : (
-          data.map((item) => (
+          data.map((item, idx) => (
             <TableRow
               key={keyExtractor(item)}
-              className={cn(onRowClick && "cursor-pointer")}
+              className={cn(
+                onRowClick && "cursor-pointer",
+                idx % 2 === 0 ? "bg-surface" : "bg-surface-2/50"
+              )}
               onClick={() => onRowClick?.(item)}
             >
               {columns.map((col) => (

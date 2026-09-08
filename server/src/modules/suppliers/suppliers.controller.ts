@@ -1,25 +1,26 @@
 import type { Request, Response, NextFunction } from "express";
 import { suppliersService } from "./suppliers.service";
+import { normalizeDistributor, normalizeDistributorList } from "../../utils/normalize";
 
 export const suppliersController = {
   async list(_req: Request, res: Response, next: NextFunction) {
     try {
       const distributors = await suppliersService.list();
-      res.json(distributors);
+      res.json(normalizeDistributorList(distributors));
     } catch (err) { next(err); }
   },
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const distributor = await suppliersService.create(req.body);
-      res.json(distributor);
+      res.json(normalizeDistributor(distributor));
     } catch (err) { next(err); }
   },
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const distributor = await suppliersService.update(req.params.id, req.body);
-      res.json(distributor);
+      res.json(normalizeDistributor(distributor));
     } catch (err) { next(err); }
   },
 

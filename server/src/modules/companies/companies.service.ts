@@ -4,10 +4,21 @@ import type { CreateCompanyInput } from "./companies.schema";
 
 export const companiesService = {
   async list() {
-    return prisma.company.findMany({
+    const companies = await prisma.company.findMany({
       orderBy: { name: "asc" },
-      include: { _count: { select: { distributors: true } } },
     });
+    
+    // Count products for each company by name match
+    const companiesWithCount = await Promise.all(
+      companies.map(async (c) => {
+        const product_count = await prisma.product.count({
+          where: { company: c.name },
+        });
+        return { ...c, product_count };
+      })
+    );
+    
+    return companiesWithCount;
   },
 
   async create(data: CreateCompanyInput) {

@@ -98,7 +98,7 @@ export default function Companies() {
   return (
     <div>
       <PageHeader title="Companies" description="Manage pharmaceutical companies" action={{ label: "Add Company", onClick: openAdd, shortcut: "Mod+N" }} />
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input autoFocus ref={searchRef} placeholder="Search companies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
@@ -192,7 +192,7 @@ export default function Companies() {
           <div className="px-5 pb-5 space-y-3">
             <div>
               <Label>Company Name</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input placeholder="Company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
               <Label>Address</Label>

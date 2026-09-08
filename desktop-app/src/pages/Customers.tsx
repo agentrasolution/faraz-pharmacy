@@ -295,7 +295,10 @@ export default function Customers() {
             </div>
             <div>
               <Label>Phone</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" />
+              <div className="flex">
+                <span className="flex items-center justify-center px-2 bg-muted border border-r-0 border-border rounded-l-md text-xs text-text-secondary">+92</span>
+                <Input inputMode="numeric" pattern="[0-9]*" value={phone.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setPhone(num ? `+92${num}` : ""); }} placeholder="3001234567" className="rounded-l-none" />
+              </div>
             </div>
             <div>
               <Label>Father Name</Label>
@@ -303,7 +306,10 @@ export default function Customers() {
             </div>
             <div>
               <Label>Father Phone No</Label>
-              <Input value={fatherPhone} onChange={(e) => setFatherPhone(e.target.value)} placeholder="Father phone (optional)" />
+              <div className="flex">
+                <span className="flex items-center justify-center px-2 bg-muted border border-r-0 border-border rounded-l-md text-xs text-text-secondary">+92</span>
+                <Input inputMode="numeric" pattern="[0-9]*" value={fatherPhone.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setFatherPhone(num ? `+92${num}` : ""); }} placeholder="3001234567" className="rounded-l-none" />
+              </div>
             </div>
             <div>
               <Label>Address</Label>
