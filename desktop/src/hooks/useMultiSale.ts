@@ -3,7 +3,6 @@ import type { SaleItemInput, DiscountType } from "@/types";
 
 export interface CartItem extends SaleItemInput {
   id: string;
-  packSize: number;
   purchasePrice: number;
 }
 
@@ -130,7 +129,7 @@ export function useMultiSale() {
   }, [updateActive, subtotal, discount]);
 
   const addItem = useCallback(
-    (product: { id: string; name: string; barcode: string; sale_price: number; purchase_price?: number; pack_size?: number }) => {
+    (product: { id: string; name: string; barcode: string; sale_price: number; purchase_price?: number }) => {
       updateActive((s) => {
         const existing = s.items.find((i) => i.productId === product.id);
         if (existing) {
@@ -156,7 +155,6 @@ export function useMultiSale() {
               unitPrice: product.sale_price,
               purchasePrice: product.purchase_price ?? 0,
               subtotal: product.sale_price,
-              packSize: product.pack_size ?? 1,
             },
           ],
         };

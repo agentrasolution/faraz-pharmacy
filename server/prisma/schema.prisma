@@ -54,7 +54,6 @@ model Product {
   markupPercent  Float            @default(20) @map("markup_percent")
   stockQty       Int              @default(0) @map("stock_qty")
   expiry         String?
-  packSize       Int              @default(1) @map("pack_size")
   active         Int              @default(1)
   createdAt      DateTime         @default(now()) @map("created_at")
   distributor    Distributor?     @relation(fields: [distributorId], references: [id])

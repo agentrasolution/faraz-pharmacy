@@ -41,8 +41,8 @@ export default function POS() {
     ? ((pendingProduct as any).prices as ProductPrice[] | undefined)
     : undefined;
 
-  const [lastSaleData, setLastSaleData] = useState<unknown>(null);
-  const [pendingPrintData, setPendingPrintData] = useState<unknown>(null);
+  const [lastSaleData, setLastSaleData] = useState<Record<string, unknown> | null>(null);
+  const [pendingPrintData, setPendingPrintData] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -136,7 +136,7 @@ export default function POS() {
     if (product) {
       const existing = cart.items.find(i => i.productId === product.id);
       if (existing) {
-        cart.incrementBy(product.id, product.pack_size);
+        cart.incrementBy(product.id, 1);
         return;
       }
       promptPriceTier(product);
@@ -147,7 +147,7 @@ export default function POS() {
       if (found) {
         const existing = cart.items.find(i => i.productId === found.id);
         if (existing) {
-          cart.incrementBy(found.id, found.pack_size);
+          cart.incrementBy(found.id, 1);
           return;
         }
         promptPriceTier(found);
@@ -162,7 +162,7 @@ export default function POS() {
     }
     const existing = cart.items.find(i => i.productId === product.id);
     if (existing) {
-      cart.incrementBy(product.id, product.pack_size);
+      cart.incrementBy(product.id, 1);
       return;
     }
     promptPriceTier(product);

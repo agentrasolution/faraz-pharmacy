@@ -23,7 +23,7 @@ import type { Product, ProductPriceInput, Category } from "@/types";
 
 interface CsvRow {
   rowNum: number; barcode: string; name: string; category: string; location: string;
-  purchasePrice: string; salePrice: string; expiry: string; company: string; packSize: string; error?: string;
+  purchasePrice: string; salePrice: string; expiry: string; company: string; error?: string;
 }
 
 interface ImportRowResult {
@@ -44,8 +44,6 @@ const HEADER_LOOKUP: Record<string, string> = {
   "location": "location", "loc": "location", "shelf": "location", "rack": "location", "position": "location", "storage": "location",
   "expiry date": "expiry", "expiry time": "expiry", "expiry": "expiry", "exp": "expiry", "expiration": "expiry", "exp date": "expiry", "use by": "expiry",
   "company": "company", "manufacturer": "company", "brand": "company", "company name": "company", "vendor": "company", "supplier": "company",
-  "pack size": "packSize", "packsize": "packSize", "units per pack": "packSize", "quantity per pack": "packSize", "pack qty": "packSize",
-  "tablets per pack": "packSize", "pack": "packSize", "per pack": "packSize",
 };
 
 interface PriceTierForm {
@@ -54,7 +52,7 @@ interface PriceTierForm {
 
 interface ProductForm {
   barcode: string; name: string; category: string; location: string;
-  purchasePrice: string; salePrice: string; packSize: string;
+  purchasePrice: string; salePrice: string;
   prices: PriceTierForm[];
 }
 
@@ -64,7 +62,7 @@ const emptyPriceTier = (): PriceTierForm => ({
 
 const emptyForm = (): ProductForm => ({
   barcode: generateBarcode(), name: "", category: "", location: "",
-  purchasePrice: "", salePrice: "", packSize: "1",
+  purchasePrice: "", salePrice: "",
   prices: [],
 });
 
@@ -153,7 +151,7 @@ export default function Products() {
     mutationFn: () => api.products.create({
       barcode: form.barcode, name: form.name, category: form.category,
       location: form.location, purchasePrice: Number(form.purchasePrice),
-      salePrice: Number(form.salePrice) || 0, packSize: Number(form.packSize),
+      salePrice: Number(form.salePrice) || 0,
       prices: buildPricesPayload(),
     }),
     onSuccess: (product) => {
@@ -172,7 +170,7 @@ export default function Products() {
     mutationFn: () => api.products.update(editingId!, {
       barcode: form.barcode, name: form.name, category: form.category,
       location: form.location, purchasePrice: Number(form.purchasePrice),
-      salePrice: Number(form.salePrice) || 0, packSize: Number(form.packSize),
+      salePrice: Number(form.salePrice) || 0,
       prices: buildPricesPayload(),
     }),
     onSuccess: () => {
@@ -274,7 +272,7 @@ export default function Products() {
     setForm({
       barcode: product.barcode, name: product.name, category: product.category,
       location: product.location, purchasePrice: String(product.purchase_price),
-      salePrice: String(product.sale_price), packSize: String(product.pack_size),
+      salePrice: String(product.sale_price),
       prices: p
         ? p.map((pt) => ({ purchasePrice: String(pt.purchasePrice), salePrice: String(pt.salePrice) }))
         : [],
@@ -345,7 +343,6 @@ export default function Products() {
         location: hasHeader(headerMap, "location") ? cols[findIndex(headerMap, "location")]?.trim() || "" : "",
         expiry: hasHeader(headerMap, "expiry") ? cols[findIndex(headerMap, "expiry")]?.trim() || "" : "",
         company: hasHeader(headerMap, "company") ? cols[findIndex(headerMap, "company")]?.trim() || "" : "",
-        packSize: hasHeader(headerMap, "packSize") ? cols[findIndex(headerMap, "packSize")]?.trim() || "" : "",
       };
       const rowErrors: string[] = [];
       if (!row.barcode) rowErrors.push("Missing barcode");
@@ -463,7 +460,6 @@ export default function Products() {
           purchasePrice: Number(row.purchasePrice),
           salePrice: Number(row.salePrice) || 0,
           expiry: row.expiry || undefined,
-          packSize: row.packSize ? Number(row.packSize) : undefined,
         });
         results[i] = { ...results[i], status: "completed" };
       } catch (err) {
@@ -791,17 +787,15 @@ export default function Products() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Pack Size (units per pack)</Label>
-              <Input type="number" min="1" value={form.packSize} onChange={(e) => setForm({ ...form, packSize: e.target.value })} placeholder="e.g. 10" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Purchase Price</Label>
-                <Input type="number" value={form.purchasePrice} onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>Sale Price</Label>
-                <Input type="number" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Purchase Price</Label>
+                  <Input type="number" value={form.purchasePrice} onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Sale Price</Label>
+                  <Input type="number" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} />
+                </div>
               </div>
             </div>
 

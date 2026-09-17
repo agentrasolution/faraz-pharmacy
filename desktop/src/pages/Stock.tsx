@@ -31,9 +31,8 @@ export default function Stock() {
   const scanRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     productId: "", distributorId: "", companyId: "",
-    invoiceNumber: "", packs: "1", quantity: "", expiry: "",
+    invoiceNumber: "", quantity: "", expiry: "",
   });
-  const [qtyLocked, setQtyLocked] = useState(true);
 
   const stockHeaders = ["Invoice", "Date", "Supplier", "Product", "Qty", "Purchase Price", "Total", "Status"];
   const stockExportRows = (data: StockPurchase[]) => data.map((s) => [
@@ -75,19 +74,6 @@ export default function Stock() {
   const { data: distributors = [] } = useQuery({ queryKey: ["distributors"], queryFn: api.distributors.list });
   const { data: companies = [] } = useQuery({ queryKey: ["companies"], queryFn: api.companies.list });
 
-  const selectedProduct = products.find((p: Product) => p.id === form.productId) as Product | undefined;
-  const packSize = selectedProduct?.pack_size ?? 1;
-
-  function handlePacksChange(packs: string) {
-    const p = Number(packs) || 0;
-    setForm((prev) => ({ ...prev, packs, quantity: qtyLocked && p > 0 ? String(p * packSize) : prev.quantity }));
-  }
-
-  function handleQuantityChange(qty: string) {
-    const q = Number(qty) || 0;
-    setForm({ ...form, quantity: qty, packs: q > 0 ? String(Math.round(q / packSize) || 1) : "1" });
-  }
-
   const totalValue = searched.reduce((s: number, i: StockPurchase) => s + i.total_value, 0);
 
   const createMutation = useMutation({
@@ -103,7 +89,7 @@ export default function Stock() {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
-      setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", packs: "1", quantity: "", expiry: "" });
+      setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", quantity: "", expiry: "" });
       toast.success("Stock purchase recorded");
     },
     onError: (err) => {
@@ -139,7 +125,7 @@ export default function Stock() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
       setEditingId(null);
-      setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", packs: "1", quantity: "", expiry: "" });
+      setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", quantity: "", expiry: "" });
       toast.success("Stock purchase updated");
     },
     onError: (err) => {
@@ -167,27 +153,21 @@ export default function Stock() {
 
   function openAdd() {
     setEditingId(null);
-    setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", packs: "1", quantity: "", expiry: "" });
-    setQtyLocked(true);
+    setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", quantity: "", expiry: "" });
     setScanValue("");
     setOpen(true);
   }
 
   function openEdit(entry: StockPurchase) {
-    const qty = entry.quantity;
-    const p = products.find((p: Product) => p.id === entry.product_id);
-    const ps = p?.pack_size ?? 1;
     setEditingId(entry.id);
     setForm({
       productId: entry.product_id,
       distributorId: entry.distributor_id || "",
       companyId: entry.company_id || "",
       invoiceNumber: entry.invoice_number || "",
-      packs: String(Math.round(qty / ps) || 1),
-      quantity: String(qty),
+      quantity: String(entry.quantity),
       expiry: entry.expiry || "",
     });
-    setQtyLocked(true);
     setOpen(true);
   }
 
@@ -314,25 +294,9 @@ export default function Stock() {
               <Label>Invoice Number</Label>
               <Input value={form.invoiceNumber} onChange={(e) => setForm({ ...form, invoiceNumber: e.target.value })} placeholder="e.g. INV-001" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Packs {packSize > 1 ? <span className="text-text-secondary font-normal">({packSize}/pack)</span> : null}</Label>
-                <Input type="number" min="1" value={form.packs} onChange={(e) => handlePacksChange(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Total Quantity</Label>
-                <div onDoubleClick={() => setQtyLocked(false)}>
-                  <Input
-                    type="number"
-                    value={form.quantity}
-                    onChange={(e) => handleQuantityChange(e.target.value)}
-                    readOnly={qtyLocked}
-                    className={qtyLocked ? "opacity-60 cursor-default select-none" : ""}
-                    tabIndex={qtyLocked ? -1 : 0}
-                    title={qtyLocked ? "Double Click to Edit" : undefined}
-                  />
-                </div>
-              </div>
+            <div className="space-y-1">
+              <Label>Quantity</Label>
+              <Input type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label>Expiry (optional)</Label>

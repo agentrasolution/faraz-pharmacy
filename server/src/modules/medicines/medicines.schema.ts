@@ -18,7 +18,6 @@ export const createProductSchema = z.object({
   markupPercent: z.number().optional().default(20),
   stockQty: z.number().int().optional().default(0),
   expiry: z.string().optional(),
-  packSize: z.number().int().optional().default(1),
   prices: z.array(priceTierSchema).optional(),
 });
 

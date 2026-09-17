@@ -1840,7 +1840,6 @@ export const ProductScalarFieldEnum = {
   markupPercent: 'markupPercent',
   stockQty: 'stockQty',
   expiry: 'expiry',
-  packSize: 'packSize',
   active: 'active',
   createdAt: 'createdAt'
 } as const

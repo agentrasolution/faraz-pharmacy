@@ -31,7 +31,6 @@ export type ProductAvgAggregateOutputType = {
   purchasePrice: number | null
   markupPercent: number | null
   stockQty: number | null
-  packSize: number | null
   active: number | null
 }
 
@@ -40,7 +39,6 @@ export type ProductSumAggregateOutputType = {
   purchasePrice: number | null
   markupPercent: number | null
   stockQty: number | null
-  packSize: number | null
   active: number | null
 }
 
@@ -57,7 +55,6 @@ export type ProductMinAggregateOutputType = {
   markupPercent: number | null
   stockQty: number | null
   expiry: string | null
-  packSize: number | null
   active: number | null
   createdAt: Date | null
 }
@@ -75,7 +72,6 @@ export type ProductMaxAggregateOutputType = {
   markupPercent: number | null
   stockQty: number | null
   expiry: string | null
-  packSize: number | null
   active: number | null
   createdAt: Date | null
 }
@@ -93,7 +89,6 @@ export type ProductCountAggregateOutputType = {
   markupPercent: number
   stockQty: number
   expiry: number
-  packSize: number
   active: number
   createdAt: number
   _all: number
@@ -105,7 +100,6 @@ export type ProductAvgAggregateInputType = {
   purchasePrice?: true
   markupPercent?: true
   stockQty?: true
-  packSize?: true
   active?: true
 }
 
@@ -114,7 +108,6 @@ export type ProductSumAggregateInputType = {
   purchasePrice?: true
   markupPercent?: true
   stockQty?: true
-  packSize?: true
   active?: true
 }
 
@@ -131,7 +124,6 @@ export type ProductMinAggregateInputType = {
   markupPercent?: true
   stockQty?: true
   expiry?: true
-  packSize?: true
   active?: true
   createdAt?: true
 }
@@ -149,7 +141,6 @@ export type ProductMaxAggregateInputType = {
   markupPercent?: true
   stockQty?: true
   expiry?: true
-  packSize?: true
   active?: true
   createdAt?: true
 }
@@ -167,7 +158,6 @@ export type ProductCountAggregateInputType = {
   markupPercent?: true
   stockQty?: true
   expiry?: true
-  packSize?: true
   active?: true
   createdAt?: true
   _all?: true
@@ -272,7 +262,6 @@ export type ProductGroupByOutputType = {
   markupPercent: number
   stockQty: number
   expiry: string | null
-  packSize: number
   active: number
   createdAt: Date
   _count: ProductCountAggregateOutputType | null
@@ -313,7 +302,6 @@ export type ProductWhereInput = {
   markupPercent?: Prisma.FloatFilter<"Product"> | number
   stockQty?: Prisma.IntFilter<"Product"> | number
   expiry?: Prisma.StringNullableFilter<"Product"> | string | null
-  packSize?: Prisma.IntFilter<"Product"> | number
   active?: Prisma.IntFilter<"Product"> | number
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   distributor?: Prisma.XOR<Prisma.DistributorNullableScalarRelationFilter, Prisma.DistributorWhereInput> | null
@@ -337,7 +325,6 @@ export type ProductOrderByWithRelationInput = {
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
   expiry?: Prisma.SortOrderInput | Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   distributor?: Prisma.DistributorOrderByWithRelationInput
@@ -364,7 +351,6 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   markupPercent?: Prisma.FloatFilter<"Product"> | number
   stockQty?: Prisma.IntFilter<"Product"> | number
   expiry?: Prisma.StringNullableFilter<"Product"> | string | null
-  packSize?: Prisma.IntFilter<"Product"> | number
   active?: Prisma.IntFilter<"Product"> | number
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   distributor?: Prisma.XOR<Prisma.DistributorNullableScalarRelationFilter, Prisma.DistributorWhereInput> | null
@@ -388,7 +374,6 @@ export type ProductOrderByWithAggregationInput = {
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
   expiry?: Prisma.SortOrderInput | Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.ProductCountOrderByAggregateInput
@@ -414,7 +399,6 @@ export type ProductScalarWhereWithAggregatesInput = {
   markupPercent?: Prisma.FloatWithAggregatesFilter<"Product"> | number
   stockQty?: Prisma.IntWithAggregatesFilter<"Product"> | number
   expiry?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
-  packSize?: Prisma.IntWithAggregatesFilter<"Product"> | number
   active?: Prisma.IntWithAggregatesFilter<"Product"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
 }
@@ -431,7 +415,6 @@ export type ProductCreateInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   distributor?: Prisma.DistributorCreateNestedOneWithoutProductsInput
@@ -455,7 +438,6 @@ export type ProductUncheckedCreateInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemUncheckedCreateNestedManyWithoutProductInput
@@ -477,7 +459,6 @@ export type ProductUpdateInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   distributor?: Prisma.DistributorUpdateOneWithoutProductsNestedInput
@@ -501,7 +482,6 @@ export type ProductUncheckedUpdateInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUncheckedUpdateManyWithoutProductNestedInput
@@ -524,7 +504,6 @@ export type ProductCreateManyInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
 }
@@ -541,7 +520,6 @@ export type ProductUpdateManyMutationInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -559,7 +537,6 @@ export type ProductUncheckedUpdateManyInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -577,7 +554,6 @@ export type ProductCountOrderByAggregateInput = {
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
   expiry?: Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -587,7 +563,6 @@ export type ProductAvgOrderByAggregateInput = {
   purchasePrice?: Prisma.SortOrder
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
 }
 
@@ -604,7 +579,6 @@ export type ProductMaxOrderByAggregateInput = {
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
   expiry?: Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -622,7 +596,6 @@ export type ProductMinOrderByAggregateInput = {
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
   expiry?: Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -632,7 +605,6 @@ export type ProductSumOrderByAggregateInput = {
   purchasePrice?: Prisma.SortOrder
   markupPercent?: Prisma.SortOrder
   stockQty?: Prisma.SortOrder
-  packSize?: Prisma.SortOrder
   active?: Prisma.SortOrder
 }
 
@@ -802,7 +774,6 @@ export type ProductCreateWithoutBarcodeLinkInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   distributor?: Prisma.DistributorCreateNestedOneWithoutProductsInput
@@ -825,7 +796,6 @@ export type ProductUncheckedCreateWithoutBarcodeLinkInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemUncheckedCreateNestedManyWithoutProductInput
@@ -862,7 +832,6 @@ export type ProductUpdateWithoutBarcodeLinkInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   distributor?: Prisma.DistributorUpdateOneWithoutProductsNestedInput
@@ -885,7 +854,6 @@ export type ProductUncheckedUpdateWithoutBarcodeLinkInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUncheckedUpdateManyWithoutProductNestedInput
@@ -906,7 +874,6 @@ export type ProductCreateWithoutPricesInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   distributor?: Prisma.DistributorCreateNestedOneWithoutProductsInput
@@ -929,7 +896,6 @@ export type ProductUncheckedCreateWithoutPricesInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemUncheckedCreateNestedManyWithoutProductInput
@@ -966,7 +932,6 @@ export type ProductUpdateWithoutPricesInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   distributor?: Prisma.DistributorUpdateOneWithoutProductsNestedInput
@@ -989,7 +954,6 @@ export type ProductUncheckedUpdateWithoutPricesInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUncheckedUpdateManyWithoutProductNestedInput
@@ -1010,7 +974,6 @@ export type ProductCreateWithoutDistributorInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemCreateNestedManyWithoutProductInput
@@ -1032,7 +995,6 @@ export type ProductUncheckedCreateWithoutDistributorInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemUncheckedCreateNestedManyWithoutProductInput
@@ -1084,7 +1046,6 @@ export type ProductScalarWhereInput = {
   markupPercent?: Prisma.FloatFilter<"Product"> | number
   stockQty?: Prisma.IntFilter<"Product"> | number
   expiry?: Prisma.StringNullableFilter<"Product"> | string | null
-  packSize?: Prisma.IntFilter<"Product"> | number
   active?: Prisma.IntFilter<"Product"> | number
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
 }
@@ -1101,7 +1062,6 @@ export type ProductCreateWithoutSaleItemsInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   distributor?: Prisma.DistributorCreateNestedOneWithoutProductsInput
@@ -1124,7 +1084,6 @@ export type ProductUncheckedCreateWithoutSaleItemsInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   stockPurchases?: Prisma.StockPurchaseUncheckedCreateNestedManyWithoutProductInput
@@ -1161,7 +1120,6 @@ export type ProductUpdateWithoutSaleItemsInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   distributor?: Prisma.DistributorUpdateOneWithoutProductsNestedInput
@@ -1184,7 +1142,6 @@ export type ProductUncheckedUpdateWithoutSaleItemsInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stockPurchases?: Prisma.StockPurchaseUncheckedUpdateManyWithoutProductNestedInput
@@ -1205,7 +1162,6 @@ export type ProductCreateWithoutStockPurchasesInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   distributor?: Prisma.DistributorCreateNestedOneWithoutProductsInput
@@ -1228,7 +1184,6 @@ export type ProductUncheckedCreateWithoutStockPurchasesInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemUncheckedCreateNestedManyWithoutProductInput
@@ -1265,7 +1220,6 @@ export type ProductUpdateWithoutStockPurchasesInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   distributor?: Prisma.DistributorUpdateOneWithoutProductsNestedInput
@@ -1288,7 +1242,6 @@ export type ProductUncheckedUpdateWithoutStockPurchasesInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUncheckedUpdateManyWithoutProductNestedInput
@@ -1309,7 +1262,6 @@ export type ProductCreateWithoutReturnItemsInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   distributor?: Prisma.DistributorCreateNestedOneWithoutProductsInput
@@ -1332,7 +1284,6 @@ export type ProductUncheckedCreateWithoutReturnItemsInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
   saleItems?: Prisma.SaleItemUncheckedCreateNestedManyWithoutProductInput
@@ -1369,7 +1320,6 @@ export type ProductUpdateWithoutReturnItemsInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   distributor?: Prisma.DistributorUpdateOneWithoutProductsNestedInput
@@ -1392,7 +1342,6 @@ export type ProductUncheckedUpdateWithoutReturnItemsInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUncheckedUpdateManyWithoutProductNestedInput
@@ -1413,7 +1362,6 @@ export type ProductCreateManyDistributorInput = {
   markupPercent?: number
   stockQty?: number
   expiry?: string | null
-  packSize?: number
   active?: number
   createdAt?: Date | string
 }
@@ -1430,7 +1378,6 @@ export type ProductUpdateWithoutDistributorInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUpdateManyWithoutProductNestedInput
@@ -1452,7 +1399,6 @@ export type ProductUncheckedUpdateWithoutDistributorInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   saleItems?: Prisma.SaleItemUncheckedUpdateManyWithoutProductNestedInput
@@ -1474,7 +1420,6 @@ export type ProductUncheckedUpdateManyWithoutDistributorInput = {
   markupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
   stockQty?: Prisma.IntFieldUpdateOperationsInput | number
   expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packSize?: Prisma.IntFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1550,7 +1495,6 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   markupPercent?: boolean
   stockQty?: boolean
   expiry?: boolean
-  packSize?: boolean
   active?: boolean
   createdAt?: boolean
   distributor?: boolean | Prisma.Product$distributorArgs<ExtArgs>
@@ -1575,7 +1519,6 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   markupPercent?: boolean
   stockQty?: boolean
   expiry?: boolean
-  packSize?: boolean
   active?: boolean
   createdAt?: boolean
   distributor?: boolean | Prisma.Product$distributorArgs<ExtArgs>
@@ -1594,7 +1537,6 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   markupPercent?: boolean
   stockQty?: boolean
   expiry?: boolean
-  packSize?: boolean
   active?: boolean
   createdAt?: boolean
   distributor?: boolean | Prisma.Product$distributorArgs<ExtArgs>
@@ -1613,12 +1555,11 @@ export type ProductSelectScalar = {
   markupPercent?: boolean
   stockQty?: boolean
   expiry?: boolean
-  packSize?: boolean
   active?: boolean
   createdAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "barcode" | "name" | "company" | "category" | "location" | "distributorId" | "salePrice" | "purchasePrice" | "markupPercent" | "stockQty" | "expiry" | "packSize" | "active" | "createdAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "barcode" | "name" | "company" | "category" | "location" | "distributorId" | "salePrice" | "purchasePrice" | "markupPercent" | "stockQty" | "expiry" | "active" | "createdAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   distributor?: boolean | Prisma.Product$distributorArgs<ExtArgs>
   saleItems?: boolean | Prisma.Product$saleItemsArgs<ExtArgs>
@@ -1658,7 +1599,6 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     markupPercent: number
     stockQty: number
     expiry: string | null
-    packSize: number
     active: number
     createdAt: Date
   }, ExtArgs["result"]["product"]>
@@ -2102,7 +2042,6 @@ export interface ProductFieldRefs {
   readonly markupPercent: Prisma.FieldRef<"Product", 'Float'>
   readonly stockQty: Prisma.FieldRef<"Product", 'Int'>
   readonly expiry: Prisma.FieldRef<"Product", 'String'>
-  readonly packSize: Prisma.FieldRef<"Product", 'Int'>
   readonly active: Prisma.FieldRef<"Product", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Product", 'DateTime'>
 }

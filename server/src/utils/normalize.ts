@@ -12,7 +12,6 @@ export function normalizeProduct(product: any): any {
     purchase_price: product.purchasePrice ?? 0,
     markup_percent: product.markupPercent ?? 20,
     stock_qty: product.stockQty ?? 0,
-    pack_size: product.packSize ?? 1,
     expiry: product.expiry ?? null,
     active: product.active ?? 1,
     created_at: product.createdAt?.toISOString?.() ?? product.createdAt,

@@ -34,7 +34,6 @@ export interface Product {
   purchase_price: number;
   markup_percent: number;
   stock_qty: number;
-  pack_size: number;
   expiry?: string;
   batch_no?: string;
   active: number;
@@ -52,7 +51,6 @@ export interface ProductInput {
   category?: string;
   location?: string;
   expiry?: string;
-  packSize?: number;
   prices?: ProductPriceInput[];
 }
 
