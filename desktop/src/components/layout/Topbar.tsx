@@ -15,7 +15,6 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/invoices": { title: "Invoices", subtitle: "Sales invoices" },
   "/arrears": { title: "Arrears", subtitle: "Outstanding payments" },
   "/distributors": { title: "Distributors", subtitle: "Supplier management" },
-  "/companies": { title: "Companies", subtitle: "Company records" },
   "/returns": { title: "Returns", subtitle: "Return management" },
   "/expenses": { title: "Expenses", subtitle: "Expense tracking" },
   "/reports": { title: "Reports", subtitle: "Business insights" },

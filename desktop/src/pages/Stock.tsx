@@ -30,7 +30,7 @@ export default function Stock() {
   const [scanValue, setScanValue] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    productId: "", distributorId: "", companyId: "",
+    productId: "", distributorId: "",
     invoiceNumber: "", quantity: "", expiry: "",
   });
 
@@ -72,7 +72,6 @@ export default function Stock() {
   );
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
   const { data: distributors = [] } = useQuery({ queryKey: ["distributors"], queryFn: api.distributors.list });
-  const { data: companies = [] } = useQuery({ queryKey: ["companies"], queryFn: api.companies.list });
 
   const totalValue = searched.reduce((s: number, i: StockPurchase) => s + i.total_value, 0);
 
@@ -80,7 +79,6 @@ export default function Stock() {
     mutationFn: () => api.stock.create({
       productId: form.productId,
       distributorId: form.distributorId || undefined,
-      companyId: form.companyId || undefined,
       invoiceNumber: form.invoiceNumber,
       quantity: Number(form.quantity),
       expiry: form.expiry || undefined,
@@ -89,7 +87,7 @@ export default function Stock() {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
-      setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", quantity: "", expiry: "" });
+      setForm({ productId: "", distributorId: "", invoiceNumber: "", quantity: "", expiry: "" });
       toast.success("Stock purchase recorded");
     },
     onError: (err) => {

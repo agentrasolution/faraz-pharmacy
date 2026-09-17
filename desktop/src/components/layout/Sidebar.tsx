@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { modKey } from "@/lib/os";
 import {
   LayoutDashboard, ShoppingCart, Package, Boxes, Tags, Users, CreditCard,
-  Factory, Building2, Undo2, Wallet, BarChart3, Receipt, Barcode, Settings,
+  Factory, Undo2, Wallet, BarChart3, Receipt, Barcode, Settings,
   LogOut, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,20 +13,19 @@ import { toast } from "sonner";
 import logoSrc from "@/asset/image/logo.png";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "F12", key: "F12" },
-  { href: "/pos", label: "POS / Sales", icon: ShoppingCart, shortcut: "Mod+S", key: "S" },
-  { href: "/invoices", label: "Invoices", icon: Receipt, shortcut: "Mod+I", key: "I" },
-  { href: "/returns", label: "Returns", icon: Undo2, shortcut: "Mod+R", key: "R" },
-  { href: "/customers", label: "Customers", icon: Users, shortcut: "Mod+C", key: "C" },
-  { href: "/arrears", label: "Arrears", icon: CreditCard, shortcut: "Mod+A", key: "A" },
-  { href: "/products", label: "Products", icon: Package, shortcut: "Mod+P", key: "P" },
-  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "Mod+T", key: "T" },
-  { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "Mod+B", key: "B" },
-  { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "Mod+D", key: "D" },
-  { href: "/companies", label: "Companies", icon: Building2, shortcut: "Mod+M", key: "M" },
-  { href: "/expenses", label: "Expenses", icon: Wallet, shortcut: "Mod+E", key: "E" },
-  { href: "/reports", label: "Reports", icon: BarChart3, shortcut: "Mod+H", key: "H" },
-  { href: "/settings", label: "Settings", icon: Settings, shortcut: "F10", key: "F10" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "F1", key: "F1" },
+  { href: "/pos", label: "POS / Sales", icon: ShoppingCart, shortcut: "F2", key: "F2" },
+  { href: "/invoices", label: "Invoices", icon: Receipt, shortcut: "F3", key: "F3" },
+  { href: "/returns", label: "Returns", icon: Undo2, shortcut: "F4", key: "F4" },
+  { href: "/customers", label: "Customers", icon: Users, shortcut: "F5", key: "F5" },
+  { href: "/arrears", label: "Arrears", icon: CreditCard, shortcut: "F6", key: "F6" },
+  { href: "/products", label: "Products", icon: Package, shortcut: "F7", key: "F7" },
+  { href: "/stock", label: "Stock", icon: Boxes, shortcut: "F8", key: "F8" },
+  { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "F9", key: "F9" },
+  { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "F10", key: "F10" },
+  { href: "/expenses", label: "Expenses", icon: Wallet, shortcut: "F11", key: "F11" },
+  { href: "/reports", label: "Reports", icon: BarChart3, shortcut: "F12", key: "F12" },
+  { href: "/settings", label: "Settings", icon: Settings, shortcut: "F13", key: "F13" },
 ];
 
 export default function Sidebar() {

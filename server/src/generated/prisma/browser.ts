@@ -53,11 +53,6 @@ export type ProductPrice = Prisma.ProductPriceModel
  */
 export type Distributor = Prisma.DistributorModel
 /**
- * Model Company
- * 
- */
-export type Company = Prisma.CompanyModel
-/**
  * Model Customer
  * 
  */

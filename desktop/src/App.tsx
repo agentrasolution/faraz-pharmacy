@@ -19,7 +19,6 @@ import CustomerDetail from "@/pages/CustomerDetail";
 import Arrears from "@/pages/Arrears";
 import Stock from "@/pages/Stock";
 import Distributors from "@/pages/Distributors";
-import Companies from "@/pages/Companies";
 import Returns from "@/pages/Returns";
 import Categories from "@/pages/Categories";
 import Barcodes from "@/pages/Barcodes";
@@ -77,42 +76,23 @@ function AppShell() {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      const mod = e.metaKey || e.ctrlKey;
-
-      // Cmd/Ctrl + letter shortcuts (work everywhere)
-      if (mod) {
-        switch (e.key.toLowerCase()) {
-          case "s": e.preventDefault(); navigate("/pos"); return;
-          case "i": e.preventDefault(); navigate("/invoices"); return;
-          case "r": e.preventDefault(); navigate("/returns"); return;
-          case "c": e.preventDefault(); navigate("/customers"); return;
-          case "a": e.preventDefault(); navigate("/arrears"); return;
-          case "p": e.preventDefault(); navigate("/products"); return;
-          case "t": e.preventDefault(); navigate("/stock"); return;
-          case "b": e.preventDefault(); navigate("/barcodes"); return;
-          case "d": e.preventDefault(); navigate("/distributors"); return;
-          case "m": e.preventDefault(); navigate("/companies"); return;
-          case "e": e.preventDefault(); navigate("/expenses"); return;
-          case "h": e.preventDefault(); navigate("/reports"); return;
-        }
-        return;
-      }
 
       // F-keys (only when not typing)
-      if (!typing && !e.altKey && !e.ctrlKey) {
+      if (!typing && !e.altKey && !e.ctrlKey && !e.metaKey) {
         switch (e.key) {
-          case "F1": e.preventDefault(); navigate("/pos"); break;
-          case "F2": e.preventDefault(); navigate("/invoices"); break;
-          case "F3": e.preventDefault(); navigate("/returns"); break;
-          case "F4": e.preventDefault(); navigate("/customers"); break;
-          case "F5": e.preventDefault(); navigate("/arrears"); break;
-          case "F6": e.preventDefault(); navigate("/products"); break;
-          case "F7": e.preventDefault(); navigate("/stock"); break;
-          case "F8": e.preventDefault(); navigate("/barcodes"); break;
-          case "F9": e.preventDefault(); navigate("/expenses"); break;
-          case "F10": e.preventDefault(); navigate("/settings"); break;
-          case "F11": e.preventDefault(); window.toggleFullscreen?.(); break;
-          case "F12": e.preventDefault(); navigate("/dashboard"); break;
+          case "F1": e.preventDefault(); navigate("/dashboard"); break;
+          case "F2": e.preventDefault(); navigate("/pos"); break;
+          case "F3": e.preventDefault(); navigate("/invoices"); break;
+          case "F4": e.preventDefault(); navigate("/returns"); break;
+          case "F5": e.preventDefault(); navigate("/customers"); break;
+          case "F6": e.preventDefault(); navigate("/arrears"); break;
+          case "F7": e.preventDefault(); navigate("/products"); break;
+          case "F8": e.preventDefault(); navigate("/stock"); break;
+          case "F9": e.preventDefault(); navigate("/barcodes"); break;
+          case "F10": e.preventDefault(); navigate("/distributors"); break;
+          case "F11": e.preventDefault(); navigate("/expenses"); break;
+          case "F12": e.preventDefault(); navigate("/reports"); break;
+          case "F13": e.preventDefault(); navigate("/settings"); break;
         }
       }
     };
@@ -138,7 +118,6 @@ function AppShell() {
         <Route path="/arrears" element={<AnimatedPage><Arrears /></AnimatedPage>} />
         <Route path="/stock" element={<AnimatedPage><Stock /></AnimatedPage>} />
         <Route path="/distributors" element={<AnimatedPage><Distributors /></AnimatedPage>} />
-        <Route path="/companies" element={<AnimatedPage><Companies /></AnimatedPage>} />
         <Route path="/barcodes" element={<AnimatedPage><Barcodes /></AnimatedPage>} />
         <Route path="/returns" element={<AnimatedPage><Returns /></AnimatedPage>} />
         <Route path="/expenses" element={<AnimatedPage><Expenses /></AnimatedPage>} />

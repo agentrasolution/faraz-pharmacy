@@ -11,7 +11,6 @@ export const purchasesService = {
       include: {
         product: { select: { name: true } },
         distributor: { select: { name: true } },
-        company: { select: { name: true } },
       },
     });
   },
@@ -31,7 +30,7 @@ export const purchasesService = {
         data: {
           productId: data.productId,
           distributorId: data.distributorId ?? null,
-          companyId: data.companyId ?? null,
+          company: data.company ?? null,
           invoiceNumber: data.invoiceNumber ?? "",
           quantity: data.quantity,
           purchasePrice: price,
@@ -42,7 +41,6 @@ export const purchasesService = {
         include: {
           product: { select: { name: true } },
           distributor: { select: { name: true } },
-          company: { select: { name: true } },
         },
       });
 
@@ -73,14 +71,13 @@ export const purchasesService = {
           quantity: data.quantity ?? old.quantity,
           expiry: data.expiry ?? old.expiry,
           totalValue,
-          companyId: data.companyId ?? old.companyId,
+          company: data.company ?? old.company,
           invoiceNumber: data.invoiceNumber ?? old.invoiceNumber,
           distributorId: data.distributorId ?? old.distributorId,
         },
         include: {
           product: { select: { name: true } },
           distributor: { select: { name: true } },
-          company: { select: { name: true } },
         },
       });
 

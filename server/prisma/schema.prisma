@@ -103,19 +103,6 @@ model Distributor {
   @@map("distributors")
 }
 
-model Company {
-  id            String        @id @default(uuid())
-  name          String
-  contact       String        @default("")
-  phone         String        @default("")
-  secondNumber  String        @default("") @map("second_number")
-  address       String        @default("")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  stockPurchases StockPurchase[]
-
-  @@map("companies")
-}
-
 model Customer {
   id         String    @id @default(uuid())
   name       String
@@ -194,7 +181,7 @@ model StockPurchase {
   id             String       @id @default(uuid())
   productId      String       @map("product_id")
   distributorId  String?      @map("distributor_id")
-  companyId      String?      @map("company_id")
+  company        String?      @map("company")
   invoiceNumber  String       @default("") @map("invoice_number")
   quantity       Int          @default(0)
   purchasePrice  Float        @default(0) @map("purchase_price")
@@ -205,7 +192,6 @@ model StockPurchase {
   createdAt      DateTime     @default(now()) @map("created_at")
   product        Product      @relation(fields: [productId], references: [id])
   distributor    Distributor? @relation(fields: [distributorId], references: [id])
-  company        Company?     @relation(fields: [companyId], references: [id])
 
   @@map("stock_purchases")
 }

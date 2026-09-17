@@ -58,7 +58,6 @@ export const ModelName = {
   Barcode: 'Barcode',
   ProductPrice: 'ProductPrice',
   Distributor: 'Distributor',
-  Company: 'Company',
   Customer: 'Customer',
   Sale: 'Sale',
   SaleItem: 'SaleItem',
@@ -178,19 +177,6 @@ export const DistributorScalarFieldEnum = {
 export type DistributorScalarFieldEnum = (typeof DistributorScalarFieldEnum)[keyof typeof DistributorScalarFieldEnum]
 
 
-export const CompanyScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  contact: 'contact',
-  phone: 'phone',
-  secondNumber: 'secondNumber',
-  address: 'address',
-  createdAt: 'createdAt'
-} as const
-
-export type CompanyScalarFieldEnum = (typeof CompanyScalarFieldEnum)[keyof typeof CompanyScalarFieldEnum]
-
-
 export const CustomerScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -262,7 +248,7 @@ export const StockPurchaseScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
   distributorId: 'distributorId',
-  companyId: 'companyId',
+  company: 'company',
   invoiceNumber: 'invoiceNumber',
   quantity: 'quantity',
   purchasePrice: 'purchasePrice',

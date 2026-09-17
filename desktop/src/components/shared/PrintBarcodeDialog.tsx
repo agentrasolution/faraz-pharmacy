@@ -14,14 +14,6 @@ import {
 import { generateBarcode, renderBarcode } from "@/lib/utils";
 import { api } from "@/lib/api";
 
-const LABEL_SIZES = [
-  { value: "35x20", label: "35 x 20 mm" },
-  { value: "40x25", label: "40 x 25 mm" },
-  { value: "50x30", label: "50 x 30 mm" },
-  { value: "60x40", label: "60 x 40 mm" },
-  { value: "100x50", label: "100 x 50 mm" },
-] as const;
-
 interface PrintBarcodeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,8 +27,8 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
   const [isNewBarcode, setIsNewBarcode] = useState(false);
   const [printers, setPrinters] = useState<{ name: string; displayName: string; isDefault: boolean }[]>([]);
   const [selectedPrinter, setSelectedPrinter] = useState("default");
-  const [labelSize, setLabelSize] = useState("50x30");
   const barcodeId = useRef(0);
+  const labelSize = "35x20";
 
   useEffect(() => {
     if (!open) return;
@@ -173,27 +165,10 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>Label size</Label>
-                  <Select value={labelSize} onValueChange={setLabelSize}>
-                    <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Label size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LABEL_SIZES.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>
-                          {s.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
+              <div className="space-y-1">
                   <Label>Number of copies</Label>
                   <Input type="number" min={1} max={100} value={copies} onChange={(e) => setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} />
                 </div>
-              </div>
               <Button className="w-full" onClick={handlePrint}>
                 Print {copies} label{copies > 1 ? "s" : ""}
               </Button>
