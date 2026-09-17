@@ -1,5 +1,6 @@
-import { Trash2, Minus, Plus, Package } from "lucide-react";
+import { Trash2, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useState, useRef, useEffect } from "react";
 
 interface CartItemProps {
   item: { productId: string; productName: string; unitPrice: number; quantity: number; subtotal: number; packSize?: number };
@@ -12,6 +13,31 @@ export default function CartItem({ item, onUpdateQuantity, onIncrementBy, onRemo
   const packSize = item.packSize ?? 1;
   const quickBtns = [5, 10, 20];
   const packLabel = packSize > 1 ? `${packSize}/pack` : null;
+  const [localQuantity, setLocalQuantity] = useState(item.quantity);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalQuantity(item.quantity);
+  }, [item.quantity]);
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    const quantity = value ? Math.max(1, parseInt(value, 10)) : 1;
+    setLocalQuantity(quantity);
+    onUpdateQuantity(item.productId, quantity);
+  };
+
+  const handleBlur = () => {
+    const quantity = Math.max(1, localQuantity);
+    setLocalQuantity(quantity);
+    onUpdateQuantity(item.productId, quantity);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
 
   return (
     <div className="group flex items-center gap-2.5 py-2 border-b border-border last:border-0">
@@ -39,20 +65,18 @@ export default function CartItem({ item, onUpdateQuantity, onIncrementBy, onRemo
         </div>
       </div>
       <div className="flex items-center gap-1">
-        <button
-          onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)}
-          disabled={item.quantity <= 1}
-          className="h-6 w-6 rounded flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-2 disabled:opacity-30 transition-colors"
-        >
-          <Minus className="h-3 w-3" />
-        </button>
-        <span className="w-7 text-center text-xs font-semibold font-mono tabular-nums">{item.quantity}</span>
-        <button
-          onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
-          className="h-6 w-6 rounded flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors"
-        >
-          <Plus className="h-3 w-3" />
-        </button>
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={localQuantity}
+          onChange={handleQuantityChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className="w-12 h-6 rounded border border-border bg-surface text-center text-xs font-semibold font-mono tabular-nums text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+          aria-label="Quantity"
+        />
       </div>
       <div className="text-right min-w-[60px]">
         <p className="text-xs font-semibold font-mono tabular-nums">{formatCurrency(item.subtotal)}</p>
