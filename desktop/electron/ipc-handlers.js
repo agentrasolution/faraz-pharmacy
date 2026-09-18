@@ -111,9 +111,9 @@ function registerHandlers() {
 
   ipcMain.handle(
     "print:barcode-label",
-    async (_, barcode, copies, svgHtml, labelWidth, labelHeight, deviceName) => {
+    async (_, barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName) => {
       try {
-        await printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName);
+        await printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName);
         return { success: true };
       } catch (e) {
         return { success: false, error: e.message };

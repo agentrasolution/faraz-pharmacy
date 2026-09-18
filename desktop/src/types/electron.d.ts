@@ -67,7 +67,7 @@ declare global {
     appConfig: AppConfig;
     printReceipt: (sale: unknown, printerConfig?: PrinterConfig) => Promise<{ success: boolean; error?: string }>;
     printReturnReceipt: (returnData: unknown, sale: unknown, printerConfig?: PrinterConfig) => Promise<{ success: boolean; error?: string }>;
-    printBarcodeLabel: (barcode: string, copies: number, svgHtml?: string, labelWidth?: number, labelHeight?: number, deviceName?: string) => Promise<{ success: boolean; error?: string }>;
+    printBarcodeLabel: (barcode: string, copies: number, svgHtml?: string, labelWidth?: number, labelHeight?: number, deviceName?: string, productName?: string) => Promise<{ success: boolean; error?: string }>;
     generateReceiptHTML: (sale: unknown, paperSize?: string) => Promise<{ success: boolean; html: string; error?: string }>;
     generateReturnReceiptHTML: (returnData: unknown, sale: unknown, paperSize?: string) => Promise<{ success: boolean; html: string; error?: string }>;
     toggleFullscreen: () => Promise<{ success: boolean; fullscreen?: boolean }>;

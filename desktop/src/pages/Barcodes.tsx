@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2, Archive, RotateCcw } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
@@ -15,12 +15,12 @@ import ExportButton from "@/components/shared/ExportButton";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
 import type { BarcodeEntry } from "@/types";
 
-const container = {
+const container: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.03 } },
 };
 
-const cardAnim = {
+const cardAnim: Variants = {
   hidden: { opacity: 0, y: 12, scale: 0.97 },
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
 };
@@ -29,7 +29,7 @@ export default function Barcodes() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [showArchived, setShowArchived] = useState(false);
-  const [printTarget, setPrintTarget] = useState<string | undefined>(undefined);
+  const [printTarget, setPrintTarget] = useState<{ barcode: string; productName?: string } | undefined>(undefined);
   const [printOpen, setPrintOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BarcodeEntry | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<BarcodeEntry | null>(null);
@@ -142,8 +142,8 @@ export default function Barcodes() {
     return () => cancelAnimationFrame(timer);
   }, [filtered, view]);
 
-  function openPrint(barcode: string) {
-    setPrintTarget(barcode);
+  function openPrint(barcode: string, productName?: string) {
+    setPrintTarget({ barcode, productName });
     setPrintOpen(true);
   }
 
@@ -318,7 +318,7 @@ export default function Barcodes() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => openPrint(b.code)}
+                  onClick={() => openPrint(b.code, b.product?.name)}
                   className="w-full h-6 text-[9px] gap-1 mt-auto opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
                 >
                   <Printer className="h-2.5 w-2.5" />
@@ -354,7 +354,7 @@ export default function Barcodes() {
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button size="sm" variant="outline" onClick={() => openPrint(b.code)} className="h-7 text-[10px] gap-1.5">
+                        <Button size="sm" variant="outline" onClick={() => openPrint(b.code, b.product?.name)} className="h-7 text-[10px] gap-1.5">
                           <Printer className="h-3 w-3" />
                           Print
                         </Button>
@@ -404,7 +404,8 @@ export default function Barcodes() {
       <PrintBarcodeDialog
         open={printOpen}
         onOpenChange={setPrintOpen}
-        barcode={printTarget}
+        barcode={printTarget?.barcode}
+        productName={printTarget?.productName}
       />
 
       <PasswordConfirmDialog

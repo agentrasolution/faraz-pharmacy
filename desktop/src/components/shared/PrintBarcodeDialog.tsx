@@ -18,9 +18,10 @@ interface PrintBarcodeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   barcode?: string;
+  productName?: string;
 }
 
-export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBarcode }: PrintBarcodeDialogProps) {
+export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBarcode, productName }: PrintBarcodeDialogProps) {
   const [barcode, setBarcode] = useState("");
   const [copies, setCopies] = useState(1);
   const [generating, setGenerating] = useState(false);
@@ -106,6 +107,7 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
         labelWidth,
         labelHeight,
         selectedPrinter === "default" ? undefined : selectedPrinter,
+        productName
       );
       if (!result.success) {
         alert("Barcode print failed: " + (result.error || "Unknown error"));
@@ -137,7 +139,14 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
                 <div className="flex items-center justify-center w-full min-h-[80px]">
                   <svg id="barcode-svg" />
                 </div>
-                <p className="text-xs text-text-secondary font-mono tracking-wider">{barcode}</p>
+                {productName ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-sm font-bold text-text-primary text-center truncate w-full max-w-[200px]">{productName}</p>
+                    <p className="text-[10px] text-text-secondary font-mono tracking-wider">{barcode}</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-text-secondary font-mono tracking-wider">{barcode}</p>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Printer</Label>

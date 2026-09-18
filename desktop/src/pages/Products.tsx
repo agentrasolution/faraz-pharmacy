@@ -90,7 +90,7 @@ export default function Products() {
   const [catDeleteId, setCatDeleteId] = useState<string | null>(null);
   const [catName, setCatName] = useState("");
   const [catSearch, setCatSearch] = useState("");
-  const [printBarcode, setPrintBarcode] = useState<{ barcode?: string } | null>(null);
+  const [printBarcode, setPrintBarcode] = useState<any | null>(null);
   const [archivePasswordOpen, setArchivePasswordOpen] = useState(false);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
   const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
@@ -997,6 +997,7 @@ export default function Products() {
         open={!!printBarcode}
         onOpenChange={(v) => { if (!v) setPrintBarcode(null); }}
         barcode={printBarcode?.barcode}
+        productName={printBarcode?.name || printBarcode?.productName}
       />
     </div>
   );
