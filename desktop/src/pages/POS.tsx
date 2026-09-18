@@ -250,14 +250,13 @@ export default function POS() {
       {isPosWindow && (
         <div
           className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-3 -mx-5 lg:-mx-6 px-5 lg:px-6 select-none"
-          style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
         >
-          <div className="flex gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+          <div className="flex gap-1 no-drag">
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
           </div>
-          <span className="text-[9px] text-text-secondary/50 font-medium tracking-wider uppercase" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>Drag to move</span>
+          <span className="no-drag text-[9px] text-text-secondary/50 font-medium tracking-wider uppercase">Drag to move</span>
         </div>
       )}
       <div className="flex justify-end shrink-0">

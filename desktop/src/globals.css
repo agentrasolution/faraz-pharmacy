@@ -181,3 +181,12 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 10px; }
 .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+/* Electron Window Drag */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag, button, input, textarea, select, a {
+  -webkit-app-region: no-drag;
+}
