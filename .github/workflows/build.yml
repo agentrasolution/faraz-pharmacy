@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -21,9 +21,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
           cache: npm
-          cache-dependency-path: desktop-app/package-lock.json
+          cache-dependency-path: desktop/package-lock.json
 
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
@@ -33,19 +33,15 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: desktop-app
-
-      - name: Rebuild native modules for Electron
-        run: npx @electron/rebuild
-        working-directory: desktop-app
+        working-directory: desktop
 
       - name: Build renderer
         run: npm run build:renderer
-        working-directory: desktop-app
+        working-directory: desktop
 
       - name: Package and publish
         run: npx electron-builder --publish=always
-        working-directory: desktop-app
+        working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -53,4 +49,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: faraz-pharmacy-${{ matrix.os }}
-          path: desktop-app/dist-electron/*
+          path: desktop/dist-electron/*
