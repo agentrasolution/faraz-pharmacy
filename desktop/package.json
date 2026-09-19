@@ -12,7 +12,9 @@
     "dev:electron": "nodemon --watch electron -e js --exec \"electron . --dev\"",
     "build": "vite build && electron-builder",
     "build:renderer": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"electron/**/*.{js,cjs}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"electron/**/*.{js,cjs}\""
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.0",

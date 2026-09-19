@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+dist-electron/
+build/
+.next/
+
+# Vendor libraries
+desktop/electron/vendor/
+
+# Database migrations (never reformat prisma migrations)
+server/prisma/migrations/
+
+# Generated Prisma client
+server/src/generated/
+
+# Logs and cache
+coverage/
+*.tsbuildinfo
+*.log
+
+# Data and documentation/agent files
+*.csv
+*.txt
+*.md
+.agents/
+skills-lock.json
+package-lock.json
+

@@ -19,7 +19,9 @@
     "db:migrate:name": "prisma migrate dev --name",
     "db:deploy": "prisma migrate deploy",
     "setup": "npm install && npm run db:setup && npm run build",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\" \"*.{ts,js,cjs,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\" \"*.{ts,js,cjs,json}\""
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

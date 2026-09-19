@@ -1,0 +1,42 @@
+name: Code Format Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'server/**'
+      - '.prettierrc'
+      - '.prettierignore'
+      - '.github/workflows/format-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'server/**'
+      - '.prettierrc'
+      - '.prettierignore'
+      - '.github/workflows/format-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  format-check:
+    name: Verify Code Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Prettier
+        run: npm install -g prettier
+
+      - name: Check code formatting
+        run: prettier --check .
