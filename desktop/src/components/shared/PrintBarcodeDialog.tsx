@@ -29,7 +29,13 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
   const [printers, setPrinters] = useState<{ name: string; displayName: string; isDefault: boolean }[]>([]);
   const [selectedPrinter, setSelectedPrinter] = useState("default");
   const barcodeId = useRef(0);
-  const labelSize = "35x20";
+  const [labelSize, setLabelSize] = useState(() => {
+    try {
+      return localStorage.getItem("faraz_label_size") || "35x20";
+    } catch {
+      return "35x20";
+    }
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -88,9 +94,17 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
     if (!svg) return;
     requestAnimationFrame(() => {
       if (id !== barcodeId.current) return;
-      renderBarcode(svg, barcode, { margin: 10 });
+      const [, h] = labelSize.split("x").map(Number);
+      const isSmall = (h || 20) <= 22;
+      renderBarcode(svg, barcode, {
+        width: isSmall ? 1.2 : 1.4,
+        height: isSmall ? 25 : 36,
+        fontSize: isSmall ? 9 : 11,
+        margin: 0,
+        displayValue: true,
+      });
     });
-  }, [barcode, open]);
+  }, [barcode, open, labelSize]);
 
   async function handlePrint() {
     try {
@@ -135,18 +149,50 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
             </div>
           ) : (
             <>
-              <div className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-surface-2">
-                <div className="flex items-center justify-center w-full min-h-[80px]">
-                  <svg id="barcode-svg" />
-                </div>
+              <div className="flex flex-col items-center justify-between p-3 rounded-lg border border-border bg-white text-black shadow-sm w-full max-w-[240px] mx-auto min-h-[85px] overflow-hidden">
                 {productName ? (
-                  <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm font-bold text-text-primary text-center truncate w-full max-w-[200px]">{productName}</p>
-                    <p className="text-[10px] text-text-secondary font-mono tracking-wider">{barcode}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-text-secondary font-mono tracking-wider">{barcode}</p>
-                )}
+                  <p className="text-[11px] font-bold text-gray-900 text-center truncate w-full mb-1 px-1">
+                    {productName}
+                  </p>
+                ) : null}
+                <div className="flex items-center justify-center w-full">
+                  <svg id="barcode-svg" className="max-w-full" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label>Label Size</Label>
+                  <Select
+                    value={labelSize}
+                    onValueChange={(val) => {
+                      setLabelSize(val);
+                      try {
+                        localStorage.setItem("faraz_label_size", val);
+                      } catch {}
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Label size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="35x20">35 × 20 mm</SelectItem>
+                      <SelectItem value="40x25">40 × 25 mm</SelectItem>
+                      <SelectItem value="50x25">50 × 25 mm</SelectItem>
+                      <SelectItem value="50x30">50 × 30 mm</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Copies</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={copies}
+                    onChange={(e) => setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+                    className="h-8 text-xs"
+                  />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Printer</Label>
@@ -174,10 +220,6 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
                   </p>
                 )}
               </div>
-              <div className="space-y-1">
-                  <Label>Number of copies</Label>
-                  <Input type="number" min={1} max={100} value={copies} onChange={(e) => setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} />
-                </div>
               <Button className="w-full" onClick={handlePrint}>
                 Print {copies} label{copies > 1 ? "s" : ""}
               </Button>

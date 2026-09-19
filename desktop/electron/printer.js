@@ -1979,16 +1979,35 @@ function generateESCPOSReturnReceipt(returnData, sale) {
   return Buffer.concat(parts);
 }
 
-function generateBarcodeLabelHTML(barcode, svgHtml, copies, productName) {
+function generateBarcodeLabelHTML(barcode, svgHtml, copies, productName, labelWidth = 35, labelHeight = 20) {
   const count = Math.max(1, copies || 1);
-  const productNameHtml = productName ? `<div class="product-name">${productName}</div>` : '';
+  const w = Number(labelWidth) || 35;
+  const h = Number(labelHeight) || 20;
+
+  const escapeHtml = (str) =>
+    String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const safeProductName = escapeHtml(productName);
+  const productNameHtml = safeProductName
+    ? `<div class="product-name">${safeProductName}</div>`
+    : "";
+
+  const isSmall = h <= 22;
+  const bcHeight = isSmall ? 25 : 36;
+  const bcFontSize = isSmall ? 9 : 11;
+  const bcWidth = isSmall ? 1.2 : 1.4;
 
   let body;
   if (jsBarcodeSource) {
     const valuesJson = JSON.stringify(Array(count).fill(String(barcode))).replace(/</g, "\\u003c");
     const labels = [];
     for (let i = 0; i < count; i++) {
-      labels.push(`<div class="label"><div class="barcode-container"><svg class="bc"></svg>${productNameHtml}</div></div>`);
+      labels.push(`<div class="label"><div class="barcode-container">${productNameHtml}<svg class="bc"></svg></div></div>`);
     }
     body = `${labels.join("")}
 <script>
@@ -1996,9 +2015,9 @@ try {
   var values = ${valuesJson};
   function renderBarcode(svg, value) {
     try {
-      JsBarcode(svg, value, { format: "EAN13", width: 2, height: 60, displayValue: true, fontSize: 14, margin: 8 });
+      JsBarcode(svg, value, { format: "EAN13", width: ${bcWidth}, height: ${bcHeight}, displayValue: true, fontSize: ${bcFontSize}, textMargin: 1, margin: 0 });
     } catch (e) {
-      JsBarcode(svg, value, { format: "CODE128", width: 2, height: 60, displayValue: true, fontSize: 14, margin: 8 });
+      JsBarcode(svg, value, { format: "CODE128", width: ${bcWidth}, height: ${bcHeight}, displayValue: true, fontSize: ${bcFontSize}, textMargin: 1, margin: 0 });
     }
   }
   var svgs = document.querySelectorAll("svg.bc");
@@ -2008,72 +2027,113 @@ try {
   } else if (svgHtml) {
     const labels = [];
     for (let i = 0; i < count; i++) {
-      labels.push(`<div class="label"><div class="barcode-container"><div class="barcode">${svgHtml}</div>${productNameHtml}</div></div>`);
+      labels.push(`<div class="label"><div class="barcode-container">${productNameHtml}<div class="barcode">${svgHtml}</div></div></div>`);
     }
     body = labels.join("");
   } else {
     const labels = [];
     for (let i = 0; i < count; i++) {
-      labels.push(`<div class="label"><div class="barcode-container"><div class="code">${barcode}</div>${productNameHtml}</div></div>`);
+      labels.push(`<div class="label"><div class="barcode-container">${productNameHtml}<div class="code">${escapeHtml(barcode)}</div></div></div>`);
     }
     body = labels.join("");
   }
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><script>${jsBarcodeSource}</script><style>
-@page { margin: 0; }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #fff; }
+@page {
+  size: ${w}mm ${h}mm;
+  margin: 0;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: ${w}mm;
+  height: ${h}mm;
+  background: #fff;
+  overflow: hidden;
+}
 .label {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: ${w}mm;
+  height: ${h}mm;
+  max-height: ${h}mm;
+  overflow: hidden;
+  page-break-inside: avoid;
   page-break-after: always;
-}
-.label:last-child { page-break-after: auto; }
-.label .barcode-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  height: 90%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.label svg,
-.label .barcode {
-  width: 80%;
-  height: 80%;
+.label:last-child {
+  page-break-after: auto;
 }
-.label .barcode { display: flex; align-items: center; justify-content: center; }
-.label .barcode svg { width: 100%; height: 100%; }
-.label .code {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 4mm;
-  letter-spacing: 1px;
-  text-align: center;
-  white-space: nowrap;
+.label .barcode-container {
+  width: 96%;
+  height: 94%;
+  max-height: 94%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0.5mm 0;
 }
 .label .product-name {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 3.5mm;
+  font-size: ${isSmall ? "2.2mm" : "2.8mm"};
+  line-height: 1.1;
+  max-height: ${isSmall ? "2.8mm" : "3.6mm"};
   font-weight: bold;
   text-align: center;
-  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
+  width: 100%;
+  color: #000;
+  margin-bottom: 0.5mm;
+  flex-shrink: 0;
+}
+.label svg.bc {
+  width: 96%;
+  height: auto;
+  max-height: ${isSmall ? "14.5mm" : "22mm"};
+  flex: 1;
+  display: block;
+}
+.label .barcode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96%;
+  height: auto;
+  max-height: ${isSmall ? "14.5mm" : "22mm"};
+  flex: 1;
+  overflow: hidden;
+}
+.label .barcode svg {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+.label .code {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 3mm;
+  letter-spacing: 1px;
+  text-align: center;
+  white-space: nowrap;
 }
 </style></head><body>${body}</body></html>`;
 }
 
 function doBarcodePrintJob(html, deviceName, labelWidth, labelHeight) {
-  const widthMicrons = Math.round((labelWidth || 50) * 1000);
-  const heightMicrons = Math.round((labelHeight || 30) * 1000);
+  const widthMicrons = Math.round((Number(labelWidth) || 35) * 1000);
+  const heightMicrons = Math.round((Number(labelHeight) || 20) * 1000);
 
   return new Promise((resolve, reject) => {
     const filePath = writeTempFile(html, "html");
@@ -2169,8 +2229,10 @@ function doBarcodePrintJob(html, deviceName, labelWidth, labelHeight) {
 }
 
 async function printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName) {
-  const html = generateBarcodeLabelHTML(barcode, svgHtml, copies || 1, productName);
-  await doBarcodePrintJob(html, deviceName, labelWidth, labelHeight);
+  const width = Number(labelWidth) || 35;
+  const height = Number(labelHeight) || 20;
+  const html = generateBarcodeLabelHTML(barcode, svgHtml, copies || 1, productName, width, height);
+  await doBarcodePrintJob(html, deviceName, width, height);
 }
 
 function generateHTML(sale, paperSize) {
