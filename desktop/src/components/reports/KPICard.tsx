@@ -10,18 +10,33 @@ interface KPICardProps {
   valueClassName?: string;
 }
 
-export default function KPICard({ title, value, icon, trend, className, valueClassName }: KPICardProps) {
+export default function KPICard({
+  title,
+  value,
+  icon,
+  trend,
+  className,
+  valueClassName,
+}: KPICardProps) {
   return (
     <Card className={cn("hover:shadow-md transition-all duration-200 border-border/50", className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-xs font-medium text-text-secondary uppercase tracking-wide">{title}</CardTitle>
+        <CardTitle className="text-xs font-medium text-text-secondary uppercase tracking-wide">
+          {title}
+        </CardTitle>
         {icon && <div className="text-text-secondary/60">{icon}</div>}
       </CardHeader>
       <CardContent>
         <p className={cn("text-2xl font-bold font-mono tracking-tight", valueClassName)}>{value}</p>
         {trend && (
-          <p className={cn("text-xs mt-1.5 font-medium", trend.isPositive ? "text-success" : "text-danger")}>
-            {trend.isPositive ? "+" : ""}{trend.value}% from last period
+          <p
+            className={cn(
+              "text-xs mt-1.5 font-medium",
+              trend.isPositive ? "text-success" : "text-danger"
+            )}
+          >
+            {trend.isPositive ? "+" : ""}
+            {trend.value}% from last period
           </p>
         )}
       </CardContent>

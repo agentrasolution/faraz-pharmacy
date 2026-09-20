@@ -7,27 +7,35 @@ export const suppliersController = {
     try {
       const distributors = await suppliersService.list();
       res.json(normalizeDistributorList(distributors));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const distributor = await suppliersService.create(req.body);
       res.json(normalizeDistributor(distributor));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const distributor = await suppliersService.update(req.params.id, req.body);
       res.json(normalizeDistributor(distributor));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await suppliersService.remove(req.params.id);
       res.json(result);
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 };

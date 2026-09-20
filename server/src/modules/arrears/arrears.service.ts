@@ -31,7 +31,12 @@ export const arrearsService = {
     });
   },
 
-  async create(data: { customerId: string; totalBill: number; amountPaid?: number; saleId?: string }) {
+  async create(data: {
+    customerId: string;
+    totalBill: number;
+    amountPaid?: number;
+    saleId?: string;
+  }) {
     const amountPaid = data.amountPaid ?? 0;
     if (amountPaid < 0 || amountPaid > data.totalBill) {
       throw new BadRequestError("Amount paid cannot exceed total bill");

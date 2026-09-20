@@ -38,9 +38,20 @@ function useCountUp(end: number, duration = 500) {
   return count;
 }
 
-export default function StatCard({ title, value, icon, trend, subtitle, loading, delay = 0, href, onClick }: StatCardProps) {
+export default function StatCard({
+  title,
+  value,
+  icon,
+  trend,
+  subtitle,
+  loading,
+  delay = 0,
+  href,
+  onClick,
+}: StatCardProps) {
   const numValue = typeof value === "number" ? value : 0;
-  const isCurrency = title.toLowerCase().includes("revenue") || title.toLowerCase().includes("arrear");
+  const isCurrency =
+    title.toLowerCase().includes("revenue") || title.toLowerCase().includes("arrear");
   const animatedValue = useCountUp(numValue, 500);
   const isClickable = !!(href || onClick);
 
@@ -68,7 +79,9 @@ export default function StatCard({ title, value, icon, trend, subtitle, loading,
       <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-accent/20 group-hover:bg-accent transition-colors duration-200" />
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-[11px] font-medium text-text-secondary tracking-wide uppercase">{title}</p>
+          <p className="text-[11px] font-medium text-text-secondary tracking-wide uppercase">
+            {title}
+          </p>
           <div className="flex items-baseline gap-1.5">
             <p className="text-xl font-bold text-text-primary tabular-nums tracking-tight">
               {isCurrency ? formatCurrency(animatedValue) : animatedValue.toLocaleString()}
@@ -100,7 +113,9 @@ export default function StatCard({ title, value, icon, trend, subtitle, loading,
           ) : (
             <TrendingDown className="h-3 w-3 text-danger" />
           )}
-          <span className={trend.positive ? "font-semibold text-success" : "font-semibold text-danger"}>
+          <span
+            className={trend.positive ? "font-semibold text-success" : "font-semibold text-danger"}
+          >
             {trend.value}%
           </span>
           <span className="text-text-secondary">vs last week</span>

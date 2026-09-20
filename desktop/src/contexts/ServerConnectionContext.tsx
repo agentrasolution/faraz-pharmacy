@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type ReactNode,
+} from "react";
 
 interface ConnectionInfo {
   isOnline: boolean;
@@ -81,7 +89,9 @@ export function ServerConnectionProvider({ children }: { children: ReactNode }) 
   }, [check]);
 
   return (
-    <ServerConnectionContext.Provider value={{ isOnline, isInitialCheck, connectionInfo, reconnect }}>
+    <ServerConnectionContext.Provider
+      value={{ isOnline, isInitialCheck, connectionInfo, reconnect }}
+    >
       {children}
     </ServerConnectionContext.Provider>
   );

@@ -3,9 +3,23 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { modKey } from "@/lib/os";
 import {
-  LayoutDashboard, ShoppingCart, Package, Boxes, Tags, Users, CreditCard,
-  Factory, Undo2, Wallet, BarChart3, Receipt, Barcode, Settings,
-  LogOut, PanelLeftClose, PanelLeftOpen,
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Boxes,
+  Tags,
+  Users,
+  CreditCard,
+  Factory,
+  Undo2,
+  Wallet,
+  BarChart3,
+  Receipt,
+  Barcode,
+  Settings,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -99,10 +113,12 @@ export default function Sidebar() {
         isExpanded ? "w-[240px]" : "w-[68px]"
       )}
     >
-      <div className={cn(
-        "flex items-center h-14 relative",
-        isExpanded ? "px-4 gap-3" : "justify-center"
-      )}>
+      <div
+        className={cn(
+          "flex items-center h-14 relative",
+          isExpanded ? "px-4 gap-3" : "justify-center"
+        )}
+      >
         <div className="flex items-center justify-center rounded-lg h-9 w-9 bg-sidebar-primary/10 shrink-0 overflow-hidden">
           <img src={logoSrc} alt="Faraz Pharmacy" className="h-6 w-6 object-contain" />
         </div>
@@ -114,8 +130,12 @@ export default function Sidebar() {
               exit={{ opacity: 0, width: 0 }}
               className="min-w-0 overflow-hidden"
             >
-              <p className="text-sm font-display font-semibold text-sidebar-foreground truncate tracking-tight">Faraz Pharmacy</p>
-              <p className="text-[10px] text-sidebar-foreground/40 truncate tracking-widest uppercase">Management</p>
+              <p className="text-sm font-display font-semibold text-sidebar-foreground truncate tracking-tight">
+                Faraz Pharmacy
+              </p>
+              <p className="text-[10px] text-sidebar-foreground/40 truncate tracking-widest uppercase">
+                Management
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -142,9 +162,7 @@ export default function Sidebar() {
             <span
               className={cn(
                 "absolute flex items-center justify-center rounded-full bg-background text-[10px] font-bold text-text-primary border border-border",
-                !isExpanded
-                  ? "-top-1 -right-1 h-5 min-w-5 px-1"
-                  : "right-3 h-5 min-w-5 px-1"
+                !isExpanded ? "-top-1 -right-1 h-5 min-w-5 px-1" : "right-3 h-5 min-w-5 px-1"
               )}
             >
               {posWindowCount}
@@ -178,11 +196,13 @@ export default function Sidebar() {
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-sidebar-primary" />
                 )}
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon className={cn(
-                    "shrink-0 relative",
-                    "h-4 w-4",
-                    isActive ? "text-sidebar-primary" : ""
-                  )} />
+                  <Icon
+                    className={cn(
+                      "shrink-0 relative",
+                      "h-4 w-4",
+                      isActive ? "text-sidebar-primary" : ""
+                    )}
+                  />
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.span
@@ -198,7 +218,9 @@ export default function Sidebar() {
                 </div>
                 {isExpanded && (
                   <span className="text-[10px] text-sidebar-foreground/30 font-mono shrink-0">
-                    {item.shortcut.startsWith("Mod+") ? `${modKey()}+${item.shortcut.slice(4)}` : item.shortcut}
+                    {item.shortcut.startsWith("Mod+")
+                      ? `${modKey()}+${item.shortcut.slice(4)}`
+                      : item.shortcut}
                   </span>
                 )}
               </button>
@@ -207,11 +229,18 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className={cn("border-t border-sidebar-border pt-3 pb-4 space-y-1.5", isExpanded ? "px-3" : "px-2")}>
-        <div className={cn(
-          "flex items-center rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-colors cursor-pointer",
-          !isExpanded && "justify-center px-0"
-        )}>
+      <div
+        className={cn(
+          "border-t border-sidebar-border pt-3 pb-4 space-y-1.5",
+          isExpanded ? "px-3" : "px-2"
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-colors cursor-pointer",
+            !isExpanded && "justify-center px-0"
+          )}
+        >
           <div className="h-8 w-8 rounded-lg bg-sidebar-primary/10 flex items-center justify-center shrink-0">
             <span className="text-[11px] font-bold text-sidebar-primary">
               {user?.username?.slice(0, 2).toUpperCase() || "AD"}
@@ -225,8 +254,12 @@ export default function Sidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="min-w-0 overflow-hidden flex-1 ml-2.5"
               >
-                <p className="text-xs font-medium text-sidebar-foreground/80 truncate leading-tight">{user?.username || "Admin"}</p>
-                <p className="text-[10px] text-sidebar-foreground/40 truncate tracking-wider uppercase leading-tight">Admin</p>
+                <p className="text-xs font-medium text-sidebar-foreground/80 truncate leading-tight">
+                  {user?.username || "Admin"}
+                </p>
+                <p className="text-[10px] text-sidebar-foreground/40 truncate tracking-wider uppercase leading-tight">
+                  Admin
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

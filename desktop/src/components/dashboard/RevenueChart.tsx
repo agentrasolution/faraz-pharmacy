@@ -29,12 +29,27 @@ export default function RevenueChart({ data = [], period = "week" }: RevenueChar
     <div className="h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} interval={period === "month" ? 4 : 0} />
-          <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            interval={period === "month" ? 4 : 0}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+          />
           <Tooltip
             formatter={(value: number) => [formatCurrency(value), "Revenue"]}
             labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-            contentStyle={{ borderRadius: 8, border: "1px solid var(--color-border)", background: "var(--color-surface)" }}
+            contentStyle={{
+              borderRadius: 8,
+              border: "1px solid var(--color-border)",
+              background: "var(--color-surface)",
+            }}
           />
           <Bar dataKey="revenue" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
         </BarChart>

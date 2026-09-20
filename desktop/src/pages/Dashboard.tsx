@@ -2,8 +2,19 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  TrendingUp, AlertCircle, Package, Clock, Plus, ShoppingCart, Users,
-  Wallet, ArrowRight, AlertTriangle, UserCheck, CreditCard, Eye
+  TrendingUp,
+  AlertCircle,
+  Package,
+  Clock,
+  Plus,
+  ShoppingCart,
+  Users,
+  Wallet,
+  ArrowRight,
+  AlertTriangle,
+  UserCheck,
+  CreditCard,
+  Eye,
 } from "lucide-react";
 import StatCard from "@/components/shared/StatCard";
 import RevenueChart from "@/components/dashboard/RevenueChart";
@@ -105,36 +116,38 @@ export default function Dashboard() {
     <div className="space-y-5">
       {/* Main Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {([
-          {
-            title: "Today's Revenue",
-            value: stats?.todayRevenue ?? 0,
-            icon: <TrendingUp className="h-4 w-4" />,
-            href: "/invoices",
-            subtitle: "View all invoices",
-          },
-          {
-            title: "Outstanding Arrears",
-            value: stats?.totalArrears ?? 0,
-            icon: <AlertCircle className="h-4 w-4" />,
-            href: "/arrears",
-            subtitle: "Collect payments",
-          },
-          {
-            title: "Low Stock Items",
-            value: stats?.lowStockCount ?? 0,
-            icon: <Package className="h-4 w-4" />,
-            href: "/stock",
-            subtitle: "Restock needed",
-          },
-          {
-            title: "Expiring Soon",
-            value: stats?.expiringSoonCount ?? 0,
-            icon: <Clock className="h-4 w-4" />,
-            href: "/products",
-            subtitle: "Check inventory",
-          },
-        ] as const).map((item, i) => (
+        {(
+          [
+            {
+              title: "Today's Revenue",
+              value: stats?.todayRevenue ?? 0,
+              icon: <TrendingUp className="h-4 w-4" />,
+              href: "/invoices",
+              subtitle: "View all invoices",
+            },
+            {
+              title: "Outstanding Arrears",
+              value: stats?.totalArrears ?? 0,
+              icon: <AlertCircle className="h-4 w-4" />,
+              href: "/arrears",
+              subtitle: "Collect payments",
+            },
+            {
+              title: "Low Stock Items",
+              value: stats?.lowStockCount ?? 0,
+              icon: <Package className="h-4 w-4" />,
+              href: "/stock",
+              subtitle: "Restock needed",
+            },
+            {
+              title: "Expiring Soon",
+              value: stats?.expiringSoonCount ?? 0,
+              icon: <Clock className="h-4 w-4" />,
+              href: "/products",
+              subtitle: "Check inventory",
+            },
+          ] as const
+        ).map((item, i) => (
           <motion.div
             key={item.title}
             custom={i}
@@ -159,10 +172,30 @@ export default function Dashboard() {
       <motion.div variants={sectionVariants} initial="hidden" animate="visible">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "New Sale", icon: ShoppingCart, href: "/pos", color: "bg-accent/10 text-accent hover:bg-accent/20" },
-            { label: "Add Product", icon: Package, href: "/products", color: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" },
-            { label: "Add Customer", icon: Users, href: "/customers", color: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" },
-            { label: "Record Expense", icon: Wallet, href: "/expenses", color: "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" },
+            {
+              label: "New Sale",
+              icon: ShoppingCart,
+              href: "/pos",
+              color: "bg-accent/10 text-accent hover:bg-accent/20",
+            },
+            {
+              label: "Add Product",
+              icon: Package,
+              href: "/products",
+              color: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
+            },
+            {
+              label: "Add Customer",
+              icon: Users,
+              href: "/customers",
+              color: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20",
+            },
+            {
+              label: "Record Expense",
+              icon: Wallet,
+              href: "/expenses",
+              color: "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20",
+            },
           ].map((action) => (
             <motion.button
               key={action.label}
@@ -217,7 +250,9 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <CardTitle className="text-sm">Low Stock Alert</CardTitle>
-                  <CardDescription className="text-[11px]">Products need restocking</CardDescription>
+                  <CardDescription className="text-[11px]">
+                    Products need restocking
+                  </CardDescription>
                 </div>
               </div>
               <button
@@ -229,7 +264,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               {lowStockProducts.length === 0 ? (
-                <p className="text-xs text-text-secondary py-4 text-center">All products are well stocked</p>
+                <p className="text-xs text-text-secondary py-4 text-center">
+                  All products are well stocked
+                </p>
               ) : (
                 <div className="space-y-2">
                   {lowStockProducts.map((product) => (
@@ -243,7 +280,9 @@ export default function Dashboard() {
                         <p className="text-[10px] text-text-secondary">{product.barcode}</p>
                       </div>
                       <div className="text-right">
-                        <p className={`text-xs font-bold ${product.stock_qty <= 5 ? "text-danger" : "text-amber-500"}`}>
+                        <p
+                          className={`text-xs font-bold ${product.stock_qty <= 5 ? "text-danger" : "text-amber-500"}`}
+                        >
                           {product.stock_qty} left
                         </p>
                       </div>
@@ -277,7 +316,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               {expiringProducts.length === 0 ? (
-                <p className="text-xs text-text-secondary py-4 text-center">No products expiring soon</p>
+                <p className="text-xs text-text-secondary py-4 text-center">
+                  No products expiring soon
+                </p>
               ) : (
                 <div className="space-y-2">
                   {expiringProducts.map((product) => (
@@ -288,7 +329,9 @@ export default function Dashboard() {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{product.name}</p>
-                        <p className="text-[10px] text-text-secondary">{product.stock_qty} in stock</p>
+                        <p className="text-[10px] text-text-secondary">
+                          {product.stock_qty} in stock
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-bold text-orange-500">
@@ -345,7 +388,9 @@ export default function Dashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">{customer.name}</p>
-                          <p className="text-[10px] text-text-secondary">{customer.phone || "No phone"}</p>
+                          <p className="text-[10px] text-text-secondary">
+                            {customer.phone || "No phone"}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -399,8 +444,12 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">{arrear.customer_name || "Unknown"}</p>
-                          <p className="text-[10px] text-text-secondary">Bill: {formatCurrency(arrear.total_bill)}</p>
+                          <p className="text-xs font-medium truncate">
+                            {arrear.customer_name || "Unknown"}
+                          </p>
+                          <p className="text-[10px] text-text-secondary">
+                            Bill: {formatCurrency(arrear.total_bill)}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">

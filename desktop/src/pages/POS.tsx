@@ -47,9 +47,11 @@ export default function POS() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      const typing =
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
 
-      if (e.ctrlKey && e.key.toLowerCase() === "p" || (e.altKey && e.key.toLowerCase() === "t")) {
+      if ((e.ctrlKey && e.key.toLowerCase() === "p") || (e.altKey && e.key.toLowerCase() === "t")) {
         e.preventDefault();
         if (lastSaleData) {
           setPendingPrintData(lastSaleData);
@@ -111,7 +113,11 @@ export default function POS() {
       setError(`${product.name} is out of stock`);
       return;
     }
-    cart.addItem({ ...product, sale_price: salePrice, purchase_price: purchasePrice ?? product.purchase_price });
+    cart.addItem({
+      ...product,
+      sale_price: salePrice,
+      purchase_price: purchasePrice ?? product.purchase_price,
+    });
   }
 
   function promptPriceTier(product: Product) {
@@ -134,7 +140,7 @@ export default function POS() {
   const handleBarcodeSubmit = async (value: string) => {
     const product = await api.products.getByBarcode(value);
     if (product) {
-      const existing = cart.items.find(i => i.productId === product.id);
+      const existing = cart.items.find((i) => i.productId === product.id);
       if (existing) {
         cart.incrementBy(product.id, 1);
         return;
@@ -145,7 +151,7 @@ export default function POS() {
         (p: Product) => p.barcode === value || p.name.toLowerCase() === value.toLowerCase()
       );
       if (found) {
-        const existing = cart.items.find(i => i.productId === found.id);
+        const existing = cart.items.find((i) => i.productId === found.id);
         if (existing) {
           cart.incrementBy(found.id, 1);
           return;
@@ -160,7 +166,7 @@ export default function POS() {
       setError(`${product.name} is out of stock`);
       return;
     }
-    const existing = cart.items.find(i => i.productId === product.id);
+    const existing = cart.items.find((i) => i.productId === product.id);
     if (existing) {
       cart.incrementBy(product.id, 1);
       return;
@@ -228,11 +234,14 @@ export default function POS() {
     }
   };
 
-  const generateReceiptHtml = useCallback(async (paperSize: string): Promise<string> => {
-    if (!pendingPrintData) return "";
-    const result = await window.generateReceiptHTML(pendingPrintData, paperSize);
-    return result.success ? result.html : "";
-  }, [pendingPrintData]);
+  const generateReceiptHtml = useCallback(
+    async (paperSize: string): Promise<string> => {
+      if (!pendingPrintData) return "";
+      const result = await window.generateReceiptHTML(pendingPrintData, paperSize);
+      return result.success ? result.html : "";
+    },
+    [pendingPrintData]
+  );
 
   async function handlePrintReceipt(config: PrinterConfig) {
     if (!pendingPrintData) return;
@@ -246,17 +255,19 @@ export default function POS() {
   }
 
   return (
-    <div className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-6.5rem)]"}`}>
+    <div
+      className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-6.5rem)]"}`}
+    >
       {isPosWindow && (
-        <div
-          className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-3 -mx-5 lg:-mx-6 px-5 lg:px-6 select-none"
-        >
+        <div className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-3 -mx-5 lg:-mx-6 px-5 lg:px-6 select-none">
           <div className="flex gap-1 no-drag">
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
           </div>
-          <span className="no-drag text-[9px] text-text-secondary/50 font-medium tracking-wider uppercase">Drag to move</span>
+          <span className="no-drag text-[9px] text-text-secondary/50 font-medium tracking-wider uppercase">
+            Drag to move
+          </span>
         </div>
       )}
       <div className="flex justify-end shrink-0">
@@ -269,74 +280,82 @@ export default function POS() {
         </button> */}
       </div>
       <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0">
+        <div className="flex-1 flex flex-col min-h-0">
+          <BarcodeInput value={search} onChange={setSearch} onSubmit={handleBarcodeSubmit} />
+          <div className="flex-1 overflow-y-auto mt-3">
+            {displayProducts.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-xs text-text-secondary">
+                {search ? "No products found" : "Search or scan a product to begin"}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                <AnimatePresence mode="popLayout">
+                  {displayProducts.slice(0, 50).map((product: Product) => (
+                    <motion.div
+                      key={product.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.12 }}
+                    >
+                      <ProductCard product={product} onAdd={handleAddProduct} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </div>
 
-      <div className="flex-1 flex flex-col min-h-0">
-        <BarcodeInput value={search} onChange={setSearch} onSubmit={handleBarcodeSubmit} />
-        <div className="flex-1 overflow-y-auto mt-3">
-          {displayProducts.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-xs text-text-secondary">
-              {search ? "No products found" : "Search or scan a product to begin"}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
-              <AnimatePresence mode="popLayout">
-                {displayProducts.slice(0, 50).map((product: Product) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.12 }}
-                  >
-                    <ProductCard product={product} onAdd={handleAddProduct} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
+        <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
+          <div
+            className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-0 max-h-[calc(100vh-7rem)]"}`}
+          >
+            <CheckoutPanel
+              items={cart.items}
+              discount={cart.discount}
+              discountValue={cart.discountValue}
+              discountType={cart.discountType}
+              subtotal={cart.subtotal}
+              total={cart.total}
+              profit={cart.profit}
+              customerId={cart.customerId}
+              notes={cart.notes}
+              amountPaid={cart.amountPaid}
+              addToArrears={cart.addToArrears}
+              onUpdateQuantity={cart.updateQuantity}
+              onIncrementBy={cart.incrementBy}
+              onRemoveItem={cart.removeItem}
+              onDiscountChange={cart.setDiscountValue}
+              onToggleDiscountType={cart.toggleDiscountType}
+              onClearCart={cart.clearCart}
+              onCheckout={handleCheckout}
+              onCustomerChange={cart.setCustomer}
+              onNotesChange={cart.setNotes}
+              onAmountPaidChange={cart.setAmountPaid}
+              onAddToArrearsChange={cart.setAddToArrears}
+              error={error}
+            />
+          </div>
         </div>
       </div>
 
-
-
-      <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
-        <div className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-0 max-h-[calc(100vh-7rem)]"}`}>
-          <CheckoutPanel
-            items={cart.items}
-            discount={cart.discount}
-            discountValue={cart.discountValue}
-            discountType={cart.discountType}
-            subtotal={cart.subtotal}
-            total={cart.total}
-            profit={cart.profit}
-            customerId={cart.customerId}
-            notes={cart.notes}
-            amountPaid={cart.amountPaid}
-            addToArrears={cart.addToArrears}
-            onUpdateQuantity={cart.updateQuantity}
-            onIncrementBy={cart.incrementBy}
-            onRemoveItem={cart.removeItem}
-            onDiscountChange={cart.setDiscountValue}
-            onToggleDiscountType={cart.toggleDiscountType}
-            onClearCart={cart.clearCart}
-            onCheckout={handleCheckout}
-            onCustomerChange={cart.setCustomer}
-            onNotesChange={cart.setNotes}
-            onAmountPaidChange={cart.setAmountPaid}
-            onAddToArrearsChange={cart.setAddToArrears}
-            error={error}
-          />
-        </div>
-      </div>
-      </div>
-
-      <AlertDialog open={pricePickerOpen} onOpenChange={(v) => { if (!v) { setPendingProduct(null); setPricePickerOpen(false); } }}>
+      <AlertDialog
+        open={pricePickerOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setPendingProduct(null);
+            setPricePickerOpen(false);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Select Price Tier</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingProduct?.name ?? "Product"} has multiple price tiers. Choose one to add to cart.
+              {pendingProduct?.name ?? "Product"} has multiple price tiers. Choose one to add to
+              cart.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2 py-3 px-5">
@@ -345,7 +364,9 @@ export default function POS() {
               className="w-full text-left p-2.5 rounded-lg border border-border hover:border-accent/50 transition-colors flex items-center justify-between"
             >
               <span className="text-xs font-medium">Standard</span>
-              <span className="font-mono font-bold text-accent text-xs">{formatCurrency(pendingProduct?.sale_price ?? 0)}</span>
+              <span className="font-mono font-bold text-accent text-xs">
+                {formatCurrency(pendingProduct?.sale_price ?? 0)}
+              </span>
             </button>
             {pendingPrices?.map((tier) => (
               <button
@@ -354,12 +375,20 @@ export default function POS() {
                 className="w-full text-left p-2.5 rounded-lg border border-border hover:border-accent/50 transition-colors flex items-center justify-between"
               >
                 <span className="text-xs font-medium">{tier.label || "Untitled"}</span>
-                <span className="font-mono font-bold text-accent text-xs">{formatCurrency(tier.salePrice)}</span>
+                <span className="font-mono font-bold text-accent text-xs">
+                  {formatCurrency(tier.salePrice)}
+                </span>
               </button>
             ))}
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setPendingProduct(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingProduct(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

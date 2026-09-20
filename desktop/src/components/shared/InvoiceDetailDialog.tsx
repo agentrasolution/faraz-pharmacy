@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Printer } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
@@ -18,7 +15,11 @@ interface InvoiceDetailDialogProps {
   saleId: string | null;
 }
 
-export default function InvoiceDetailDialog({ open, onOpenChange, saleId }: InvoiceDetailDialogProps) {
+export default function InvoiceDetailDialog({
+  open,
+  onOpenChange,
+  saleId,
+}: InvoiceDetailDialogProps) {
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -27,39 +28,47 @@ export default function InvoiceDetailDialog({ open, onOpenChange, saleId }: Invo
     if (!open || !saleId) return;
     setSale(null);
     setLoading(true);
-    api.sales.getById(saleId).then((data) => {
-      setSale(data);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
+    api.sales
+      .getById(saleId)
+      .then((data) => {
+        setSale(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, [open, saleId]);
 
-  const generateReceiptHtml = useCallback(async (paperSize: string): Promise<string> => {
-    if (!sale) return "";
-    const printData = {
-      ...sale,
-      customer_total_arrears: 0,
-      items: sale.items?.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: i.subtotal,
-      })) || [],
-    };
-    const result = await window.generateReceiptHTML(printData, paperSize);
-    return result.success ? result.html : "";
-  }, [sale]);
+  const generateReceiptHtml = useCallback(
+    async (paperSize: string): Promise<string> => {
+      if (!sale) return "";
+      const printData = {
+        ...sale,
+        customer_total_arrears: 0,
+        items:
+          sale.items?.map((i) => ({
+            product_name: i.product_name,
+            quantity: i.quantity,
+            subtotal: i.subtotal,
+          })) || [],
+      };
+      const result = await window.generateReceiptHTML(printData, paperSize);
+      return result.success ? result.html : "";
+    },
+    [sale]
+  );
 
   async function handlePrint(config: PrinterConfig) {
     if (!sale) return;
     const printData = {
       ...sale,
       customer_total_arrears: 0,
-      items: sale.items?.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: i.subtotal,
-      })) || [],
+      items:
+        sale.items?.map((i) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          subtotal: i.subtotal,
+        })) || [],
     };
     const result = await window.printReceipt(printData, config);
     if (!result.success) {
@@ -111,7 +120,10 @@ export default function InvoiceDetailDialog({ open, onOpenChange, saleId }: Invo
                 const total = formatCurrency(item.subtotal);
                 const name = item.product_name || "";
                 return (
-                  <div key={item.id} className="flex items-baseline gap-2 text-[11px] leading-relaxed">
+                  <div
+                    key={item.id}
+                    className="flex items-baseline gap-2 text-[11px] leading-relaxed"
+                  >
                     <span className="text-text-primary truncate flex-1 min-w-0">{name}</span>
                     <span className="font-mono text-text-secondary shrink-0 tabular-nums">
                       {qty} &times; {price}
@@ -127,12 +139,16 @@ export default function InvoiceDetailDialog({ open, onOpenChange, saleId }: Invo
             <div className="border-t border-border pt-2.5 space-y-1.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-text-secondary">Subtotal</span>
-                <span className="font-mono text-text-primary tabular-nums">{formatCurrency(sale.subtotal)}</span>
+                <span className="font-mono text-text-primary tabular-nums">
+                  {formatCurrency(sale.subtotal)}
+                </span>
               </div>
               {sale.discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-secondary">Discount</span>
-                  <span className="font-mono text-danger tabular-nums">&minus;{formatCurrency(sale.discount)}</span>
+                  <span className="font-mono text-danger tabular-nums">
+                    &minus;{formatCurrency(sale.discount)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-border -mx-1 px-1">
@@ -141,12 +157,16 @@ export default function InvoiceDetailDialog({ open, onOpenChange, saleId }: Invo
               </div>
               <div className="flex justify-between">
                 <span className="text-text-secondary">Paid</span>
-                <span className="font-mono text-success tabular-nums">{formatCurrency(sale.amount_paid)}</span>
+                <span className="font-mono text-success tabular-nums">
+                  {formatCurrency(sale.amount_paid)}
+                </span>
               </div>
               {sale.change > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-secondary">Change</span>
-                  <span className="font-mono text-text-primary tabular-nums">{formatCurrency(sale.change)}</span>
+                  <span className="font-mono text-text-primary tabular-nums">
+                    {formatCurrency(sale.change)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-1">

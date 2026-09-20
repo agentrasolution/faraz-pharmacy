@@ -28,20 +28,26 @@ export const returnsController = {
     try {
       const returns = await returnsService.list();
       res.json(returns.map(normalizeReturn));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const entry = await returnsService.getById(req.params.id);
       res.json(normalizeReturn(entry));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await returnsService.create(req.body);
       res.json(normalizeReturn(result));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 };

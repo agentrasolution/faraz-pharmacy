@@ -97,28 +97,33 @@ function registerHandlers() {
     }
   });
 
-  ipcMain.handle(
-    "print:return-receipt",
-    async (_, returnData, sale, printerConfig) => {
-      try {
-        await printReturnReceipt(returnData, sale, printerConfig);
-        return { success: true };
-      } catch (e) {
-        return { success: false, error: e.message };
-      }
-    },
-  );
+  ipcMain.handle("print:return-receipt", async (_, returnData, sale, printerConfig) => {
+    try {
+      await printReturnReceipt(returnData, sale, printerConfig);
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  });
 
   ipcMain.handle(
     "print:barcode-label",
     async (_, barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName) => {
       try {
-        await printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName);
+        await printBarcodeLabel(
+          barcode,
+          copies,
+          svgHtml,
+          labelWidth,
+          labelHeight,
+          deviceName,
+          productName
+        );
         return { success: true };
       } catch (e) {
         return { success: false, error: e.message };
       }
-    },
+    }
   );
 
   ipcMain.handle("print:generate-receipt-html", (_, sale, paperSize) => {
@@ -146,10 +151,7 @@ function registerHandlers() {
     try {
       const dir = getBackupsDir();
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      const timestamp = new Date()
-        .toISOString()
-        .replace(/[:.]/g, "-")
-        .slice(0, 19);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
       const backupName = `faraz-pharmacy-backup-${timestamp}.db`;
       const backupPath = path.join(dir, backupName);
       fs.writeFileSync(backupPath, "");
@@ -183,10 +185,7 @@ function registerHandlers() {
             createdAt: new Date(stat.birthtime || stat.mtime).toISOString(),
           };
         })
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       return files;
     } catch (err) {
       return [];
@@ -217,8 +216,7 @@ function registerHandlers() {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
     });
-    if (result.canceled || result.filePaths.length === 0)
-      return { canceled: true };
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
     const selectedPath = result.filePaths[0];
     const cfg = loadConfig();
     cfg.backupDirectory = selectedPath;

@@ -6,20 +6,63 @@ import { config } from "../../config/env";
 import { BadRequestError, UnauthorizedError } from "../../utils/errors";
 
 const WORDS = [
-  "apple", "bridge", "cloud", "dragon", "eagle", "forest", "garden",
-  "harbor", "island", "jungle", "knight", "lemon", "mountain", "noble",
-  "ocean", "pencil", "queen", "river", "silver", "tiger", "umbrella",
-  "valley", "whale", "xenon", "yellow", "zebra", "amber", "bloom",
-  "coral", "dawn", "ember", "frost", "glow", "haven", "iris", "jade",
-  "kite", "lunar", "mist", "nova", "orbit", "pearl", "ridge", "stone",
-  "thaw", "unity", "vivid", "wind", "azure", "berry",
+  "apple",
+  "bridge",
+  "cloud",
+  "dragon",
+  "eagle",
+  "forest",
+  "garden",
+  "harbor",
+  "island",
+  "jungle",
+  "knight",
+  "lemon",
+  "mountain",
+  "noble",
+  "ocean",
+  "pencil",
+  "queen",
+  "river",
+  "silver",
+  "tiger",
+  "umbrella",
+  "valley",
+  "whale",
+  "xenon",
+  "yellow",
+  "zebra",
+  "amber",
+  "bloom",
+  "coral",
+  "dawn",
+  "ember",
+  "frost",
+  "glow",
+  "haven",
+  "iris",
+  "jade",
+  "kite",
+  "lunar",
+  "mist",
+  "nova",
+  "orbit",
+  "pearl",
+  "ridge",
+  "stone",
+  "thaw",
+  "unity",
+  "vivid",
+  "wind",
+  "azure",
+  "berry",
 ];
 
 function generateRecoveryPhrase(): string {
   const bytes = crypto.randomBytes(24);
   const indices: number[] = [];
   for (let i = 0; i < 12; i++) {
-    const idx = (bytes[i * 2]! << 8 | bytes[i * 2 + 1]!) % WORDS.length;
+    const idx = ((bytes[i * 2]! << 8) | bytes[i * 2 + 1]!) % WORDS.length;
     indices.push(idx);
   }
   return indices.map((i) => WORDS[i]!).join(" ");
@@ -36,7 +79,7 @@ export const authService = {
     const accessToken = jwt.sign(
       { userId: user.id, username: user.username, role: user.role },
       config.jwtSecret,
-      { expiresIn: "24h" },
+      { expiresIn: "24h" }
     );
 
     const refreshToken = crypto.randomUUID();
@@ -90,7 +133,7 @@ export const authService = {
     const normalized = phrase.trim().toLowerCase().replace(/\s+/g, " ");
     const keys = await prisma.recoveryKey.findMany({ where: { usedAt: null } });
 
-    let matchedKey: typeof keys[0] | null = null;
+    let matchedKey: (typeof keys)[0] | null = null;
     for (const key of keys) {
       const valid = await bcrypt.compare(normalized, key.keyHash);
       if (valid) {
@@ -128,7 +171,7 @@ export const authService = {
     const newAccessToken = jwt.sign(
       { userId: token.user.id, username: token.user.username, role: token.user.role },
       config.jwtSecret,
-      { expiresIn: "24h" },
+      { expiresIn: "24h" }
     );
 
     const newCsrfToken = crypto.randomUUID();

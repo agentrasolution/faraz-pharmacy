@@ -23,7 +23,6 @@ const jsBarcodeSource = (() => {
   }
 })();
 
-
 function generateSaleReceiptHTML(sale) {
   const items = sale.items || [];
 
@@ -198,9 +197,7 @@ td{
 <div class="info">
     <div><span class="bold">Invoice #: ${sale.id ?? ""}</span></div>
     <div><span class="bold">Date: ${dateStr} ${timeStr}</span></div>
-    <div><span class="bold">Customer Name: ${
-      sale.customer_name || "Walk-in Customer"
-    }</span></div>
+    <div><span class="bold">Customer Name: ${sale.customer_name || "Walk-in Customer"}</span></div>
     <div><span class="bold">No. of Items : ${items.length}</span> </div>
 </div>
 
@@ -300,8 +297,6 @@ Developed by www.farsightsystem.com
 `;
 }
 
-
-
 function generateA4InvoiceHTML(sale) {
   const items = sale.items || [];
   const now = new Date();
@@ -390,7 +385,6 @@ ${sale.status === "partial" ? '<div class="status-a4 partial">PARTIAL PAYMENT</d
 <div class="footer"><p>Thank you for your visit! &bull; Powered by Faraz Pharmacy</p></div>
 </body></html>`;
 }
-
 
 function generateA5InvoiceHTML(sale) {
   const items = sale.items || [];
@@ -517,15 +511,17 @@ table.items tbody tr:last-child td { border-bottom: none; }
     </tr>
   </thead>
   <tbody>
-    ${items.map(item => {
-      const unitPrice = item.unit_price || (item.subtotal / item.quantity);
-      return `<tr>
+    ${items
+      .map((item) => {
+        const unitPrice = item.unit_price || item.subtotal / item.quantity;
+        return `<tr>
         <td>${item.product_name}</td>
         <td style="text-align:center">${item.quantity}</td>
         <td style="text-align:right">${Math.round(unitPrice)}</td>
         <td style="text-align:right">${item.subtotal.toFixed(0)}</td>
       </tr>`;
-    }).join("")}
+      })
+      .join("")}
   </tbody>
 </table>
 
@@ -546,9 +542,11 @@ table.items tbody tr:last-child td { border-bottom: none; }
       <tr><td>Change</td><td>${Math.max(0, (sale.amount_paid || 0) - (sale.total || 0)).toFixed(0)}</td></tr>
       <tr><td>Arrears</td><td>${(sale.customer_total_arrears || 0).toFixed(0)}</td></tr>
     </table>
-    ${sale.status === "partial"
-      ? '<div class="status-badge partial">PARTIAL PAYMENT</div>'
-      : '<div class="status-badge">PAID</div>'}
+    ${
+      sale.status === "partial"
+        ? '<div class="status-badge partial">PARTIAL PAYMENT</div>'
+        : '<div class="status-badge">PAID</div>'
+    }
   </div>
 </div>
 
@@ -580,34 +578,21 @@ function generateReturnReceiptHTML(returnData, sale) {
 
   const invoiceNo = sale?.id || "N/A";
 
-  const customerName =
-    sale?.customer_name || "Walk-in Customer";
+  const customerName = sale?.customer_name || "Walk-in Customer";
 
   const itemsHTML = items
     .map((item) => {
       const quantity = Number(item.quantity || 0);
 
-      const refund = Number(
-        item.refund_amount ??
-        item.subtotal ??
-        0
-      );
+      const refund = Number(item.refund_amount ?? item.subtotal ?? 0);
 
-      const price = Number(
-        item.price ??
-        item.unit_price ??
-        (quantity > 0 ? refund / quantity : 0)
-      );
+      const price = Number(item.price ?? item.unit_price ?? (quantity > 0 ? refund / quantity : 0));
 
       return `
         <tr>
           <td class="item-name">
             ${item.product_name || "Unknown Item"}
-            ${
-              item.reason
-                ? `<div class="item-reason">${item.reason}</div>`
-                : ""
-            }
+            ${item.reason ? `<div class="item-reason">${item.reason}</div>` : ""}
           </td>
 
           <td class="qty">
@@ -1509,7 +1494,6 @@ body {
 
 //   </div>
 
-
 //   <!-- ================================================
 //        RETURN TITLE
 //   ================================================= -->
@@ -1527,7 +1511,6 @@ body {
 //     </div>
 
 //   </div>
-
 
 //   <!-- ================================================
 //        META INFORMATION
@@ -1547,7 +1530,6 @@ body {
 
 //     </div>
 
-
 //     <div class="meta-block">
 
 //       <div class="meta-label">
@@ -1562,7 +1544,6 @@ body {
 //     </div>
 
 //   </div>
-
 
 //   <!-- ================================================
 //        ITEMS
@@ -1594,7 +1575,6 @@ body {
 
 //   </table>
 
-
 //   <!-- ================================================
 //        REFUND TOTAL
 //   ================================================= -->
@@ -1610,7 +1590,6 @@ body {
 //     </div>
 
 //   </div>
-
 
 //   <!-- ================================================
 //        REASON
@@ -1634,7 +1613,6 @@ body {
 //       : ""
 //   }
 
-
 //   <!-- ================================================
 //        STATUS
 //   ================================================= -->
@@ -1642,7 +1620,6 @@ body {
 //   <div class="status">
 //     RETURN PROCESSED SUCCESSFULLY
 //   </div>
-
 
 //   <!-- ================================================
 //        FOOTER
@@ -1737,8 +1714,6 @@ body {
 // }
 
 // return Recipt end
-
-
 
 function getPrintOptions(printerConfig) {
   const paperSize = printerConfig?.paperSize || "thermal";
@@ -1855,8 +1830,11 @@ function generateESCPOSReceipt(sale) {
   parts.push(escposAlign(0));
 
   const dateStr = now.toLocaleDateString("en-PK", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
   parts.push(escposText("Date:      " + dateStr));
   parts.push(escposText("Invoice:   " + (sale.id || "")));
@@ -1868,10 +1846,14 @@ function generateESCPOSReceipt(sale) {
   const colUnit = 7;
   const colAmt = 10;
   const colPad = colName + colQty + colUnit;
-  parts.push(escposText(
-    "Item".padEnd(colName) + "Qty".padStart(colQty) +
-    "Rate".padStart(colUnit) + "Amt".padStart(colAmt)
-  ));
+  parts.push(
+    escposText(
+      "Item".padEnd(colName) +
+        "Qty".padStart(colQty) +
+        "Rate".padStart(colUnit) +
+        "Amt".padStart(colAmt)
+    )
+  );
   parts.push(escposLine("-", L));
 
   items.forEach((item) => {
@@ -1947,19 +1929,13 @@ function generateESCPOSReturnReceipt(returnData, sale) {
   parts.push(escposAlign(0));
   const colName = 44;
   const colAmt = 12;
-  parts.push(
-    escposText("Item description".padEnd(colName) + "Refund".padStart(colAmt)),
-  );
+  parts.push(escposText("Item description".padEnd(colName) + "Refund".padStart(colAmt)));
   parts.push(escposLine("-", L));
 
   items.forEach((i) => {
     const reasonStr = i.reason ? " (" + i.reason + ")" : "";
-    const name = (i.product_name + " x" + i.quantity + reasonStr)
-      .padEnd(colName)
-      .slice(0, colName);
-    const amt = String(
-      (i.refund_amount ?? i.subtotal ?? 0).toFixed(0),
-    ).padStart(colAmt);
+    const name = (i.product_name + " x" + i.quantity + reasonStr).padEnd(colName).slice(0, colName);
+    const amt = String((i.refund_amount ?? i.subtotal ?? 0).toFixed(0)).padStart(colAmt);
     parts.push(escposText(name + amt));
   });
 
@@ -1979,7 +1955,14 @@ function generateESCPOSReturnReceipt(returnData, sale) {
   return Buffer.concat(parts);
 }
 
-function generateBarcodeLabelHTML(barcode, svgHtml, copies, productName, labelWidth = 35, labelHeight = 20) {
+function generateBarcodeLabelHTML(
+  barcode,
+  svgHtml,
+  copies,
+  productName,
+  labelWidth = 35,
+  labelHeight = 20
+) {
   const count = Math.max(1, copies || 1);
   const w = Number(labelWidth) || 35;
   const h = Number(labelHeight) || 20;
@@ -2007,7 +1990,9 @@ function generateBarcodeLabelHTML(barcode, svgHtml, copies, productName, labelWi
     const valuesJson = JSON.stringify(Array(count).fill(String(barcode))).replace(/</g, "\\u003c");
     const labels = [];
     for (let i = 0; i < count; i++) {
-      labels.push(`<div class="label"><div class="barcode-container">${productNameHtml}<svg class="bc"></svg></div></div>`);
+      labels.push(
+        `<div class="label"><div class="barcode-container">${productNameHtml}<svg class="bc"></svg></div></div>`
+      );
     }
     body = `${labels.join("")}
 <script>
@@ -2027,13 +2012,17 @@ try {
   } else if (svgHtml) {
     const labels = [];
     for (let i = 0; i < count; i++) {
-      labels.push(`<div class="label"><div class="barcode-container">${productNameHtml}<div class="barcode">${svgHtml}</div></div></div>`);
+      labels.push(
+        `<div class="label"><div class="barcode-container">${productNameHtml}<div class="barcode">${svgHtml}</div></div></div>`
+      );
     }
     body = labels.join("");
   } else {
     const labels = [];
     for (let i = 0; i < count; i++) {
-      labels.push(`<div class="label"><div class="barcode-container">${productNameHtml}<div class="code">${escapeHtml(barcode)}</div></div></div>`);
+      labels.push(
+        `<div class="label"><div class="barcode-container">${productNameHtml}<div class="code">${escapeHtml(barcode)}</div></div></div>`
+      );
     }
     body = labels.join("");
   }
@@ -2228,7 +2217,15 @@ function doBarcodePrintJob(html, deviceName, labelWidth, labelHeight) {
   });
 }
 
-async function printBarcodeLabel(barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName) {
+async function printBarcodeLabel(
+  barcode,
+  copies,
+  svgHtml,
+  labelWidth,
+  labelHeight,
+  deviceName,
+  productName
+) {
   const width = Number(labelWidth) || 35;
   const height = Number(labelHeight) || 20;
   const html = generateBarcodeLabelHTML(barcode, svgHtml, copies || 1, productName, width, height);
@@ -2281,18 +2278,15 @@ function doPrintJob(data, printerConfig) {
     function doPrint() {
       if (resolved) return;
       try {
-        printWin.webContents.print(
-          getPrintOptions(printerConfig),
-          (success) => {
-            if (resolved) return;
-            if (!success) {
-              cleanup();
-              return reject(new Error("Print failed or cancelled"));
-            }
+        printWin.webContents.print(getPrintOptions(printerConfig), (success) => {
+          if (resolved) return;
+          if (!success) {
             cleanup();
-            resolve();
-          },
-        );
+            return reject(new Error("Print failed or cancelled"));
+          }
+          cleanup();
+          resolve();
+        });
       } catch (e) {
         cleanup();
         reject(e);
@@ -2320,7 +2314,7 @@ function doPrintJob(data, printerConfig) {
 function printReceipt(sale, printerConfig) {
   const paperSize = printerConfig?.paperSize || "thermal";
   console.log(
-    `printReceipt: paperSize=${paperSize} items=${(sale.items || []).length} total=${sale.total}`,
+    `printReceipt: paperSize=${paperSize} items=${(sale.items || []).length} total=${sale.total}`
   );
   const html = generateHTML(sale, paperSize);
   console.log(`printReceipt: generated HTML length=${html.length}`);
@@ -2333,4 +2327,10 @@ function printReturnReceipt(returnData, sale, printerConfig) {
   return doPrintJob(html, printerConfig);
 }
 
-export { printReceipt, printReturnReceipt, printBarcodeLabel, generateHTML, generateReturnReceiptHTML };
+export {
+  printReceipt,
+  printReturnReceipt,
+  printBarcodeLabel,
+  generateHTML,
+  generateReturnReceiptHTML,
+};

@@ -57,11 +57,14 @@ function AppShell() {
     setReady(true);
   }, []);
 
-  const generateReprintHtml = useCallback(async (paperSize: string): Promise<string> => {
-    if (!reprintData) return "";
-    const result = await window.generateReceiptHTML(reprintData, paperSize);
-    return result.success ? result.html : "";
-  }, [reprintData]);
+  const generateReprintHtml = useCallback(
+    async (paperSize: string): Promise<string> => {
+      if (!reprintData) return "";
+      const result = await window.generateReceiptHTML(reprintData, paperSize);
+      return result.success ? result.html : "";
+    },
+    [reprintData]
+  );
 
   async function handleReprint(config: PrinterConfig) {
     if (!reprintData) return;
@@ -75,24 +78,65 @@ function AppShell() {
     if (!isAuthenticated) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      const typing =
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
 
       // F-keys (only when not typing)
       if (!typing && !e.altKey && !e.ctrlKey && !e.metaKey) {
         switch (e.key) {
-          case "F1": e.preventDefault(); navigate("/dashboard"); break;
-          case "F2": e.preventDefault(); navigate("/pos"); break;
-          case "F3": e.preventDefault(); navigate("/invoices"); break;
-          case "F4": e.preventDefault(); navigate("/returns"); break;
-          case "F5": e.preventDefault(); navigate("/customers"); break;
-          case "F6": e.preventDefault(); navigate("/arrears"); break;
-          case "F7": e.preventDefault(); navigate("/products"); break;
-          case "F8": e.preventDefault(); navigate("/stock"); break;
-          case "F9": e.preventDefault(); navigate("/barcodes"); break;
-          case "F10": e.preventDefault(); navigate("/distributors"); break;
-          case "F11": e.preventDefault(); navigate("/expenses"); break;
-          case "F12": e.preventDefault(); navigate("/reports"); break;
-          case "F13": e.preventDefault(); navigate("/settings"); break;
+          case "F1":
+            e.preventDefault();
+            navigate("/dashboard");
+            break;
+          case "F2":
+            e.preventDefault();
+            navigate("/pos");
+            break;
+          case "F3":
+            e.preventDefault();
+            navigate("/invoices");
+            break;
+          case "F4":
+            e.preventDefault();
+            navigate("/returns");
+            break;
+          case "F5":
+            e.preventDefault();
+            navigate("/customers");
+            break;
+          case "F6":
+            e.preventDefault();
+            navigate("/arrears");
+            break;
+          case "F7":
+            e.preventDefault();
+            navigate("/products");
+            break;
+          case "F8":
+            e.preventDefault();
+            navigate("/stock");
+            break;
+          case "F9":
+            e.preventDefault();
+            navigate("/barcodes");
+            break;
+          case "F10":
+            e.preventDefault();
+            navigate("/distributors");
+            break;
+          case "F11":
+            e.preventDefault();
+            navigate("/expenses");
+            break;
+          case "F12":
+            e.preventDefault();
+            navigate("/reports");
+            break;
+          case "F13":
+            e.preventDefault();
+            navigate("/settings");
+            break;
         }
       }
     };
@@ -110,21 +154,126 @@ function AppShell() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Navigate to="/pos" replace />} />
-        <Route path="/dashboard" element={<AnimatedPage><Dashboard /></AnimatedPage>} />
-        <Route path="/pos" element={<AnimatedPage><POS /></AnimatedPage>} />
-        <Route path="/products" element={<AnimatedPage><Products /></AnimatedPage>} />
-        <Route path="/customers" element={<AnimatedPage><Customers /></AnimatedPage>} />
-        <Route path="/customers/:id" element={<AnimatedPage><CustomerDetail /></AnimatedPage>} />
-        <Route path="/arrears" element={<AnimatedPage><Arrears /></AnimatedPage>} />
-        <Route path="/stock" element={<AnimatedPage><Stock /></AnimatedPage>} />
-        <Route path="/distributors" element={<AnimatedPage><Distributors /></AnimatedPage>} />
-        <Route path="/barcodes" element={<AnimatedPage><Barcodes /></AnimatedPage>} />
-        <Route path="/returns" element={<AnimatedPage><Returns /></AnimatedPage>} />
-        <Route path="/expenses" element={<AnimatedPage><Expenses /></AnimatedPage>} />
-        <Route path="/reports" element={<AnimatedPage><Reports /></AnimatedPage>} />
-        <Route path="/invoices" element={<AnimatedPage><Invoices /></AnimatedPage>} />
-        <Route path="/invoices/:id" element={<AnimatedPage><InvoiceDetail /></AnimatedPage>} />
-        <Route path="/settings" element={<AnimatedPage><Settings /></AnimatedPage>} />
+        <Route
+          path="/dashboard"
+          element={
+            <AnimatedPage>
+              <Dashboard />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/pos"
+          element={
+            <AnimatedPage>
+              <POS />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <AnimatedPage>
+              <Products />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/customers"
+          element={
+            <AnimatedPage>
+              <Customers />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/customers/:id"
+          element={
+            <AnimatedPage>
+              <CustomerDetail />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/arrears"
+          element={
+            <AnimatedPage>
+              <Arrears />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/stock"
+          element={
+            <AnimatedPage>
+              <Stock />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/distributors"
+          element={
+            <AnimatedPage>
+              <Distributors />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/barcodes"
+          element={
+            <AnimatedPage>
+              <Barcodes />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/returns"
+          element={
+            <AnimatedPage>
+              <Returns />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/expenses"
+          element={
+            <AnimatedPage>
+              <Expenses />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <AnimatedPage>
+              <Reports />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/invoices"
+          element={
+            <AnimatedPage>
+              <Invoices />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/invoices/:id"
+          element={
+            <AnimatedPage>
+              <InvoiceDetail />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <AnimatedPage>
+              <Settings />
+            </AnimatedPage>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );

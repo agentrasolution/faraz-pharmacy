@@ -43,11 +43,29 @@ interface CheckoutPanelProps {
 }
 
 export default function CheckoutPanel({
-  items, discount, discountValue, discountType, subtotal, total, profit, customerId, notes,
-  amountPaid = "", addToArrears = false,
-  onUpdateQuantity, onIncrementBy, onRemoveItem, onDiscountChange, onToggleDiscountType,
-  onClearCart, onCheckout, onCustomerChange, onNotesChange, onAmountPaidChange,
-  onAddToArrearsChange, error,
+  items,
+  discount,
+  discountValue,
+  discountType,
+  subtotal,
+  total,
+  profit,
+  customerId,
+  notes,
+  amountPaid = "",
+  addToArrears = false,
+  onUpdateQuantity,
+  onIncrementBy,
+  onRemoveItem,
+  onDiscountChange,
+  onToggleDiscountType,
+  onClearCart,
+  onCheckout,
+  onCustomerChange,
+  onNotesChange,
+  onAmountPaidChange,
+  onAddToArrearsChange,
+  error,
 }: CheckoutPanelProps) {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [showProfit, setShowProfit] = useState(false);
@@ -64,7 +82,14 @@ export default function CheckoutPanel({
 
   const queryClient = useQueryClient();
   const quickAddMutation = useMutation({
-    mutationFn: () => api.customers.create({ name: quickName, phone: quickPhone, address: quickAddress, fatherName: quickFatherName, fatherPhone: quickFatherPhone }),
+    mutationFn: () =>
+      api.customers.create({
+        name: quickName,
+        phone: quickPhone,
+        address: quickAddress,
+        fatherName: quickFatherName,
+        fatherPhone: quickFatherPhone,
+      }),
     onSuccess: (customer) => {
       toast.success("Customer added");
       queryClient.invalidateQueries({ queryKey: ["customers"] });
@@ -85,7 +110,8 @@ export default function CheckoutPanel({
   const numPaid = Number(amountPaid) || 0;
   const change = Math.max(0, numPaid - total);
   const isPartial = numPaid > 0 && numPaid < total;
-  const canPay = items.length > 0 && (numPaid >= total || (isPartial && !!customerId && addToArrears));
+  const canPay =
+    items.length > 0 && (numPaid >= total || (isPartial && !!customerId && addToArrears));
 
   async function handleCheckout() {
     if (!canPay) return;
@@ -121,11 +147,18 @@ export default function CheckoutPanel({
           <ShoppingCart className="h-4 w-4 text-accent" />
           Cart
           {items.length > 0 && (
-            <span className="text-[10px] font-normal text-text-secondary bg-surface-2 rounded-full px-1.5 py-px">{items.length}</span>
+            <span className="text-[10px] font-normal text-text-secondary bg-surface-2 rounded-full px-1.5 py-px">
+              {items.length}
+            </span>
           )}
         </h2>
         {items.length > 0 && (
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-text-secondary hover:text-danger" onClick={onClearCart}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-text-secondary hover:text-danger"
+            onClick={onClearCart}
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         )}
@@ -141,7 +174,13 @@ export default function CheckoutPanel({
         ) : (
           <div>
             {items.map((item) => (
-              <CartItem key={item.productId} item={item} onUpdateQuantity={onUpdateQuantity} onIncrementBy={onIncrementBy} onRemove={onRemoveItem} />
+              <CartItem
+                key={item.productId}
+                item={item}
+                onUpdateQuantity={onUpdateQuantity}
+                onIncrementBy={onIncrementBy}
+                onRemove={onRemoveItem}
+              />
             ))}
           </div>
         )}
@@ -152,7 +191,10 @@ export default function CheckoutPanel({
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <SearchableSelect
-                options={customers.map((c: Customer) => ({ value: c.id, label: `${c.name}${c.phone ? ` (${c.phone})` : ""}` }))}
+                options={customers.map((c: Customer) => ({
+                  value: c.id,
+                  label: `${c.name}${c.phone ? ` (${c.phone})` : ""}`,
+                }))}
                 value={customerId || ""}
                 onChange={(v) => {
                   const selected = customers.find((c: Customer) => c.id === v);
@@ -161,7 +203,13 @@ export default function CheckoutPanel({
                 placeholder="Customer (optional)"
               />
             </div>
-            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setQuickAddOpen(true)} title="Quick add customer">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setQuickAddOpen(true)}
+              title="Quick add customer"
+            >
               <UserPlus className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -169,7 +217,9 @@ export default function CheckoutPanel({
 
           <Dialog open={quickAddOpen} onOpenChange={setQuickAddOpen}>
             <DialogContent>
-              <DialogHeader><DialogTitle>Quick Add Customer</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Quick Add Customer</DialogTitle>
+              </DialogHeader>
               <div className="px-5 pb-5 space-y-3">
                 <div className="space-y-1">
                   <Label>Name</Label>
@@ -178,32 +228,63 @@ export default function CheckoutPanel({
                 <div className="space-y-1">
                   <Label>Phone</Label>
                   <div className="flex items-center">
-                    <span className="h-9 px-2 flex items-center justify-center rounded-l-md border border-r-0 border-border bg-surface-2 text-text-secondary text-sm font-mono">+92</span>
-                    <Input inputMode="numeric" pattern="[0-9]*" value={quickPhone.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setQuickPhone(num ? `+92${num}` : ""); }} placeholder="3001234567" className="rounded-l-none" />
+                    <span className="h-9 px-2 flex items-center justify-center rounded-l-md border border-r-0 border-border bg-surface-2 text-text-secondary text-sm font-mono">
+                      +92
+                    </span>
+                    <Input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={quickPhone.replace(/^\+92/, "")}
+                      onChange={(e) => {
+                        const num = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setQuickPhone(num ? `+92${num}` : "");
+                      }}
+                      placeholder="3001234567"
+                      className="rounded-l-none"
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Father Name</Label>
-                  <Input value={quickFatherName} onChange={(e) => setQuickFatherName(e.target.value)} />
+                  <Input
+                    value={quickFatherName}
+                    onChange={(e) => setQuickFatherName(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label>Father Phone No</Label>
                   <div className="flex items-center">
-                    <span className="h-9 px-2 flex items-center justify-center rounded-l-md border border-r-0 border-border bg-surface-2 text-text-secondary text-sm font-mono">+92</span>
-                    <Input inputMode="numeric" pattern="[0-9]*" value={quickFatherPhone.replace(/^\+92/, "")} onChange={(e) => { const num = e.target.value.replace(/\D/g, "").slice(0, 10); setQuickFatherPhone(num ? `+92${num}` : ""); }} placeholder="3001234567" className="rounded-l-none" />
+                    <span className="h-9 px-2 flex items-center justify-center rounded-l-md border border-r-0 border-border bg-surface-2 text-text-secondary text-sm font-mono">
+                      +92
+                    </span>
+                    <Input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={quickFatherPhone.replace(/^\+92/, "")}
+                      onChange={(e) => {
+                        const num = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setQuickFatherPhone(num ? `+92${num}` : "");
+                      }}
+                      placeholder="3001234567"
+                      className="rounded-l-none"
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Address</Label>
                   <Input value={quickAddress} onChange={(e) => setQuickAddress(e.target.value)} />
                 </div>
-                <Button className="w-full" disabled={!quickName || quickAddMutation.isPending} onClick={() => quickAddMutation.mutate()}>
+                <Button
+                  className="w-full"
+                  disabled={!quickName || quickAddMutation.isPending}
+                  onClick={() => quickAddMutation.mutate()}
+                >
                   {quickAddMutation.isPending ? "Adding..." : "Add Customer & Select"}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
-          
+
           {/* <div>
             <Label className="text-[10px] text-text-secondary mb-1 block">Notes</Label>
             <textarea
@@ -235,7 +316,9 @@ export default function CheckoutPanel({
             </div>
             {discountValue > 0 && (
               <p className="text-[10px] text-text-secondary text-right mt-0.5">
-                {discountType === "percent" ? `= ${formatCurrency(discount)}` : `= ${Math.round(discountValue * 100 / subtotal)}%`}
+                {discountType === "percent"
+                  ? `= ${formatCurrency(discount)}`
+                  : `= ${Math.round((discountValue * 100) / subtotal)}%`}
               </p>
             )}
           </div>
@@ -266,7 +349,9 @@ export default function CheckoutPanel({
                 {showProfit ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                 Profit
               </span>
-              <span className={`font-mono font-semibold tabular-nums transition-all duration-150 ${showProfit ? profit >= 0 ? "text-success" : "text-danger" : "blur-[3px] select-none text-text-secondary/40"}`}>
+              <span
+                className={`font-mono font-semibold tabular-nums transition-all duration-150 ${showProfit ? (profit >= 0 ? "text-success" : "text-danger") : "blur-[3px] select-none text-text-secondary/40"}`}
+              >
                 {showProfit ? formatCurrency(profit) : "••••••"}
               </span>
             </button>
@@ -297,7 +382,10 @@ export default function CheckoutPanel({
                   checked={addToArrears}
                   onCheckedChange={(val) => onAddToArrearsChange?.(val === true)}
                 />
-                <Label htmlFor="add-to-arrears" className="text-[11px] cursor-pointer text-text-secondary">
+                <Label
+                  htmlFor="add-to-arrears"
+                  className="text-[11px] cursor-pointer text-text-secondary"
+                >
                   Add remaining to arrears
                 </Label>
               </div>
@@ -310,14 +398,16 @@ export default function CheckoutPanel({
               {processing ? "Processing..." : `Pay ${formatCurrency(total)}`}
             </Button>
             {isPartial && !customerId && (
-              <p className="text-[10px] text-center text-danger">Select a customer for partial payment</p>
+              <p className="text-[10px] text-center text-danger">
+                Select a customer for partial payment
+              </p>
             )}
             {isPartial && !!customerId && !addToArrears && (
-              <p className="text-[10px] text-center text-text-secondary">Check the box above to add remaining to arrears</p>
+              <p className="text-[10px] text-center text-text-secondary">
+                Check the box above to add remaining to arrears
+              </p>
             )}
-            {error && (
-              <p className="text-[10px] text-center text-danger">{error}</p>
-            )}
+            {error && <p className="text-[10px] text-center text-danger">{error}</p>}
           </div>
         </div>
       )}

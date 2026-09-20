@@ -16,7 +16,7 @@ export function useCart() {
 
   const discount = useMemo(() => {
     if (discountType === "percent") {
-      return Math.round(subtotal * discountValue / 100);
+      return Math.round((subtotal * discountValue) / 100);
     }
     return discountValue;
   }, [subtotal, discountValue, discountType]);
@@ -26,7 +26,7 @@ export function useCart() {
   function toggleDiscountType() {
     setDiscountType((prev) => {
       if (prev === "pkr") {
-        const pct = subtotal > 0 ? Math.round(discountValue * 100 / subtotal) : 0;
+        const pct = subtotal > 0 ? Math.round((discountValue * 100) / subtotal) : 0;
         setDiscountValue(Math.min(pct, 100));
         return "percent";
       }
@@ -97,8 +97,22 @@ export function useCart() {
   }
 
   return {
-    items, discount, discountValue, discountType, subtotal, total, customerId, customerName,
-    setCustomer, setDiscountValue, setDiscountType, toggleDiscountType,
-    addItem, incrementBy, updateQuantity, removeItem, clearCart,
+    items,
+    discount,
+    discountValue,
+    discountType,
+    subtotal,
+    total,
+    customerId,
+    customerName,
+    setCustomer,
+    setDiscountValue,
+    setDiscountType,
+    toggleDiscountType,
+    addItem,
+    incrementBy,
+    updateQuantity,
+    removeItem,
+    clearCart,
   };
 }

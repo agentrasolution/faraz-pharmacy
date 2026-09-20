@@ -21,12 +21,19 @@ interface PrintBarcodeDialogProps {
   productName?: string;
 }
 
-export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBarcode, productName }: PrintBarcodeDialogProps) {
+export default function PrintBarcodeDialog({
+  open,
+  onOpenChange,
+  barcode: propBarcode,
+  productName,
+}: PrintBarcodeDialogProps) {
   const [barcode, setBarcode] = useState("");
   const [copies, setCopies] = useState(1);
   const [generating, setGenerating] = useState(false);
   const [isNewBarcode, setIsNewBarcode] = useState(false);
-  const [printers, setPrinters] = useState<{ name: string; displayName: string; isDefault: boolean }[]>([]);
+  const [printers, setPrinters] = useState<
+    { name: string; displayName: string; isDefault: boolean }[]
+  >([]);
   const [selectedPrinter, setSelectedPrinter] = useState("default");
   const barcodeId = useRef(0);
   const [labelSize, setLabelSize] = useState(() => {
@@ -55,8 +62,8 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
           api.barcodes.list(),
         ]);
         const existing = new Set([
-          ...products.map(p => p.barcode),
-          ...existingBarcodes.map(b => b.code),
+          ...products.map((p) => p.barcode),
+          ...existingBarcodes.map((b) => b.code),
         ]);
         let code = generateBarcode();
         while (existing.has(code)) {
@@ -74,7 +81,9 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
       }
       if (!cancelled) setGenerating(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, propBarcode]);
 
   useEffect(() => {
@@ -189,7 +198,9 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
                     min={1}
                     max={100}
                     value={copies}
-                    onChange={(e) => setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+                    onChange={(e) =>
+                      setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))
+                    }
                     className="h-8 text-xs"
                   />
                 </div>
@@ -205,11 +216,7 @@ export default function PrintBarcodeDialog({ open, onOpenChange, barcode: propBa
                     {printers.map((p) => (
                       <SelectItem key={p.name} value={p.name}>
                         {p.displayName}{" "}
-                        {p.isDefault ? (
-                          <span className="text-text-secondary">(Default)</span>
-                        ) : (
-                          ""
-                        )}
+                        {p.isDefault ? <span className="text-text-secondary">(Default)</span> : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>

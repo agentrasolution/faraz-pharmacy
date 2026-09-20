@@ -33,10 +33,14 @@ export default function ProductCard({ product, onAdd }: ProductCardProps) {
           {outOfStock ? "OUT OF STOCK" : lowStock ? `Only ${product.stock_qty} left` : "In Stock"}
         </span>
       </div>
-      <h3 className="font-display font-semibold text-sm text-text-primary leading-tight">{product.name}</h3>
+      <h3 className="font-display font-semibold text-sm text-text-primary leading-tight">
+        {product.name}
+      </h3>
       <p className="text-[10px] text-text-secondary mt-0.5 truncate">{product.company}</p>
       <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between">
-        <span className="font-mono font-bold text-sm text-text-primary tabular-nums">{formatCurrency(product.sale_price)}</span>
+        <span className="font-mono font-bold text-sm text-text-primary tabular-nums">
+          {formatCurrency(product.sale_price)}
+        </span>
       </div>
     </motion.button>
   );

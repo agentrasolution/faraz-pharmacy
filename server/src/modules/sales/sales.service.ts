@@ -123,17 +123,26 @@ export const salesService = {
     });
   },
 
-  async listAll(opts?: { search?: string; dateFrom?: string; dateTo?: string; tzOffsetMinutes?: number }) {
+  async listAll(opts?: {
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    tzOffsetMinutes?: number;
+  }) {
     const where: Record<string, unknown> = {};
     const offsetMs = (opts?.tzOffsetMinutes ?? 0) * 60000;
 
     if (opts?.dateFrom || opts?.dateTo) {
       where.createdAt = {};
       if (opts.dateFrom) {
-        (where.createdAt as Record<string, Date>).gte = new Date(new Date(`${opts.dateFrom}T00:00:00.000Z`).getTime() - offsetMs);
+        (where.createdAt as Record<string, Date>).gte = new Date(
+          new Date(`${opts.dateFrom}T00:00:00.000Z`).getTime() - offsetMs
+        );
       }
       if (opts.dateTo) {
-        (where.createdAt as Record<string, Date>).lte = new Date(new Date(`${opts.dateTo}T23:59:59.999Z`).getTime() - offsetMs);
+        (where.createdAt as Record<string, Date>).lte = new Date(
+          new Date(`${opts.dateTo}T23:59:59.999Z`).getTime() - offsetMs
+        );
       }
     }
 

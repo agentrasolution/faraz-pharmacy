@@ -13,7 +13,9 @@ export function useModuleShortcuts(shortcuts: ModuleShortcuts) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      const typing =
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
       const mod = e.metaKey || e.ctrlKey;
 
       if (!mod) return;

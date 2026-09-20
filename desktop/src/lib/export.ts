@@ -14,10 +14,18 @@ export function downloadCSV(filename: string, headers: string[], rows: unknown[]
   URL.revokeObjectURL(url);
 }
 
-export function downloadExcel(filename: string, title: string, headers: string[], rows: unknown[][]): void {
-  const tableRows = rows.map((r) =>
-    `<tr>${r.map((c) => `<td style="padding:8px 12px;border:1px solid #e5e7eb;font-size:12px">${csvEscape(c)}</td>`).join("")}</tr>`
-  ).join("\n");
+export function downloadExcel(
+  filename: string,
+  title: string,
+  headers: string[],
+  rows: unknown[][]
+): void {
+  const tableRows = rows
+    .map(
+      (r) =>
+        `<tr>${r.map((c) => `<td style="padding:8px 12px;border:1px solid #e5e7eb;font-size:12px">${csvEscape(c)}</td>`).join("")}</tr>`
+    )
+    .join("\n");
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
     <style>
       body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 20px; }
@@ -66,10 +74,18 @@ export function downloadExcel(filename: string, title: string, headers: string[]
   }
 }
 
-export function downloadPDF(filename: string, title: string, headers: string[], rows: unknown[][]): void {
-  const tableRows = rows.map((r) =>
-    `<tr>${r.map((c) => `<td style="padding:6px 10px;border:1px solid #ccc;font-size:12px">${csvEscape(c)}</td>`).join("")}</tr>`
-  ).join("\n");
+export function downloadPDF(
+  filename: string,
+  title: string,
+  headers: string[],
+  rows: unknown[][]
+): void {
+  const tableRows = rows
+    .map(
+      (r) =>
+        `<tr>${r.map((c) => `<td style="padding:6px 10px;border:1px solid #ccc;font-size:12px">${csvEscape(c)}</td>`).join("")}</tr>`
+    )
+    .join("\n");
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title></head><body>
     <h2 style="font-family:sans-serif;margin-bottom:16px">${title}</h2>
     <table style="border-collapse:collapse;width:100%;font-family:sans-serif">

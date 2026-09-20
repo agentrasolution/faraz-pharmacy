@@ -13,47 +13,56 @@ export const reportsService = {
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const [todayRevenue, totalArrears, lowStockCount, expiringSoonCount, weekRevenue, monthRevenue, topProducts] =
-      await Promise.all([
-        prisma.sale.aggregate({
-          where: { createdAt: { gte: today } },
-          _sum: { total: true },
-        }),
+    const [
+      todayRevenue,
+      totalArrears,
+      lowStockCount,
+      expiringSoonCount,
+      weekRevenue,
+      monthRevenue,
+      topProducts,
+    ] = await Promise.all([
+      prisma.sale.aggregate({
+        where: { createdAt: { gte: today } },
+        _sum: { total: true },
+      }),
 
-        prisma.arrear.aggregate({
-          where: { status: "pending" },
-          _sum: { balanceDue: true },
-        }),
+      prisma.arrear.aggregate({
+        where: { status: "pending" },
+        _sum: { balanceDue: true },
+      }),
 
-        prisma.product.count({
-          where: { stockQty: { lte: 5 } },
-        }),
+      prisma.product.count({
+        where: { stockQty: { lte: 5 } },
+      }),
 
-        prisma.$queryRawUnsafe<{ count: bigint }[]>(
-          `SELECT COUNT(*) as count FROM products WHERE expiry IS NOT NULL AND expiry::date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'`,
-        ).then((r) => Number(r[0]?.count ?? 0)),
+      prisma
+        .$queryRawUnsafe<{ count: bigint }[]>(
+          `SELECT COUNT(*) as count FROM products WHERE expiry IS NOT NULL AND expiry::date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'`
+        )
+        .then((r) => Number(r[0]?.count ?? 0)),
 
-        prisma.sale.groupBy({
-          by: ["createdAt"],
-          where: { createdAt: { gte: sevenDaysAgo } },
-          _sum: { total: true },
-          orderBy: { createdAt: "asc" },
-        }),
+      prisma.sale.groupBy({
+        by: ["createdAt"],
+        where: { createdAt: { gte: sevenDaysAgo } },
+        _sum: { total: true },
+        orderBy: { createdAt: "asc" },
+      }),
 
-        prisma.sale.groupBy({
-          by: ["createdAt"],
-          where: { createdAt: { gte: thirtyDaysAgo } },
-          _sum: { total: true },
-          orderBy: { createdAt: "asc" },
-        }),
+      prisma.sale.groupBy({
+        by: ["createdAt"],
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        _sum: { total: true },
+        orderBy: { createdAt: "asc" },
+      }),
 
-        prisma.saleItem.groupBy({
-          by: ["productName"],
-          _sum: { quantity: true },
-          orderBy: { _sum: { quantity: "desc" } },
-          take: 5,
-        }),
-      ]);
+      prisma.saleItem.groupBy({
+        by: ["productName"],
+        _sum: { quantity: true },
+        orderBy: { _sum: { quantity: "desc" } },
+        take: 5,
+      }),
+    ]);
 
     return {
       todayRevenue: todayRevenue._sum.total ?? 0,

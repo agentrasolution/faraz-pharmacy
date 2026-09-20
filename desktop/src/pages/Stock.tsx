@@ -1,7 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, RotateCcw, Eye, EyeOff, Barcode, Search, Download } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  RotateCcw,
+  Eye,
+  EyeOff,
+  Barcode,
+  Search,
+  Download,
+} from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -30,28 +40,51 @@ export default function Stock() {
   const [scanValue, setScanValue] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    productId: "", distributorId: "",
-    invoiceNumber: "", quantity: "", expiry: "",
+    productId: "",
+    distributorId: "",
+    invoiceNumber: "",
+    quantity: "",
+    expiry: "",
   });
 
-  const stockHeaders = ["Invoice", "Date", "Supplier", "Product", "Qty", "Purchase Price", "Total", "Status"];
-  const stockExportRows = (data: StockPurchase[]) => data.map((s) => [
-    s.invoice_number || "—",
-    formatDate(s.created_at),
-    s.distributor_name || "—",
-    s.product_name,
-    s.quantity,
-    formatCurrency(s.purchase_price),
-    formatCurrency(s.total_value),
-    s.active !== 0 ? "Active" : "Archived",
-  ]);
+  const stockHeaders = [
+    "Invoice",
+    "Date",
+    "Supplier",
+    "Product",
+    "Qty",
+    "Purchase Price",
+    "Total",
+    "Status",
+  ];
+  const stockExportRows = (data: StockPurchase[]) =>
+    data.map((s) => [
+      s.invoice_number || "—",
+      formatDate(s.created_at),
+      s.distributor_name || "—",
+      s.product_name,
+      s.quantity,
+      formatCurrency(s.purchase_price),
+      formatCurrency(s.total_value),
+      s.active !== 0 ? "Active" : "Archived",
+    ]);
 
   function handleExportPDF() {
-    downloadPDF(`stock_${new Date().toISOString().split("T")[0]}.pdf`, "Stock / Purchases", stockHeaders, stockExportRows(searched));
+    downloadPDF(
+      `stock_${new Date().toISOString().split("T")[0]}.pdf`,
+      "Stock / Purchases",
+      stockHeaders,
+      stockExportRows(searched)
+    );
   }
 
   function handleExportCSV() {
-    downloadCSV(`stock_${new Date().toISOString().split("T")[0]}.csv`, "Stock / Purchases", stockHeaders, stockExportRows(searched));
+    downloadCSV(
+      `stock_${new Date().toISOString().split("T")[0]}.csv`,
+      "Stock / Purchases",
+      stockHeaders,
+      stockExportRows(searched)
+    );
   }
 
   const { searchRef } = useModuleShortcuts({
@@ -61,28 +94,38 @@ export default function Stock() {
     onExportCSV: handleExportCSV,
   });
 
-  const { data: stockEntries = [], isLoading } = useQuery({ queryKey: ["stock"], queryFn: api.stock.list });
-  const filtered = showArchived ? stockEntries : stockEntries.filter((s: StockPurchase) => s.active !== 0);
-  const searched = filtered.filter((s: StockPurchase) =>
-    !search
-    || (s.product_name && s.product_name.toLowerCase().includes(search.toLowerCase()))
-    || (s.company_name && s.company_name.toLowerCase().includes(search.toLowerCase()))
-    || (s.distributor_name && s.distributor_name.toLowerCase().includes(search.toLowerCase()))
-    || (s.invoice_number && s.invoice_number.toLowerCase().includes(search.toLowerCase()))
+  const { data: stockEntries = [], isLoading } = useQuery({
+    queryKey: ["stock"],
+    queryFn: api.stock.list,
+  });
+  const filtered = showArchived
+    ? stockEntries
+    : stockEntries.filter((s: StockPurchase) => s.active !== 0);
+  const searched = filtered.filter(
+    (s: StockPurchase) =>
+      !search ||
+      (s.product_name && s.product_name.toLowerCase().includes(search.toLowerCase())) ||
+      (s.company_name && s.company_name.toLowerCase().includes(search.toLowerCase())) ||
+      (s.distributor_name && s.distributor_name.toLowerCase().includes(search.toLowerCase())) ||
+      (s.invoice_number && s.invoice_number.toLowerCase().includes(search.toLowerCase()))
   );
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
-  const { data: distributors = [] } = useQuery({ queryKey: ["distributors"], queryFn: api.distributors.list });
+  const { data: distributors = [] } = useQuery({
+    queryKey: ["distributors"],
+    queryFn: api.distributors.list,
+  });
 
   const totalValue = searched.reduce((s: number, i: StockPurchase) => s + i.total_value, 0);
 
   const createMutation = useMutation({
-    mutationFn: () => api.stock.create({
-      productId: form.productId,
-      distributorId: form.distributorId || undefined,
-      invoiceNumber: form.invoiceNumber,
-      quantity: Number(form.quantity),
-      expiry: form.expiry || undefined,
-    }),
+    mutationFn: () =>
+      api.stock.create({
+        productId: form.productId,
+        distributorId: form.distributorId || undefined,
+        invoiceNumber: form.invoiceNumber,
+        quantity: Number(form.quantity),
+        expiry: form.expiry || undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -110,20 +153,28 @@ export default function Stock() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: () => api.stock.update(editingId!, {
-      productId: form.productId,
-      distributorId: form.distributorId || undefined,
-      companyId: form.companyId || undefined,
-      invoiceNumber: form.invoiceNumber,
-      quantity: Number(form.quantity),
-      expiry: form.expiry || undefined,
-    }),
+    mutationFn: () =>
+      api.stock.update(editingId!, {
+        productId: form.productId,
+        distributorId: form.distributorId || undefined,
+        companyId: form.companyId || undefined,
+        invoiceNumber: form.invoiceNumber,
+        quantity: Number(form.quantity),
+        expiry: form.expiry || undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
       setEditingId(null);
-      setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", quantity: "", expiry: "" });
+      setForm({
+        productId: "",
+        distributorId: "",
+        companyId: "",
+        invoiceNumber: "",
+        quantity: "",
+        expiry: "",
+      });
       toast.success("Stock purchase updated");
     },
     onError: (err) => {
@@ -151,7 +202,14 @@ export default function Stock() {
 
   function openAdd() {
     setEditingId(null);
-    setForm({ productId: "", distributorId: "", companyId: "", invoiceNumber: "", quantity: "", expiry: "" });
+    setForm({
+      productId: "",
+      distributorId: "",
+      companyId: "",
+      invoiceNumber: "",
+      quantity: "",
+      expiry: "",
+    });
     setScanValue("");
     setOpen(true);
   }
@@ -170,25 +228,105 @@ export default function Stock() {
   }
 
   const columns = [
-    { key: "created_at", header: "Date", cell: (s: StockPurchase) => <span className="font-mono text-[11px] text-text-secondary">{formatDate(s.created_at)}</span> },
-    { key: "product_name", header: "Product", cell: (s: StockPurchase) => <span className="text-xs font-medium text-text-primary">{s.product_name}</span> },
-    { key: "company_name", header: "Company", cell: (s: StockPurchase) => <span className="text-[11px] text-text-secondary">{s.company_name || "\u2014"}</span> },
-    { key: "distributor_name", header: "Distributor", cell: (s: StockPurchase) => <span className="text-[11px] text-text-secondary">{s.distributor_name || "\u2014"}</span> },
-    { key: "invoice_number", header: "Invoice", cell: (s: StockPurchase) => <span className="font-mono text-[11px] text-text-secondary">{s.invoice_number || "\u2014"}</span> },
-    { key: "quantity", header: "Qty", cell: (s: StockPurchase) => <span className="font-mono text-xs font-semibold">{s.quantity}</span> },
-    { key: "purchase_price", header: "Cost", cell: (s: StockPurchase) => <span className="font-mono text-xs">{formatCurrency(s.purchase_price)}</span> },
-    { key: "sale_price", header: "Sale Price", cell: (s: StockPurchase) => <span className="font-mono text-xs text-accent font-semibold">{formatCurrency(s.sale_price)}</span> },
-    { key: "total_value", header: "Total", cell: (s: StockPurchase) => <span className="font-mono text-xs font-bold text-text-primary">{formatCurrency(s.total_value)}</span> },
-    { key: "expiry", header: "Expiry", cell: (s: StockPurchase) => <span className="font-mono text-[11px] text-text-secondary">{s.expiry ? formatDate(s.expiry) : "\u2014"}</span> },
     {
-      key: "actions", header: "", cell: (s: StockPurchase) => (
+      key: "created_at",
+      header: "Date",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-[11px] text-text-secondary">
+          {formatDate(s.created_at)}
+        </span>
+      ),
+    },
+    {
+      key: "product_name",
+      header: "Product",
+      cell: (s: StockPurchase) => (
+        <span className="text-xs font-medium text-text-primary">{s.product_name}</span>
+      ),
+    },
+    {
+      key: "company_name",
+      header: "Company",
+      cell: (s: StockPurchase) => (
+        <span className="text-[11px] text-text-secondary">{s.company_name || "\u2014"}</span>
+      ),
+    },
+    {
+      key: "distributor_name",
+      header: "Distributor",
+      cell: (s: StockPurchase) => (
+        <span className="text-[11px] text-text-secondary">{s.distributor_name || "\u2014"}</span>
+      ),
+    },
+    {
+      key: "invoice_number",
+      header: "Invoice",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-[11px] text-text-secondary">
+          {s.invoice_number || "\u2014"}
+        </span>
+      ),
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-xs font-semibold">{s.quantity}</span>
+      ),
+    },
+    {
+      key: "purchase_price",
+      header: "Cost",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-xs">{formatCurrency(s.purchase_price)}</span>
+      ),
+    },
+    {
+      key: "sale_price",
+      header: "Sale Price",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-xs text-accent font-semibold">
+          {formatCurrency(s.sale_price)}
+        </span>
+      ),
+    },
+    {
+      key: "total_value",
+      header: "Total",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-xs font-bold text-text-primary">
+          {formatCurrency(s.total_value)}
+        </span>
+      ),
+    },
+    {
+      key: "expiry",
+      header: "Expiry",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-[11px] text-text-secondary">
+          {s.expiry ? formatDate(s.expiry) : "\u2014"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (s: StockPurchase) => (
         <div className="flex items-center gap-0.5 justify-end">
           {s.active !== 0 ? (
             <>
-              <button onClick={() => openEdit(s)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
+              <button
+                onClick={() => openEdit(s)}
+                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                title="Edit"
+              >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button onClick={() => setDeleteId(s.id)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete">
+              <button
+                onClick={() => setDeleteId(s.id)}
+                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                title="Delete"
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </>
@@ -200,19 +338,37 @@ export default function Stock() {
 
   return (
     <div>
-      <PageHeader title="Stock / Purchases" description="Track inventory purchases and stock levels" action={{ label: <><span>New Purchase</span><ShortcutHint shortcut="Mod+N" /></>, onClick: openAdd }} />
-      
+      <PageHeader
+        title="Stock / Purchases"
+        description="Track inventory purchases and stock levels"
+        action={{
+          label: (
+            <>
+              <span>New Purchase</span>
+              <ShortcutHint shortcut="Mod+N" />
+            </>
+          ),
+          onClick: openAdd,
+        }}
+      />
+
       <div className="mb-5">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <p className="text-[11px] font-medium text-text-secondary uppercase tracking-wide">Total Stock Value</p>
+                <p className="text-[11px] font-medium text-text-secondary uppercase tracking-wide">
+                  Total Stock Value
+                </p>
                 <p className="text-xl font-bold text-text-primary tabular-nums">
                   {showValue ? formatCurrency(totalValue) : "••••••••"}
                 </p>
               </div>
-              <button onClick={() => setShowValue(!showValue)} className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent hover:bg-accent/20 transition-colors" title={showValue ? "Hide value" : "Show value"}>
+              <button
+                onClick={() => setShowValue(!showValue)}
+                className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent hover:bg-accent/20 transition-colors"
+                title={showValue ? "Hide value" : "Show value"}
+              >
                 {showValue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
@@ -223,7 +379,14 @@ export default function Stock() {
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input ref={searchRef} autoFocus placeholder="Search by product, company, distributor, invoice..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input
+            ref={searchRef}
+            autoFocus
+            placeholder="Search by product, company, distributor, invoice..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <div className="flex-1" />
         <ExportButton type="pdf" onClick={handleExportPDF} />
@@ -237,12 +400,27 @@ export default function Stock() {
         </button>
       </div>
       <div className="rounded-xl border border-border">
-        <DataTable columns={columns} data={searched} loading={isLoading} keyExtractor={(s: StockPurchase) => s.id} />
+        <DataTable
+          columns={columns}
+          data={searched}
+          loading={isLoading}
+          keyExtractor={(s: StockPurchase) => s.id}
+        />
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v) { setEditingId(null); } setOpen(v); }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v) {
+            setEditingId(null);
+          }
+          setOpen(v);
+        }}
+      >
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editingId ? "Edit Stock Purchase" : "Record Stock Purchase"}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit Stock Purchase" : "Record Stock Purchase"}</DialogTitle>
+          </DialogHeader>
           <div className="px-5 pb-5 space-y-3">
             <div className="relative">
               <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
@@ -261,12 +439,15 @@ export default function Stock() {
             </div>
             <div className="space-y-1">
               <Label>Product</Label>
-                <SearchableSelect
-                  options={products.map((p: Product) => ({ value: p.id, label: `${p.name} — ${p.category || "No Category"}` }))}
-                  value={form.productId}
-                  onChange={(v) => setForm({ ...form, productId: v })}
-                  placeholder="Select product"
-                />
+              <SearchableSelect
+                options={products.map((p: Product) => ({
+                  value: p.id,
+                  label: `${p.name} — ${p.category || "No Category"}`,
+                }))}
+                value={form.productId}
+                onChange={(v) => setForm({ ...form, productId: v })}
+                placeholder="Select product"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -281,7 +462,10 @@ export default function Stock() {
               <div className="space-y-1">
                 <Label>Distributor</Label>
                 <SearchableSelect
-                  options={distributors.map((d: Distributor) => ({ value: d.id, label: d.name || "Unnamed" }))}
+                  options={distributors.map((d: Distributor) => ({
+                    value: d.id,
+                    label: d.name || "Unnamed",
+                  }))}
                   value={form.distributorId}
                   onChange={(v) => setForm({ ...form, distributorId: v })}
                   placeholder="Select distributor"
@@ -290,19 +474,45 @@ export default function Stock() {
             </div>
             <div className="space-y-1">
               <Label>Invoice Number</Label>
-              <Input value={form.invoiceNumber} onChange={(e) => setForm({ ...form, invoiceNumber: e.target.value })} placeholder="e.g. INV-001" />
+              <Input
+                value={form.invoiceNumber}
+                onChange={(e) => setForm({ ...form, invoiceNumber: e.target.value })}
+                placeholder="e.g. INV-001"
+              />
             </div>
             <div className="space-y-1">
               <Label>Quantity</Label>
-              <Input type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+              <Input
+                type="number"
+                min="1"
+                value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+              />
             </div>
             <div className="space-y-1">
               <Label>Expiry (optional)</Label>
-              <Input type="date" value={form.expiry} onChange={(e) => setForm({ ...form, expiry: e.target.value })} min={new Date().toISOString().split("T")[0]} />
+              <Input
+                type="date"
+                value={form.expiry}
+                onChange={(e) => setForm({ ...form, expiry: e.target.value })}
+                min={new Date().toISOString().split("T")[0]}
+              />
             </div>
-            <Button className="w-full" disabled={!form.productId || !form.quantity || createMutation.isPending || updateMutation.isPending}
-              onClick={() => editingId ? updateMutation.mutate() : createMutation.mutate()}>
-              {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingId ? "Update Purchase" : "Record Purchase"}
+            <Button
+              className="w-full"
+              disabled={
+                !form.productId ||
+                !form.quantity ||
+                createMutation.isPending ||
+                updateMutation.isPending
+              }
+              onClick={() => (editingId ? updateMutation.mutate() : createMutation.mutate())}
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? "Saving..."
+                : editingId
+                  ? "Update Purchase"
+                  : "Record Purchase"}
             </Button>
           </div>
         </DialogContent>
@@ -310,11 +520,15 @@ export default function Stock() {
 
       <PasswordConfirmDialog
         open={!!deleteId}
-        onOpenChange={(v) => { if (!v) setDeleteId(null); }}
+        onOpenChange={(v) => {
+          if (!v) setDeleteId(null);
+        }}
         title="Delete Stock Entry"
         description="This will remove the stock quantity from the product. The entry will be archived and can be viewed later."
         confirmLabel="Delete"
-        onConfirm={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
+        onConfirm={() => {
+          if (deleteId) deleteMutation.mutate(deleteId);
+        }}
         loading={deleteMutation.isPending}
       />
     </div>

@@ -75,11 +75,20 @@ function startOfYear(): Date {
 
 const QUICK_RANGES = [
   { label: "Today", getRange: () => ({ from: today(), to: today() }) },
-  { label: "Yesterday", getRange: () => ({ from: toDateStr(offsetDate(-1)), to: toDateStr(offsetDate(-1)) }) },
+  {
+    label: "Yesterday",
+    getRange: () => ({ from: toDateStr(offsetDate(-1)), to: toDateStr(offsetDate(-1)) }),
+  },
   { label: "This Week", getRange: () => ({ from: toDateStr(startOfWeek()), to: today() }) },
-  { label: "Last Week", getRange: () => ({ from: toDateStr(startOfLastWeek()), to: toDateStr(endOfLastWeek()) }) },
+  {
+    label: "Last Week",
+    getRange: () => ({ from: toDateStr(startOfLastWeek()), to: toDateStr(endOfLastWeek()) }),
+  },
   { label: "This Month", getRange: () => ({ from: toDateStr(startOfMonth()), to: today() }) },
-  { label: "Last Month", getRange: () => ({ from: toDateStr(startOfLastMonth()), to: toDateStr(endOfLastMonth()) }) },
+  {
+    label: "Last Month",
+    getRange: () => ({ from: toDateStr(startOfLastMonth()), to: toDateStr(endOfLastMonth()) }),
+  },
   { label: "Last 30 Days", getRange: () => ({ from: toDateStr(offsetDate(-30)), to: today() }) },
   { label: "This Year", getRange: () => ({ from: toDateStr(startOfYear()), to: today() }) },
 ] as const;
@@ -118,7 +127,9 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
         >
           <Calendar className="h-4 w-4 text-text-secondary" />
           <span className="text-sm font-medium">{activeRange || "Date Range"}</span>
-          <ChevronDown className={cn("h-3 w-3 text-text-secondary transition-transform", open && "rotate-180")} />
+          <ChevronDown
+            className={cn("h-3 w-3 text-text-secondary transition-transform", open && "rotate-180")}
+          />
         </Button>
 
         {open && (
@@ -146,14 +157,20 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
         <Input
           type="date"
           value={value.from}
-          onChange={(e) => { onChange({ ...value, from: e.target.value }); setActiveRange(null); }}
+          onChange={(e) => {
+            onChange({ ...value, from: e.target.value });
+            setActiveRange(null);
+          }}
           className="h-9 w-36 text-sm"
         />
         <span className="text-xs text-text-secondary font-medium">to</span>
         <Input
           type="date"
           value={value.to}
-          onChange={(e) => { onChange({ ...value, to: e.target.value }); setActiveRange(null); }}
+          onChange={(e) => {
+            onChange({ ...value, to: e.target.value });
+            setActiveRange(null);
+          }}
           className="h-9 w-36 text-sm"
         />
       </div>

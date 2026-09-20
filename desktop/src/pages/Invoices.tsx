@@ -24,59 +24,119 @@ export default function Invoices() {
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ["invoices", search, dateFrom, dateTo],
-    queryFn: () => api.sales.listAll({ search: search || undefined, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined }),
+    queryFn: () =>
+      api.sales.listAll({
+        search: search || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      }),
   });
 
   const exportData = useCallback(() => {
-    const headers = ["Sale ID", "Date", "Customer", "Items", "Subtotal", "Discount", "Total", "Paid", "Change", "Status"];
+    const headers = [
+      "Sale ID",
+      "Date",
+      "Customer",
+      "Items",
+      "Subtotal",
+      "Discount",
+      "Total",
+      "Paid",
+      "Change",
+      "Status",
+    ];
     return sales.map((s: Sale) => [
-      s.id, s.created_at, s.customer_name || "Walk-in",
-      s.items?.length ?? 0, s.subtotal, s.discount, s.total, s.amount_paid, s.change, s.status,
+      s.id,
+      s.created_at,
+      s.customer_name || "Walk-in",
+      s.items?.length ?? 0,
+      s.subtotal,
+      s.discount,
+      s.total,
+      s.amount_paid,
+      s.change,
+      s.status,
     ]);
   }, [sales]);
 
   const handleExportCSV = useCallback(() => {
-    const headers = ["Sale ID", "Date", "Customer", "Items", "Subtotal", "Discount", "Total", "Paid", "Change", "Status"];
+    const headers = [
+      "Sale ID",
+      "Date",
+      "Customer",
+      "Items",
+      "Subtotal",
+      "Discount",
+      "Total",
+      "Paid",
+      "Change",
+      "Status",
+    ];
     downloadCSV(`invoices_${dateFrom || "all"}_${dateTo || "all"}.csv`, headers, exportData());
   }, [exportData, dateFrom, dateTo]);
 
   const handleExportPDF = useCallback(() => {
-    const headers = ["Sale ID", "Date", "Customer", "Items", "Subtotal", "Discount", "Total", "Paid", "Change", "Status"];
-    downloadPDF(`invoices_${dateFrom || "all"}_${dateTo || "all"}.pdf`, "Invoices & Billing", headers, exportData());
+    const headers = [
+      "Sale ID",
+      "Date",
+      "Customer",
+      "Items",
+      "Subtotal",
+      "Discount",
+      "Total",
+      "Paid",
+      "Change",
+      "Status",
+    ];
+    downloadPDF(
+      `invoices_${dateFrom || "all"}_${dateTo || "all"}.pdf`,
+      "Invoices & Billing",
+      headers,
+      exportData()
+    );
   }, [exportData, dateFrom, dateTo]);
 
-  const { searchRef } = useModuleShortcuts({ onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+  const { searchRef } = useModuleShortcuts({
+    onSearch: () => searchRef.current?.focus(),
+    onExportPDF: handleExportPDF,
+    onExportCSV: handleExportCSV,
+  });
 
   function handleQuickPrint(sale: Sale, e: React.MouseEvent) {
     e.stopPropagation();
     setPrintSale(sale);
   }
 
-  const generateReceiptHtml = useCallback(async (paperSize: string): Promise<string> => {
-    if (!printSale) return "";
-    const printData = {
-      ...printSale,
-      customer_total_arrears: 0,
-      items: printSale.items?.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: i.subtotal,
-      })) || [],
-    };
-    const result = await window.generateReceiptHTML(printData, paperSize);
-    return result.success ? result.html : "";
-  }, [printSale]);
+  const generateReceiptHtml = useCallback(
+    async (paperSize: string): Promise<string> => {
+      if (!printSale) return "";
+      const printData = {
+        ...printSale,
+        customer_total_arrears: 0,
+        items:
+          printSale.items?.map((i) => ({
+            product_name: i.product_name,
+            quantity: i.quantity,
+            subtotal: i.subtotal,
+          })) || [],
+      };
+      const result = await window.generateReceiptHTML(printData, paperSize);
+      return result.success ? result.html : "";
+    },
+    [printSale]
+  );
 
   async function handlePrint(config: PrinterConfig) {
     if (!printSale) return;
     const printData = {
       ...printSale,
       customer_total_arrears: 0,
-      items: printSale.items?.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: i.subtotal,
-      })) || [],
+      items:
+        printSale.items?.map((i) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          subtotal: i.subtotal,
+        })) || [],
     };
     const result = await window.printReceipt(printData, config);
     if (!result.success) {
@@ -85,16 +145,53 @@ export default function Invoices() {
   }
 
   const columns = [
-    { key: "created_at", header: "Date", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(s.created_at)}</span> },
-    { key: "id", header: "Invoice ID", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{s.id.slice(0, 8)}...</span> },
-    { key: "customer_name", header: "Customer", cell: (s: Sale) => <span>{s.customer_name || "Walk-in"}</span> },
-    { key: "items", header: "Items", cell: (s: Sale) => <span className="font-mono text-sm">{(s as any).item_count ?? s.items?.length ?? 0}</span> },
-    { key: "total", header: "Total", cell: (s: Sale) => <span className="font-mono font-medium">{formatCurrency(s.total)}</span> },
-    { key: "amount_paid", header: "Paid", cell: (s: Sale) => <span className="font-mono">{formatCurrency(s.amount_paid)}</span> },
     {
-      key: "profit", header: "Profit", cell: (s: Sale) => (
+      key: "created_at",
+      header: "Date",
+      cell: (s: Sale) => (
+        <span className="font-mono text-xs text-text-secondary">
+          {formatDateTime(s.created_at)}
+        </span>
+      ),
+    },
+    {
+      key: "id",
+      header: "Invoice ID",
+      cell: (s: Sale) => (
+        <span className="font-mono text-xs text-text-secondary">{s.id.slice(0, 8)}...</span>
+      ),
+    },
+    {
+      key: "customer_name",
+      header: "Customer",
+      cell: (s: Sale) => <span>{s.customer_name || "Walk-in"}</span>,
+    },
+    {
+      key: "items",
+      header: "Items",
+      cell: (s: Sale) => (
+        <span className="font-mono text-sm">{(s as any).item_count ?? s.items?.length ?? 0}</span>
+      ),
+    },
+    {
+      key: "total",
+      header: "Total",
+      cell: (s: Sale) => <span className="font-mono font-medium">{formatCurrency(s.total)}</span>,
+    },
+    {
+      key: "amount_paid",
+      header: "Paid",
+      cell: (s: Sale) => <span className="font-mono">{formatCurrency(s.amount_paid)}</span>,
+    },
+    {
+      key: "profit",
+      header: "Profit",
+      cell: (s: Sale) => (
         <button
-          onClick={(e) => { e.stopPropagation(); setShowProfitId(showProfitId === s.id ? null : s.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowProfitId(showProfitId === s.id ? null : s.id);
+          }}
           className={`font-mono font-medium cursor-pointer hover:underline ${(s.profit ?? 0) >= 0 ? "text-success" : "text-danger"}`}
         >
           {showProfitId === s.id ? formatCurrency(s.profit ?? 0) : "••••"}
@@ -103,12 +200,25 @@ export default function Invoices() {
     },
     { key: "status", header: "Status", cell: (s: Sale) => <StatusBadge status={s.status} /> },
     {
-      key: "actions", header: "", cell: (s: Sale) => (
+      key: "actions",
+      header: "",
+      cell: (s: Sale) => (
         <div className="flex items-center gap-1 justify-end">
-          <button onClick={(e) => { e.stopPropagation(); navigate(`/invoices/${s.id}`); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="View Details">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/invoices/${s.id}`);
+            }}
+            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+            title="View Details"
+          >
             <Eye className="h-3.5 w-3.5" />
           </button>
-          <button onClick={(e) => handleQuickPrint(s, e)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Print Receipt">
+          <button
+            onClick={(e) => handleQuickPrint(s, e)}
+            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+            title="Print Receipt"
+          >
             <Printer className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -123,14 +233,31 @@ export default function Invoices() {
         <div className="flex-1 min-w-[200px] max-w-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-            <Input ref={searchRef} autoFocus placeholder="Search by invoice ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input
+              ref={searchRef}
+              autoFocus
+              placeholder="Search by invoice ID or customer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-text-secondary" />
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-36" />
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-36"
+          />
           <span className="text-text-secondary text-sm">to</span>
-          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-36" />
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-36"
+          />
         </div>
         <ExportButton type="csv" onClick={handleExportCSV} disabled={sales.length === 0} />
         <ExportButton type="pdf" onClick={handleExportPDF} disabled={sales.length === 0} />
@@ -148,7 +275,9 @@ export default function Invoices() {
       {printSale && (
         <PrintPreviewDialog
           open={!!printSale}
-          onOpenChange={(v) => { if (!v) setPrintSale(null); }}
+          onOpenChange={(v) => {
+            if (!v) setPrintSale(null);
+          }}
           title="Invoice Receipt"
           htmlGenerator={generateReceiptHtml}
           onPrint={handlePrint}

@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { BarChart3, Package, ShoppingCart, Wallet, AlertTriangle, Clock, Calculator, DollarSign, Download } from "lucide-react";
+import {
+  BarChart3,
+  Package,
+  ShoppingCart,
+  Wallet,
+  AlertTriangle,
+  Clock,
+  Calculator,
+  DollarSign,
+  Download,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import SalesReport from "./reports/SalesReport";
@@ -11,7 +21,8 @@ import PurchaseReport from "./reports/PurchaseReport";
 import ZakatReport from "./reports/ZakatReport";
 import IncomeReport from "./reports/IncomeReport";
 
-type ReportType = "sales" | "stock" | "purchases" | "expenses" | "arrears" | "expiry" | "zakat" | "income";
+type ReportType =
+  "sales" | "stock" | "purchases" | "expenses" | "arrears" | "expiry" | "zakat" | "income";
 
 interface ReportTab {
   id: ReportType;
@@ -35,22 +46,30 @@ export default function Reports() {
 
   function renderReport() {
     switch (activeReport) {
-      case "sales": return <SalesReport />;
-      case "stock": return <StockReport />;
-      case "purchases": return <PurchaseReport />;
-      case "expenses": return <ExpensesReport />;
-      case "arrears": return <ArrearsReport />;
-      case "expiry": return <ExpiryReport />;
-      case "zakat": return <ZakatReport />;
-      case "income": return <IncomeReport />;
-      default: return <SalesReport />;
+      case "sales":
+        return <SalesReport />;
+      case "stock":
+        return <StockReport />;
+      case "purchases":
+        return <PurchaseReport />;
+      case "expenses":
+        return <ExpensesReport />;
+      case "arrears":
+        return <ArrearsReport />;
+      case "expiry":
+        return <ExpiryReport />;
+      case "zakat":
+        return <ZakatReport />;
+      case "income":
+        return <IncomeReport />;
+      default:
+        return <SalesReport />;
     }
   }
 
   return (
     <div>
       {/* Page Header */}
-      
 
       {/* Tab Bar */}
       <div className="flex items-center gap-1 mb-6 p-1 bg-surface-2 rounded-xl overflow-x-auto">

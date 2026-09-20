@@ -9,63 +9,62 @@ const isDev =
   process.env.NODE_ENV === "development" || process.argv.includes("--dev") || !app.isPackaged;
 
 const template = [
-  ...(process.platform === 'darwin' ? [{
-    label: app.name,
-    submenu: [
-      { role: 'about' },
-      { type: 'separator' },
-      { role: 'services' },
-      { type: 'separator' },
-      { role: 'hide' },
-      { role: 'hideOthers' },
-      { role: 'unhide' },
-      { type: 'separator' },
-      { role: 'quit' }
-    ]
-  }] : []),
+  ...(process.platform === "darwin"
+    ? [
+        {
+          label: app.name,
+          submenu: [
+            { role: "about" },
+            { type: "separator" },
+            { role: "services" },
+            { type: "separator" },
+            { role: "hide" },
+            { role: "hideOthers" },
+            { role: "unhide" },
+            { type: "separator" },
+            { role: "quit" },
+          ],
+        },
+      ]
+    : []),
   {
-    label: 'Edit',
+    label: "Edit",
     submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { role: 'pasteAndMatchStyle' },
-      { role: 'delete' },
-      { role: 'selectAll' }
-    ]
+      { role: "undo" },
+      { role: "redo" },
+      { type: "separator" },
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "pasteAndMatchStyle" },
+      { role: "delete" },
+      { role: "selectAll" },
+    ],
   },
   {
-    label: 'View',
+    label: "View",
     submenu: [
-      { role: 'reload' },
-      { role: 'forceReload' },
-      { role: 'toggleDevTools' },
-      { type: 'separator' },
-      { role: 'resetZoom' },
-      { role: 'zoomIn' },
-      { role: 'zoomOut' },
-      { type: 'separator' },
-      { role: 'togglefullscreen' }
-    ]
+      { role: "reload" },
+      { role: "forceReload" },
+      { role: "toggleDevTools" },
+      { type: "separator" },
+      { role: "resetZoom" },
+      { role: "zoomIn" },
+      { role: "zoomOut" },
+      { type: "separator" },
+      { role: "togglefullscreen" },
+    ],
   },
   {
-    label: 'Window',
+    label: "Window",
     submenu: [
-      { role: 'minimize' },
-      { role: 'zoom' },
-      ...(process.platform === 'darwin' ? [
-        { type: 'separator' },
-        { role: 'front' },
-        { type: 'separator' },
-        { role: 'window' }
-      ] : [
-        { role: 'close' }
-      ])
-    ]
-  }
+      { role: "minimize" },
+      { role: "zoom" },
+      ...(process.platform === "darwin"
+        ? [{ type: "separator" }, { role: "front" }, { type: "separator" }, { role: "window" }]
+        : [{ role: "close" }]),
+    ],
+  },
 ];
 
 const menu = Menu.buildFromTemplate(template);
@@ -102,8 +101,14 @@ function createWindow({ posOnly = false } = {}) {
     posWindowCounter++;
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
     const cascadeOffset = (posWindowCounter - 1) * 30;
-    const x = Math.min(Math.round((screenWidth - winOptions.width) / 2) + cascadeOffset, screenWidth - 200);
-    const y = Math.min(Math.round((screenHeight - winOptions.height) / 2) + cascadeOffset, screenHeight - 200);
+    const x = Math.min(
+      Math.round((screenWidth - winOptions.width) / 2) + cascadeOffset,
+      screenWidth - 200
+    );
+    const y = Math.min(
+      Math.round((screenHeight - winOptions.height) / 2) + cascadeOffset,
+      screenHeight - 200
+    );
     winOptions.x = x;
     winOptions.y = y;
     winOptions.title = `Faraz Pharmacy - Sale ${posWindowCounter}`;
@@ -123,17 +128,17 @@ function createWindow({ posOnly = false } = {}) {
   if (isDev) {
     const DEV_URL = "http://localhost:5173";
     const loadDev = (attempt = 0) => {
-      win
-        .loadURL(`${DEV_URL}/#${posHash}`)
-        .catch(() => {
-          if (attempt < 60) {
-            setTimeout(() => loadDev(attempt + 1), 500);
-          }
-        });
+      win.loadURL(`${DEV_URL}/#${posHash}`).catch(() => {
+        if (attempt < 60) {
+          setTimeout(() => loadDev(attempt + 1), 500);
+        }
+      });
     };
     loadDev();
     if (isPrimary) {
-      win.webContents.once("did-finish-load", () => win.webContents.openDevTools({ mode: "detach" }));
+      win.webContents.once("did-finish-load", () =>
+        win.webContents.openDevTools({ mode: "detach" })
+      );
     }
   } else {
     win.loadFile(path.join(__dirname, "..", "dist", "index.html"), { hash: posHash });

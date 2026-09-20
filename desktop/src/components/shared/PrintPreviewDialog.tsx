@@ -97,12 +97,7 @@ export default function PrintPreviewDialog({
 
   useEffect(() => {
     if (!open) return;
-    const def =
-      paperSize === "a4"
-        ? A4_MARGINS
-        : paperSize === "a5"
-          ? A5_MARGINS
-          : DEFAULT_MARGINS;
+    const def = paperSize === "a4" ? A4_MARGINS : paperSize === "a5" ? A5_MARGINS : DEFAULT_MARGINS;
     if (!savedConfig.margins) setMargins(def);
   }, [paperSize, open]);
 
@@ -118,11 +113,7 @@ export default function PrintPreviewDialog({
   }, [html]);
 
   function getDefaultMargins() {
-    return paperSize === "a4"
-      ? A4_MARGINS
-      : paperSize === "a5"
-        ? A5_MARGINS
-        : DEFAULT_MARGINS;
+    return paperSize === "a4" ? A4_MARGINS : paperSize === "a5" ? A5_MARGINS : DEFAULT_MARGINS;
   }
 
   async function handlePrint() {
@@ -142,10 +133,7 @@ export default function PrintPreviewDialog({
     setPrinting(false);
   }
 
-  function updateMargin(
-    side: "top" | "bottom" | "left" | "right",
-    value: string,
-  ) {
+  function updateMargin(side: "top" | "bottom" | "left" | "right", value: string) {
     const num = parseFloat(value) || 0;
     setMargins((prev) => ({ ...prev, [side]: num }));
   }
@@ -154,8 +142,7 @@ export default function PrintPreviewDialog({
     setMargins(getDefaultMargins());
   }
 
-  const previewWidth =
-    paperSize === "thermal" ? 320 : paperSize === "a5" ? 480 : 680;
+  const previewWidth = paperSize === "thermal" ? 320 : paperSize === "a5" ? 480 : 680;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -170,9 +157,7 @@ export default function PrintPreviewDialog({
         <div className="px-5 pt-3 pb-2 space-y-2.5">
           <div className="flex items-end gap-2.5 flex-wrap">
             <div className="space-y-1">
-              <Label className="text-[10px] text-text-secondary font-medium">
-                Paper Size
-              </Label>
+              <Label className="text-[10px] text-text-secondary font-medium">Paper Size</Label>
               <div className="flex gap-1">
                 {PAPER_SIZES.map(({ value, label }) => (
                   <button
@@ -191,13 +176,8 @@ export default function PrintPreviewDialog({
             </div>
 
             <div className="space-y-1 flex-1 min-w-[160px] max-w-[220px]">
-              <Label className="text-[10px] text-text-secondary font-medium">
-                Printer
-              </Label>
-              <Select
-                value={selectedPrinter}
-                onValueChange={setSelectedPrinter}
-              >
+              <Label className="text-[10px] text-text-secondary font-medium">Printer</Label>
+              <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
                 <SelectTrigger className="h-7 text-[11px]">
                   <SelectValue placeholder="Default printer" />
                 </SelectTrigger>
@@ -206,11 +186,7 @@ export default function PrintPreviewDialog({
                   {printers.map((p) => (
                     <SelectItem key={p.name} value={p.name}>
                       {p.displayName}{" "}
-                      {p.isDefault ? (
-                        <span className="text-text-secondary">(Default)</span>
-                      ) : (
-                        ""
-                      )}
+                      {p.isDefault ? <span className="text-text-secondary">(Default)</span> : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -236,9 +212,7 @@ export default function PrintPreviewDialog({
               </span>
               {(["top", "left", "right", "bottom"] as const).map((side) => (
                 <div key={side} className="space-y-0.5">
-                  <Label className="text-[9px] text-text-secondary capitalize block">
-                    {side}
-                  </Label>
+                  <Label className="text-[9px] text-text-secondary capitalize block">{side}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -250,12 +224,7 @@ export default function PrintPreviewDialog({
                   />
                 </div>
               ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-[10px]"
-                onClick={resetMargins}
-              >
+              <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={resetMargins}>
                 Reset
               </Button>
             </div>

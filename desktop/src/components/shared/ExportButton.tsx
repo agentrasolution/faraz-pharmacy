@@ -11,7 +11,13 @@ interface ExportButtonProps {
   className?: string;
 }
 
-export default function ExportButton({ type, onClick, disabled, showShortcut, className }: ExportButtonProps) {
+export default function ExportButton({
+  type,
+  onClick,
+  disabled,
+  showShortcut,
+  className,
+}: ExportButtonProps) {
   if (type === "pdf") {
     return (
       <Button
@@ -19,7 +25,10 @@ export default function ExportButton({ type, onClick, disabled, showShortcut, cl
         size="sm"
         onClick={onClick}
         disabled={disabled}
-        className={cn("h-9 gap-2 border-danger/20 text-danger hover:bg-danger hover:text-white hover:border-danger transition-colors", className)}
+        className={cn(
+          "h-9 gap-2 border-danger/20 text-danger hover:bg-danger hover:text-white hover:border-danger transition-colors",
+          className
+        )}
       >
         <FileText className="h-4 w-4" />
         <span>PDF</span>
@@ -34,7 +43,10 @@ export default function ExportButton({ type, onClick, disabled, showShortcut, cl
       size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={cn("h-9 gap-2 border-success/20 text-success hover:bg-success hover:text-white hover:border-success transition-colors", className)}
+      className={cn(
+        "h-9 gap-2 border-success/20 text-success hover:bg-success hover:text-white hover:border-success transition-colors",
+        className
+      )}
     >
       <Download className="h-4 w-4" />
       <span>CSV</span>

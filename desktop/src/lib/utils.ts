@@ -14,7 +14,11 @@ export interface RenderBarcodeOptions {
   margin?: number;
 }
 
-export function renderBarcode(svg: SVGElement, value: string, options: RenderBarcodeOptions = {}): boolean {
+export function renderBarcode(
+  svg: SVGElement,
+  value: string,
+  options: RenderBarcodeOptions = {}
+): boolean {
   const opts = {
     width: 2,
     height: 60,

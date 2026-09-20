@@ -1,4 +1,11 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +25,14 @@ interface DataTableProps<T> {
   emptyMessage?: string;
 }
 
-export default function DataTable<T>({ columns, data, loading, keyExtractor, onRowClick, emptyMessage }: DataTableProps<T>) {
+export default function DataTable<T>({
+  columns,
+  data,
+  loading,
+  keyExtractor,
+  onRowClick,
+  emptyMessage,
+}: DataTableProps<T>) {
   if (loading) {
     return (
       <Table>
@@ -49,14 +63,19 @@ export default function DataTable<T>({ columns, data, loading, keyExtractor, onR
       <TableHeader>
         <TableRow>
           {columns.map((col) => (
-            <TableHead key={col.key} className={col.className}>{col.header}</TableHead>
+            <TableHead key={col.key} className={col.className}>
+              {col.header}
+            </TableHead>
           ))}
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={columns.length} className="text-center text-text-secondary py-10 text-xs">
+            <TableCell
+              colSpan={columns.length}
+              className="text-center text-text-secondary py-10 text-xs"
+            >
               {emptyMessage || "No data found"}
             </TableCell>
           </TableRow>
@@ -71,7 +90,9 @@ export default function DataTable<T>({ columns, data, loading, keyExtractor, onR
               onClick={() => onRowClick?.(item)}
             >
               {columns.map((col) => (
-                <TableCell key={col.key} className={col.className}>{col.cell(item)}</TableCell>
+                <TableCell key={col.key} className={col.className}>
+                  {col.cell(item)}
+                </TableCell>
               ))}
             </TableRow>
           ))

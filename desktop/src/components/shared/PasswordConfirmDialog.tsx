@@ -1,6 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { Lock, AlertTriangle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,9 +82,14 @@ export default function PasswordConfirmDialog({
             <Input
               type="password"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
               placeholder="Admin password"
-              onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleConfirm();
+              }}
               autoFocus
             />
             {error && <p className="text-xs text-danger">{error}</p>}

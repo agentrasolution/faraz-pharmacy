@@ -3,13 +3,24 @@ import { formatCurrency } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
 interface CartItemProps {
-  item: { productId: string; productName: string; unitPrice: number; quantity: number; subtotal: number };
+  item: {
+    productId: string;
+    productName: string;
+    unitPrice: number;
+    quantity: number;
+    subtotal: number;
+  };
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onIncrementBy: (productId: string, amount: number) => void;
   onRemove: (productId: string) => void;
 }
 
-export default function CartItem({ item, onUpdateQuantity, onIncrementBy, onRemove }: CartItemProps) {
+export default function CartItem({
+  item,
+  onUpdateQuantity,
+  onIncrementBy,
+  onRemove,
+}: CartItemProps) {
   const quickBtns = [5, 10, 20];
   const [localQuantity, setLocalQuantity] = useState(item.quantity);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +80,9 @@ export default function CartItem({ item, onUpdateQuantity, onIncrementBy, onRemo
         />
       </div>
       <div className="text-right min-w-[60px]">
-        <p className="text-xs font-semibold font-mono tabular-nums">{formatCurrency(item.subtotal)}</p>
+        <p className="text-xs font-semibold font-mono tabular-nums">
+          {formatCurrency(item.subtotal)}
+        </p>
       </div>
       <button
         onClick={() => onRemove(item.productId)}

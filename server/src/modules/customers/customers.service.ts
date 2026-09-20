@@ -20,7 +20,7 @@ export const customersService = {
       `SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
         ${customerStatsSelect}
        FROM customers c
-       ORDER BY c.name ASC`,
+       ORDER BY c.name ASC`
     );
   },
 
@@ -32,7 +32,7 @@ export const customersService = {
        FROM customers c
        WHERE c.name ILIKE $1 OR c.phone ILIKE $1 OR c.father_name ILIKE $1 OR c.father_phone ILIKE $1
        ORDER BY c.name LIMIT 20`,
-      q,
+      q
     );
   },
 
@@ -58,7 +58,7 @@ export const customersService = {
        FROM customers c
        WHERE c.id = $1
        GROUP BY c.id`,
-      id,
+      id
     );
 
     return {
@@ -146,7 +146,7 @@ export const customersService = {
 
     if ((salesCount > 0 || arrearsCount > 0) && !force) {
       throw new BadRequestError(
-        `Customer has ${salesCount} invoice(s) and ${arrearsCount} arrear(s). Use force delete to remove.`,
+        `Customer has ${salesCount} invoice(s) and ${arrearsCount} arrear(s). Use force delete to remove.`
       );
     }
 

@@ -9,14 +9,18 @@ interface SearchableSelectProps {
   className?: string;
 }
 
-export function SearchableSelect({ options, value, onChange, placeholder, className }: SearchableSelectProps) {
+export function SearchableSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
+  className,
+}: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const ref = React.useRef<HTMLDivElement>(null);
 
-  const filtered = options.filter((o) =>
-    o.label.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()));
 
   React.useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -40,7 +44,12 @@ export function SearchableSelect({ options, value, onChange, placeholder, classN
         <span className={selected ? "" : "text-text-secondary/60"}>
           {selected?.label || placeholder || "Select..."}
         </span>
-        <svg className="h-3.5 w-3.5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          className="h-3.5 w-3.5 opacity-50"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
@@ -63,7 +72,11 @@ export function SearchableSelect({ options, value, onChange, placeholder, classN
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => { onChange(opt.value); setOpen(false); setSearch(""); }}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                    setSearch("");
+                  }}
                   className={cn(
                     "w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors",
                     opt.value === value

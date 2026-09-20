@@ -22,10 +22,13 @@ export default function Categories() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
 
-  const { data: categories = [], isLoading } = useQuery({ queryKey: ["categories"], queryFn: api.categories.list });
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: api.categories.list,
+  });
 
-  const filtered = categories.filter((c: Category) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = categories.filter(
+    (c: Category) => !search || c.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const createMutation = useMutation({
@@ -78,16 +81,47 @@ export default function Categories() {
 
   return (
     <div>
-      <PageHeader title="Categories" description="Manage product categories" action={{ label: "Add Category", onClick: openAdd }} />
+      <PageHeader
+        title="Categories"
+        description="Manage product categories"
+        action={{ label: "Add Category", onClick: openAdd }}
+      />
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input autoFocus placeholder="Search categories..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input
+            autoFocus
+            placeholder="Search categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
-        <Button variant="outline" size="sm" onClick={() => downloadCSV(`categories_${new Date().toISOString().split("T")[0]}.csv`, ["Name"], filtered.map((c: Category) => [c.name]))}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            downloadCSV(
+              `categories_${new Date().toISOString().split("T")[0]}.csv`,
+              ["Name"],
+              filtered.map((c: Category) => [c.name])
+            )
+          }
+        >
           <Download className="h-4 w-4 mr-1" /> CSV
         </Button>
-        <Button variant="outline" size="sm" onClick={() => downloadPDF(`categories_${new Date().toISOString().split("T")[0]}.pdf`, "Categories List", ["Name"], filtered.map((c: Category) => [c.name]))}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            downloadPDF(
+              `categories_${new Date().toISOString().split("T")[0]}.pdf`,
+              "Categories List",
+              ["Name"],
+              filtered.map((c: Category) => [c.name])
+            )
+          }
+        >
           <Download className="h-4 w-4 mr-1" /> PDF
         </Button>
       </div>
@@ -96,7 +130,9 @@ export default function Categories() {
           Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
         ) : filtered.length === 0 ? (
           <div className="col-span-full text-center py-12 text-sm text-text-secondary">
-            {search ? "No categories match your search" : "No categories yet. Add your first category to get started."}
+            {search
+              ? "No categories match your search"
+              : "No categories yet. Add your first category to get started."}
           </div>
         ) : (
           filtered.map((cat: Category) => (
@@ -112,10 +148,18 @@ export default function Categories() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => openEdit(cat)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors" title="Edit">
+                    <button
+                      onClick={() => openEdit(cat)}
+                      className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                      title="Edit"
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => setDeleteId(cat.id)} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors" title="Delete">
+                    <button
+                      onClick={() => setDeleteId(cat.id)}
+                      className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                      title="Delete"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -126,7 +170,15 @@ export default function Categories() {
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v) { setEditingId(null); } setOpen(v); }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v) {
+            setEditingId(null);
+          }
+          setOpen(v);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Category" : "Add Category"}</DialogTitle>
@@ -144,9 +196,13 @@ export default function Categories() {
             <Button
               className="w-full"
               disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
-              onClick={() => editingId ? updateMutation.mutate() : createMutation.mutate()}
+              onClick={() => (editingId ? updateMutation.mutate() : createMutation.mutate())}
             >
-              {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingId ? "Update Category" : "Add Category"}
+              {createMutation.isPending || updateMutation.isPending
+                ? "Saving..."
+                : editingId
+                  ? "Update Category"
+                  : "Add Category"}
             </Button>
           </div>
         </DialogContent>
@@ -154,11 +210,15 @@ export default function Categories() {
 
       <PasswordConfirmDialog
         open={!!deleteId}
-        onOpenChange={(v) => { if (!v) setDeleteId(null); }}
+        onOpenChange={(v) => {
+          if (!v) setDeleteId(null);
+        }}
         title="Delete Category"
         description="Are you sure you want to delete this category? Products assigned to it will not be affected."
         confirmLabel="Delete"
-        onConfirm={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
+        onConfirm={() => {
+          if (deleteId) deleteMutation.mutate(deleteId);
+        }}
         loading={deleteMutation.isPending}
       />
     </div>

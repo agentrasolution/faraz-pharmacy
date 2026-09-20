@@ -20,10 +20,7 @@ export function downloadExcel(options: ExcelExportOptions): void {
   const wb = sheets
     .map((sheet) => {
       const totalRows = sheet.totals
-        ? [
-            [],
-            sheet.totals.map((t) => t.label + ": " + t.value).join(", "),
-          ]
+        ? [[], sheet.totals.map((t) => t.label + ": " + t.value).join(", ")]
         : [];
 
       const allRows = [
@@ -66,10 +63,7 @@ export function downloadExcel(options: ExcelExportOptions): void {
         : `<table>
       <thead><tr>${sheet.headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
       <tbody>${sheet.rows
-        .map(
-          (row) =>
-            `<tr>${row.map((c) => `<td>${c}</td>`).join("")}</tr>`
-        )
+        .map((row) => `<tr>${row.map((c) => `<td>${c}</td>`).join("")}</tr>`)
         .join("")}</tbody>
     </table>
     ${
@@ -118,7 +112,11 @@ export function downloadExcel(options: ExcelExportOptions): void {
   }
 }
 
-export function downloadCSVFile(filename: string, headers: string[], rows: (string | number)[][]): void {
+export function downloadCSVFile(
+  filename: string,
+  headers: string[],
+  rows: (string | number)[][]
+): void {
   const csv = [headers, ...rows].map((r) => r.map(csvEscape).join(",")).join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -129,7 +127,11 @@ export function downloadCSVFile(filename: string, headers: string[], rows: (stri
   URL.revokeObjectURL(url);
 }
 
-export function downloadExcelFile(filename: string, headers: string[], rows: (string | number)[][]): void {
+export function downloadExcelFile(
+  filename: string,
+  headers: string[],
+  rows: (string | number)[][]
+): void {
   const csv = [headers, ...rows].map((r) => r.map(csvEscape).join(",")).join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);

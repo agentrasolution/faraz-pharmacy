@@ -114,12 +114,18 @@ export const settingsService = {
     const backupDir = getConfiguredBackupDir();
     if (!fs.existsSync(backupDir)) return [];
 
-    return fs.readdirSync(backupDir)
+    return fs
+      .readdirSync(backupDir)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => {
         const fp = path.join(backupDir, f);
         const stat = fs.statSync(fp);
-        return { name: f, path: fp, size: stat.size, createdAt: (stat.birthtime || stat.mtime).toISOString() };
+        return {
+          name: f,
+          path: fp,
+          size: stat.size,
+          createdAt: (stat.birthtime || stat.mtime).toISOString(),
+        };
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   },
@@ -177,9 +183,16 @@ export const settingsService = {
   // Google Drive config
   getGdriveConfig() {
     const cfg = loadConfig();
-    return (cfg.googleDrive as Record<string, unknown>) || {
-      clientId: "", clientSecret: "", redirectUri: "", refreshToken: "", autoUpload: false, connected: false,
-    };
+    return (
+      (cfg.googleDrive as Record<string, unknown>) || {
+        clientId: "",
+        clientSecret: "",
+        redirectUri: "",
+        refreshToken: "",
+        autoUpload: false,
+        connected: false,
+      }
+    );
   },
 
   saveGdriveConfig(gdriveConfig: Record<string, unknown>) {

@@ -30,9 +30,13 @@ export default function Topbar() {
 
   useEffect(() => {
     const update = () => {
-      setTime(new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit", minute: "2-digit", hour12: true,
-      }));
+      setTime(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      );
     };
     update();
     const interval = setInterval(update, 1000);
@@ -57,11 +61,16 @@ export default function Topbar() {
     const next = !dark;
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
-    try { localStorage.setItem("faraz_theme", next ? "dark" : "light"); } catch {}
+    try {
+      localStorage.setItem("faraz_theme", next ? "dark" : "light");
+    } catch {}
   }
 
   const { isOnline, isInitialCheck, connectionInfo, reconnect } = useServerConnection();
-  const page = pageLabels[location.pathname] || { title: "Dashboard", subtitle: "Business overview" };
+  const page = pageLabels[location.pathname] || {
+    title: "Dashboard",
+    subtitle: "Business overview",
+  };
   const isServer = window.appConfig?.mode === "server";
 
   const formatLastChecked = (date: Date | null) => {
@@ -83,7 +92,9 @@ export default function Topbar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <h1 className="text-sm font-display font-semibold text-text-primary tracking-tight">{page.title}</h1>
+            <h1 className="text-sm font-display font-semibold text-text-primary tracking-tight">
+              {page.title}
+            </h1>
             <p className="text-[11px] text-text-secondary leading-none mt-0.5">{page.subtitle}</p>
           </motion.div>
 
@@ -99,11 +110,7 @@ export default function Topbar() {
             >
               <span
                 className={`h-2 w-2 rounded-full shrink-0 ${
-                  isInitialCheck
-                    ? "bg-muted-foreground/40"
-                    : isOnline
-                      ? "bg-success"
-                      : "bg-danger"
+                  isInitialCheck ? "bg-muted-foreground/40" : isOnline ? "bg-success" : "bg-danger"
                 }`}
               />
               {isServer ? (
@@ -145,8 +152,12 @@ export default function Topbar() {
                         <Server className="h-3.5 w-3.5 text-accent" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">Server</p>
-                        <p className="text-xs font-mono font-medium text-text-primary truncate">{connectionInfo.serverUrl.replace(/^https?:\/\//, "")}</p>
+                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
+                          Server
+                        </p>
+                        <p className="text-xs font-mono font-medium text-text-primary truncate">
+                          {connectionInfo.serverUrl.replace(/^https?:\/\//, "")}
+                        </p>
                       </div>
                     </div>
 
@@ -156,10 +167,16 @@ export default function Topbar() {
                         <Wifi className="h-3.5 w-3.5 text-success" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">Status</p>
+                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
+                          Status
+                        </p>
                         <div className="flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${connectionInfo.isOnline ? "bg-success" : "bg-danger"}`} />
-                          <p className={`text-xs font-medium ${connectionInfo.isOnline ? "text-success" : "text-danger"}`}>
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${connectionInfo.isOnline ? "bg-success" : "bg-danger"}`}
+                          />
+                          <p
+                            className={`text-xs font-medium ${connectionInfo.isOnline ? "text-success" : "text-danger"}`}
+                          >
                             {connectionInfo.isOnline ? "Connected" : "Disconnected"}
                           </p>
                         </div>
@@ -172,9 +189,13 @@ export default function Topbar() {
                         <Clock className="h-3.5 w-3.5 text-text-secondary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">Response</p>
+                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
+                          Response
+                        </p>
                         <p className="text-xs font-mono font-medium text-text-primary">
-                          {connectionInfo.responseTime !== null ? `${connectionInfo.responseTime} ms` : "—"}
+                          {connectionInfo.responseTime !== null
+                            ? `${connectionInfo.responseTime} ms`
+                            : "—"}
                         </p>
                       </div>
                     </div>
@@ -185,10 +206,16 @@ export default function Topbar() {
                         <Database className="h-3.5 w-3.5 text-text-secondary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">Database</p>
+                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
+                          Database
+                        </p>
                         <div className="flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${connectionInfo.databaseOnline ? "bg-success" : "bg-danger"}`} />
-                          <p className={`text-xs font-medium ${connectionInfo.databaseOnline ? "text-success" : "text-danger"}`}>
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${connectionInfo.databaseOnline ? "bg-success" : "bg-danger"}`}
+                          />
+                          <p
+                            className={`text-xs font-medium ${connectionInfo.databaseOnline ? "text-success" : "text-danger"}`}
+                          >
                             {connectionInfo.databaseOnline ? "Online" : "Offline"}
                           </p>
                         </div>
@@ -198,7 +225,10 @@ export default function Topbar() {
                     {/* Last Checked */}
                     <div className="pt-2 border-t border-border">
                       <p className="text-[10px] text-text-secondary">
-                        Last checked: <span className="font-medium text-text-primary">{formatLastChecked(connectionInfo.lastChecked)}</span>
+                        Last checked:{" "}
+                        <span className="font-medium text-text-primary">
+                          {formatLastChecked(connectionInfo.lastChecked)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -207,7 +237,9 @@ export default function Topbar() {
             </AnimatePresence>
           </div>
 
-          <span className="text-xs text-text-secondary tabular-nums font-mono font-medium">{time}</span>
+          <span className="text-xs text-text-secondary tabular-nums font-mono font-medium">
+            {time}
+          </span>
 
           <button
             onClick={toggleDark}

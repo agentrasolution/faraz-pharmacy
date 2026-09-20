@@ -74,17 +74,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.refreshToken) return;
 
-    const interval = setInterval(async () => {
-      try {
-        const res = await api.auth.refresh(state.refreshToken!);
-        saveTokens(res.accessToken, res.refreshToken);
-        localStorage.setItem("faraz_user", JSON.stringify(res.user));
-        setState((prev) => ({ ...prev, accessToken: res.accessToken }));
-      } catch {
-        clearTokens();
-        setState({ user: null, accessToken: null, refreshToken: null });
-      }
-    }, 10 * 60 * 1000);
+    const interval = setInterval(
+      async () => {
+        try {
+          const res = await api.auth.refresh(state.refreshToken!);
+          saveTokens(res.accessToken, res.refreshToken);
+          localStorage.setItem("faraz_user", JSON.stringify(res.user));
+          setState((prev) => ({ ...prev, accessToken: res.accessToken }));
+        } catch {
+          clearTokens();
+          setState({ user: null, accessToken: null, refreshToken: null });
+        }
+      },
+      10 * 60 * 1000
+    );
 
     return () => clearInterval(interval);
   }, [state.refreshToken]);

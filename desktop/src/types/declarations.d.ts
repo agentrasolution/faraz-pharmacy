@@ -4,7 +4,8 @@ declare module "sonner" {
   interface ToastOptions {
     description?: ReactNode;
     duration?: number;
-    position?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "top-center" | "bottom-center";
+    position?:
+      "top-left" | "top-right" | "bottom-left" | "bottom-right" | "top-center" | "bottom-center";
     style?: React.CSSProperties;
     className?: string;
     dismissible?: boolean;

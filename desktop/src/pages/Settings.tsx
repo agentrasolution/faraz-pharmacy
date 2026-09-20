@@ -2,9 +2,22 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Database, HardDrive, Trash2, RefreshCw, CheckCircle2, XCircle,
-  Cloud, CloudOff, Loader2, Link2, Link2Off, Lock, FolderOpen, RotateCcw,
-  Clock, Save,
+  Database,
+  HardDrive,
+  Trash2,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  Cloud,
+  CloudOff,
+  Loader2,
+  Link2,
+  Link2Off,
+  Lock,
+  FolderOpen,
+  RotateCcw,
+  Clock,
+  Save,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +25,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatDateTime, formatFileSize } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -44,13 +63,23 @@ export default function Settings() {
   const [adminPass, setAdminPass] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
-  const [backupStatus, setBackupStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [backupStatus, setBackupStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [gdriveForm, setGdriveForm] = useState<GDriveConfig>(defaultGDriveConfig);
-  const [passwordDialog, setPasswordDialog] = useState<{ open: boolean; action: "create" | "restore"; backupName?: string }>({ open: false, action: "create" });
+  const [passwordDialog, setPasswordDialog] = useState<{
+    open: boolean;
+    action: "create" | "restore";
+    backupName?: string;
+  }>({ open: false, action: "create" });
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [backupDirectory, setBackupDirectory] = useState("");
-  const [recoveryDialog, setRecoveryDialog] = useState<{ open: boolean; phrase: string }>({ open: false, phrase: "" });
+  const [recoveryDialog, setRecoveryDialog] = useState<{ open: boolean; phrase: string }>({
+    open: false,
+    phrase: "",
+  });
   const [deleteBackup, setDeleteBackup] = useState<string | null>(null);
   const [autoBackup, setAutoBackup] = useState<AutoBackupConfig>({ enabled: false, time: "02:00" });
   const [dirDialog, setDirDialog] = useState(false);
@@ -166,7 +195,13 @@ export default function Settings() {
 
   async function handlePickBackupDir() {
     // Use the native folder picker when running inside Electron, else manual entry.
-    const picker = (window as unknown as { electronAPI?: { settings?: { backupDirectoryPick?: () => Promise<{ canceled: boolean; path?: string }> } } }).electronAPI?.settings?.backupDirectoryPick;
+    const picker = (
+      window as unknown as {
+        electronAPI?: {
+          settings?: { backupDirectoryPick?: () => Promise<{ canceled: boolean; path?: string }> };
+        };
+      }
+    ).electronAPI?.settings?.backupDirectoryPick;
     if (picker) {
       const res = await picker();
       if (!res.canceled && res.path) {
@@ -258,19 +293,35 @@ export default function Settings() {
           <div className="text-center space-y-2">
             <Lock className="h-10 w-10 mx-auto text-accent" />
             <h1 className="text-xl font-semibold">Admin Access Required</h1>
-            <p className="text-sm text-text-secondary">Enter admin credentials to access settings</p>
+            <p className="text-sm text-text-secondary">
+              Enter admin credentials to access settings
+            </p>
           </div>
           <form onSubmit={handleAdminLogin} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="settings-admin-user">Username</Label>
-              <Input id="settings-admin-user" value={adminUser} onChange={(e) => setAdminUser(e.target.value)} autoFocus />
+              <Input
+                id="settings-admin-user"
+                value={adminUser}
+                onChange={(e) => setAdminUser(e.target.value)}
+                autoFocus
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="settings-admin-pass">Password</Label>
-              <Input id="settings-admin-pass" type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} />
+              <Input
+                id="settings-admin-pass"
+                type="password"
+                value={adminPass}
+                onChange={(e) => setAdminPass(e.target.value)}
+              />
             </div>
             {loginError && <p className="text-sm text-danger">{loginError}</p>}
-            <Button type="submit" className="w-full" disabled={loggingIn || !adminUser || !adminPass}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loggingIn || !adminUser || !adminPass}
+            >
               {loggingIn ? "Verifying..." : "Unlock Settings"}
             </Button>
           </form>
@@ -283,7 +334,10 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader title="Settings" description="Manage database backups and Google Drive integration" />
+      <PageHeader
+        title="Settings"
+        description="Manage database backups and Google Drive integration"
+      />
 
       <Tabs defaultValue="backup">
         <TabsList className="mb-6">
@@ -306,13 +360,18 @@ export default function Settings() {
                   Create Backup
                 </CardTitle>
                 <CardDescription>
-                  Create a backup of the entire database. Files are saved to the backups directory. Admin password required.
+                  Create a backup of the entire database. Files are saved to the backups directory.
+                  Admin password required.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Button
-                    onClick={() => { setAdminPassword(""); setPasswordError(""); setPasswordDialog({ open: true, action: "create" }); }}
+                    onClick={() => {
+                      setAdminPassword("");
+                      setPasswordError("");
+                      setPasswordDialog({ open: true, action: "create" });
+                    }}
                     disabled={backupMutation.isPending}
                     className="gap-2"
                   >
@@ -324,7 +383,9 @@ export default function Settings() {
                     {backupMutation.isPending ? "Creating..." : "Create Backup Now"}
                   </Button>
                   {backupStatus && (
-                    <div className={`flex items-center gap-2 text-sm ${backupStatus.type === "success" ? "text-success" : "text-danger"}`}>
+                    <div
+                      className={`flex items-center gap-2 text-sm ${backupStatus.type === "success" ? "text-success" : "text-danger"}`}
+                    >
                       {backupStatus.type === "success" ? (
                         <CheckCircle2 className="h-4 w-4" />
                       ) : (
@@ -343,9 +404,7 @@ export default function Settings() {
                   <FolderOpen className="h-5 w-5 text-accent" />
                   Backup Location
                 </CardTitle>
-                <CardDescription>
-                  Choose where backup files are saved.
-                </CardDescription>
+                <CardDescription>Choose where backup files are saved.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-3">
@@ -354,7 +413,11 @@ export default function Settings() {
                     readOnly
                     className="flex-1 font-mono text-sm"
                   />
-                  <Button variant="outline" onClick={handleOpenDirDialog} className="gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    onClick={handleOpenDirDialog}
+                    className="gap-2 shrink-0"
+                  >
                     <FolderOpen className="h-4 w-4" />
                     Change
                   </Button>
@@ -384,11 +447,15 @@ export default function Settings() {
                     onClick={() => setAutoBackup({ ...autoBackup, enabled: !autoBackup.enabled })}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoBackup.enabled ? "bg-accent" : "bg-border"}`}
                   >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoBackup.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoBackup.enabled ? "translate-x-6" : "translate-x-1"}`}
+                    />
                   </button>
                 </div>
 
-                <div className={`space-y-4 ${autoBackup.enabled ? "" : "pointer-events-none opacity-50"}`}>
+                <div
+                  className={`space-y-4 ${autoBackup.enabled ? "" : "pointer-events-none opacity-50"}`}
+                >
                   <div>
                     <Label>Backup time (24-hour)</Label>
                     <Input
@@ -467,7 +534,10 @@ export default function Settings() {
                         .replace(/T/, " ")
                         .replace(/-/g, ":");
                       return (
-                        <div key={backup.name} className="flex items-center justify-between rounded-lg border border-border bg-surface-2/50 px-4 py-3">
+                        <div
+                          key={backup.name}
+                          className="flex items-center justify-between rounded-lg border border-border bg-surface-2/50 px-4 py-3"
+                        >
                           <div className="flex items-center gap-3 min-w-0">
                             <Database className="h-4 w-4 shrink-0 text-text-secondary" />
                             <div className="min-w-0">
@@ -481,7 +551,15 @@ export default function Settings() {
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <button
-                              onClick={() => { setAdminPassword(""); setPasswordError(""); setPasswordDialog({ open: true, action: "restore", backupName: backup.name }); }}
+                              onClick={() => {
+                                setAdminPassword("");
+                                setPasswordError("");
+                                setPasswordDialog({
+                                  open: true,
+                                  action: "restore",
+                                  backupName: backup.name,
+                                });
+                              }}
                               className="h-8 w-8 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
                               title="Restore from this backup"
                             >
@@ -513,7 +591,8 @@ export default function Settings() {
                 Google Drive Integration
               </CardTitle>
               <CardDescription>
-                Configure Google Drive API credentials to enable automatic backup uploads to your Google Drive.
+                Configure Google Drive API credentials to enable automatic backup uploads to your
+                Google Drive.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -542,12 +621,22 @@ export default function Settings() {
                       </div>
                     </div>
                     {gdriveForm.connected ? (
-                      <Button variant="destructive" size="sm" onClick={handleDisconnect} className="gap-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleDisconnect}
+                        className="gap-2"
+                      >
                         <Link2Off className="h-4 w-4" />
                         Disconnect
                       </Button>
                     ) : (
-                      <Button size="sm" onClick={handleConnect} className="gap-2" disabled={!gdriveForm.clientId || !gdriveForm.clientSecret}>
+                      <Button
+                        size="sm"
+                        onClick={handleConnect}
+                        className="gap-2"
+                        disabled={!gdriveForm.clientId || !gdriveForm.clientSecret}
+                      >
                         <Link2 className="h-4 w-4" />
                         Connect
                       </Button>
@@ -570,7 +659,9 @@ export default function Settings() {
                       <Input
                         type="password"
                         value={gdriveForm.clientSecret}
-                        onChange={(e) => setGdriveForm({ ...gdriveForm, clientSecret: e.target.value })}
+                        onChange={(e) =>
+                          setGdriveForm({ ...gdriveForm, clientSecret: e.target.value })
+                        }
                         placeholder="Enter your Google Drive Client Secret"
                       />
                     </div>
@@ -578,7 +669,9 @@ export default function Settings() {
                       <Label>Redirect URI</Label>
                       <Input
                         value={gdriveForm.redirectUri}
-                        onChange={(e) => setGdriveForm({ ...gdriveForm, redirectUri: e.target.value })}
+                        onChange={(e) =>
+                          setGdriveForm({ ...gdriveForm, redirectUri: e.target.value })
+                        }
                         placeholder="http://localhost:3456/auth/callback"
                       />
                     </div>
@@ -594,10 +687,14 @@ export default function Settings() {
                       </p>
                     </div>
                     <button
-                      onClick={() => setGdriveForm({ ...gdriveForm, autoUpload: !gdriveForm.autoUpload })}
+                      onClick={() =>
+                        setGdriveForm({ ...gdriveForm, autoUpload: !gdriveForm.autoUpload })
+                      }
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gdriveForm.autoUpload ? "bg-accent" : "bg-border"}`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${gdriveForm.autoUpload ? "translate-x-6" : "translate-x-1"}`} />
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${gdriveForm.autoUpload ? "translate-x-6" : "translate-x-1"}`}
+                      />
                     </button>
                   </div>
 
@@ -615,7 +712,16 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={passwordDialog.open} onOpenChange={(o) => { if (!o) { setPasswordDialog({ open: false, action: "create" }); setAdminPassword(""); setPasswordError(""); } }}>
+      <Dialog
+        open={passwordDialog.open}
+        onOpenChange={(o) => {
+          if (!o) {
+            setPasswordDialog({ open: false, action: "create" });
+            setAdminPassword("");
+            setPasswordError("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -636,19 +742,37 @@ export default function Settings() {
                 onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="Enter password"
                 autoFocus
-                onKeyDown={(e) => { if (e.key === "Enter") handlePasswordConfirmed(); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePasswordConfirmed();
+                }}
               />
             </div>
             {passwordError && <p className="text-sm text-danger">{passwordError}</p>}
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => { setPasswordDialog({ open: false, action: "create" }); setAdminPassword(""); setPasswordError(""); }}>Cancel</Button>
-              <Button onClick={handlePasswordConfirmed} disabled={!adminPassword}>Confirm</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPasswordDialog({ open: false, action: "create" });
+                  setAdminPassword("");
+                  setPasswordError("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordConfirmed} disabled={!adminPassword}>
+                Confirm
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={recoveryDialog.open} onOpenChange={(o) => { if (!o) setRecoveryDialog({ open: false, phrase: "" }); }}>
+      <Dialog
+        open={recoveryDialog.open}
+        onOpenChange={(o) => {
+          if (!o) setRecoveryDialog({ open: false, phrase: "" });
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -656,8 +780,8 @@ export default function Settings() {
               Recovery Key Generated
             </DialogTitle>
             <DialogDescription>
-              This is your one-time recovery key. Save it somewhere safe — it will never be shown again.
-              Use it on the login screen if you forget your password.
+              This is your one-time recovery key. Save it somewhere safe — it will never be shown
+              again. Use it on the login screen if you forget your password.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -670,13 +794,20 @@ export default function Settings() {
               This key will never be shown again. Write it down or save it now.
             </p>
             <div className="flex justify-end">
-              <Button onClick={() => setRecoveryDialog({ open: false, phrase: "" })}>I've Saved It</Button>
+              <Button onClick={() => setRecoveryDialog({ open: false, phrase: "" })}>
+                I've Saved It
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={dirDialog} onOpenChange={(o) => { if (!o) setDirDialog(false); }}>
+      <Dialog
+        open={dirDialog}
+        onOpenChange={(o) => {
+          if (!o) setDirDialog(false);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -695,12 +826,19 @@ export default function Settings() {
                 placeholder="C:\path\to\backups"
                 autoFocus
               />
-              <Button variant="outline" onClick={handlePickBackupDir} className="shrink-0" title="Browse folders">
+              <Button
+                variant="outline"
+                onClick={handlePickBackupDir}
+                className="shrink-0"
+                title="Browse folders"
+              >
                 <FolderOpen className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setDirDialog(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setDirDialog(false)}>
+                Cancel
+              </Button>
               <Button onClick={handleSaveBackupDir} disabled={savingDir || !dirInput.trim()}>
                 {savingDir ? "Saving..." : "Save"}
               </Button>
@@ -711,11 +849,15 @@ export default function Settings() {
 
       <ConfirmDialog
         open={!!deleteBackup}
-        onOpenChange={(v) => { if (!v) setDeleteBackup(null); }}
+        onOpenChange={(v) => {
+          if (!v) setDeleteBackup(null);
+        }}
         title="Delete Backup"
         description="Are you sure you want to delete this backup file? This action cannot be undone."
         confirmLabel="Delete"
-        onConfirm={() => { if (deleteBackup) deleteBackupMutation.mutate(deleteBackup); }}
+        onConfirm={() => {
+          if (deleteBackup) deleteBackupMutation.mutate(deleteBackup);
+        }}
         loading={deleteBackupMutation.isPending}
       />
     </div>

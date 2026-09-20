@@ -15,13 +15,14 @@ export function normalizeProduct(product: any): any {
     expiry: product.expiry ?? null,
     active: product.active ?? 1,
     created_at: product.createdAt?.toISOString?.() ?? product.createdAt,
-    prices: product.prices?.map((p: any) => ({
-      id: p.id,
-      productId: p.productId,
-      label: p.label,
-      purchasePrice: p.purchasePrice,
-      salePrice: p.salePrice,
-    })) ?? [],
+    prices:
+      product.prices?.map((p: any) => ({
+        id: p.id,
+        productId: p.productId,
+        label: p.label,
+        purchasePrice: p.purchasePrice,
+        salePrice: p.salePrice,
+      })) ?? [],
   };
 }
 
@@ -88,16 +89,17 @@ export function normalizeSale(sale: any): any {
     profit: sale.profit ?? 0,
     return_count: sale._count?.returns ?? 0,
     created_at: sale.createdAt?.toISOString?.() ?? sale.createdAt,
-    items: sale.items?.map((i: any) => ({
-      id: i.id,
-      sale_id: i.saleId,
-      product_id: i.productId,
-      product_name: i.productName,
-      barcode: i.barcode,
-      quantity: i.quantity,
-      unit_price: i.unitPrice,
-      subtotal: i.subtotal,
-    })) ?? [],
+    items:
+      sale.items?.map((i: any) => ({
+        id: i.id,
+        sale_id: i.saleId,
+        product_id: i.productId,
+        product_name: i.productName,
+        barcode: i.barcode,
+        quantity: i.quantity,
+        unit_price: i.unitPrice,
+        subtotal: i.subtotal,
+      })) ?? [],
   };
 }
 

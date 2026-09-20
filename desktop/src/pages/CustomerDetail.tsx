@@ -8,7 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import StatusBadge from "@/components/shared/StatusBadge";
 import StatCard from "@/components/shared/StatCard";
@@ -30,13 +36,24 @@ export default function CustomerDetail() {
   const [expandedArrear, setExpandedArrear] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
-  const [passwordDialog, setPasswordDialog] = useState<{ open: boolean; targetId: string; amount: number | null }>({ open: false, targetId: "", amount: null });
+  const [passwordDialog, setPasswordDialog] = useState<{
+    open: boolean;
+    targetId: string;
+    amount: number | null;
+  }>({ open: false, targetId: "", amount: null });
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
   const recordPayment = useMutation({
-    mutationFn: ({ arrearId, amount, password }: { arrearId: string; amount: number; password: string }) =>
-      api.arrears.recordPayment(arrearId, amount, password),
+    mutationFn: ({
+      arrearId,
+      amount,
+      password,
+    }: {
+      arrearId: string;
+      amount: number;
+      password: string;
+    }) => api.arrears.recordPayment(arrearId, amount, password),
     onSuccess: () => {
       toast.success("Payment recorded");
       queryClient.invalidateQueries({ queryKey: ["customer", id] });
@@ -82,7 +99,9 @@ export default function CustomerDetail() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-6 w-32" />
         <div className="grid grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
+          ))}
         </div>
       </div>
     );
@@ -92,27 +111,71 @@ export default function CustomerDetail() {
     return (
       <div className="text-center py-16">
         <p className="text-text-secondary">Customer not found</p>
-        <Button variant="link" onClick={() => navigate("/customers")}>Back to Customers</Button>
+        <Button variant="link" onClick={() => navigate("/customers")}>
+          Back to Customers
+        </Button>
       </div>
     );
   }
 
   const purchaseColumns = [
-    { key: "date", header: "Date", cell: (s: Sale) => <span className="font-mono text-xs text-text-secondary">{formatDate(s.created_at)}</span> },
-    { key: "items", header: "Items", cell: (s: Sale) => <span className="text-text-secondary">{s.items?.length ?? 0} items</span> },
-    { key: "total", header: "Total", cell: (s: Sale) => <span className="font-mono font-medium">{formatCurrency(s.total)}</span> },
-    { key: "paid", header: "Paid", cell: (s: Sale) => <span className="font-mono">{formatCurrency(s.amount_paid)}</span> },
-    { key: "status", header: "Status", cell: (s: Sale) => <StatusBadge status={s.status} />, className: "text-center" },
+    {
+      key: "date",
+      header: "Date",
+      cell: (s: Sale) => (
+        <span className="font-mono text-xs text-text-secondary">{formatDate(s.created_at)}</span>
+      ),
+    },
+    {
+      key: "items",
+      header: "Items",
+      cell: (s: Sale) => <span className="text-text-secondary">{s.items?.length ?? 0} items</span>,
+    },
+    {
+      key: "total",
+      header: "Total",
+      cell: (s: Sale) => <span className="font-mono font-medium">{formatCurrency(s.total)}</span>,
+    },
+    {
+      key: "paid",
+      header: "Paid",
+      cell: (s: Sale) => <span className="font-mono">{formatCurrency(s.amount_paid)}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (s: Sale) => <StatusBadge status={s.status} />,
+      className: "text-center",
+    },
   ];
 
   const paymentHistoryColumns = [
-    { key: "date", header: "Payment Date", cell: (p: ArrearPayment) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(p.created_at)}</span> },
-    { key: "amount", header: "Amount", cell: (p: ArrearPayment) => <span className="font-mono font-medium text-success">{formatCurrency(p.amount)}</span> },
+    {
+      key: "date",
+      header: "Payment Date",
+      cell: (p: ArrearPayment) => (
+        <span className="font-mono text-xs text-text-secondary">
+          {formatDateTime(p.created_at)}
+        </span>
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      cell: (p: ArrearPayment) => (
+        <span className="font-mono font-medium text-success">{formatCurrency(p.amount)}</span>
+      ),
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => navigate("/customers")} className="gap-1.5 text-text-secondary">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate("/customers")}
+        className="gap-1.5 text-text-secondary"
+      >
         <ArrowLeft className="h-4 w-4" />
         Back to Customers
       </Button>
@@ -141,9 +204,23 @@ export default function CustomerDetail() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Total Purchases" value={customer.total_purchases ?? customer.purchases?.length ?? 0} icon={<ShoppingBag className="h-5 w-5" />} />
-        <StatCard title="Total Spent" value={formatCurrency(customer.purchases?.reduce((s: number, p: Sale) => s + p.total, 0) ?? 0)} icon={<ShoppingBag className="h-5 w-5" />} />
-        <StatCard title="Outstanding Arrear" value={formatCurrency(customer.outstanding_arrear ?? 0)} icon={<ShoppingBag className="h-5 w-5" />} />
+        <StatCard
+          title="Total Purchases"
+          value={customer.total_purchases ?? customer.purchases?.length ?? 0}
+          icon={<ShoppingBag className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Total Spent"
+          value={formatCurrency(
+            customer.purchases?.reduce((s: number, p: Sale) => s + p.total, 0) ?? 0
+          )}
+          icon={<ShoppingBag className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Outstanding Arrear"
+          value={formatCurrency(customer.outstanding_arrear ?? 0)}
+          icon={<ShoppingBag className="h-5 w-5" />}
+        />
       </div>
 
       <Tabs defaultValue="purchases">
@@ -154,7 +231,11 @@ export default function CustomerDetail() {
         <TabsContent value="purchases">
           <Card>
             <CardContent className="p-0">
-              <DataTable columns={purchaseColumns} data={(customer.purchases ?? []) as Sale[]} keyExtractor={(s: Sale) => s.id} />
+              <DataTable
+                columns={purchaseColumns}
+                data={(customer.purchases ?? []) as Sale[]}
+                keyExtractor={(s: Sale) => s.id}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -165,8 +246,19 @@ export default function CustomerDetail() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      {["Date", "Total Bill", "Paid", "Balance", "Status", "Payments", "Action"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 text-xs font-medium text-text-secondary whitespace-nowrap">
+                      {[
+                        "Date",
+                        "Total Bill",
+                        "Paid",
+                        "Balance",
+                        "Status",
+                        "Payments",
+                        "Action",
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="text-left px-4 py-3 text-xs font-medium text-text-secondary whitespace-nowrap"
+                        >
                           {h}
                         </th>
                       ))}
@@ -179,60 +271,125 @@ export default function CustomerDetail() {
                           No arrears found
                         </td>
                       </tr>
-                    ) : (customer.arrears ?? []).map((a: Arrear) => (
-                      <Fragment key={a.id}>
-                        <tr className="border-b border-border/60 hover:bg-bg-secondary/40">
-                          <td className="px-4 py-3 font-mono text-xs text-text-secondary whitespace-nowrap">{formatDate(a.created_at)}</td>
-                          <td className="px-4 py-3 font-mono whitespace-nowrap">{formatCurrency(a.total_bill)}</td>
-                          <td className="px-4 py-3 font-mono whitespace-nowrap">{formatCurrency(a.amount_paid)}</td>
-                          <td className="px-4 py-3 font-mono font-medium text-warning whitespace-nowrap">{formatCurrency(a.balance_due)}</td>
-                          <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                          <td className="px-4 py-3">
-                            {(a.payments?.length ?? 0) > 0 && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 gap-1 text-xs"
-                                onClick={() => setExpandedArrear(expandedArrear === a.id ? null : a.id)}
-                              >
-                                {expandedArrear === a.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                                {a.payments?.length} payment{(a.payments?.length ?? 0) > 1 ? "s" : ""}
-                              </Button>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            {a.status === "pending" && (
-                              payingId === a.id ? (
-                                <div className="flex items-center gap-1.5">
-                                  <Input type="number" placeholder="Amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="h-8 w-24 text-sm font-mono" autoFocus />
-                                  <Button size="sm" className="h-8" disabled={!paymentAmount || recordPayment.isPending}
-                                    onClick={() => { setPasswordDialog({ open: true, targetId: a.id, amount: Number(paymentAmount) }); setAdminPassword(""); }}>
-                                    Pay
-                                  </Button>
-                                  <Button size="sm" variant="ghost" className="h-8" onClick={() => setPayingId(null)}>Cancel</Button>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1.5">
-                                  <Button size="sm" variant="outline" className="h-8" onClick={() => setPayingId(a.id)}>Record Payment</Button>
-                                  <button onClick={() => { setPasswordDialog({ open: true, targetId: a.id, amount: null }); setAdminPassword(""); }} className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors" title="Mark Settled">
-                                    <CreditCard className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              )
-                            )}
-                          </td>
-                        </tr>
-                        {expandedArrear === a.id && (a.payments?.length ?? 0) > 0 && (
-                          <tr className="bg-bg-secondary/30">
-                            <td colSpan={7} className="px-4 py-3">
-                              <div className="rounded-lg border border-border/60 overflow-hidden">
-                                <DataTable columns={paymentHistoryColumns} data={a.payments ?? []} keyExtractor={(p: ArrearPayment) => p.id} />
-                              </div>
+                    ) : (
+                      (customer.arrears ?? []).map((a: Arrear) => (
+                        <Fragment key={a.id}>
+                          <tr className="border-b border-border/60 hover:bg-bg-secondary/40">
+                            <td className="px-4 py-3 font-mono text-xs text-text-secondary whitespace-nowrap">
+                              {formatDate(a.created_at)}
+                            </td>
+                            <td className="px-4 py-3 font-mono whitespace-nowrap">
+                              {formatCurrency(a.total_bill)}
+                            </td>
+                            <td className="px-4 py-3 font-mono whitespace-nowrap">
+                              {formatCurrency(a.amount_paid)}
+                            </td>
+                            <td className="px-4 py-3 font-mono font-medium text-warning whitespace-nowrap">
+                              {formatCurrency(a.balance_due)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <StatusBadge status={a.status} />
+                            </td>
+                            <td className="px-4 py-3">
+                              {(a.payments?.length ?? 0) > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 gap-1 text-xs"
+                                  onClick={() =>
+                                    setExpandedArrear(expandedArrear === a.id ? null : a.id)
+                                  }
+                                >
+                                  {expandedArrear === a.id ? (
+                                    <ChevronUp className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <ChevronDown className="h-3.5 w-3.5" />
+                                  )}
+                                  {a.payments?.length} payment
+                                  {(a.payments?.length ?? 0) > 1 ? "s" : ""}
+                                </Button>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {a.status === "pending" &&
+                                (payingId === a.id ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      type="number"
+                                      placeholder="Amount"
+                                      value={paymentAmount}
+                                      onChange={(e) => setPaymentAmount(e.target.value)}
+                                      className="h-8 w-24 text-sm font-mono"
+                                      autoFocus
+                                    />
+                                    <Button
+                                      size="sm"
+                                      className="h-8"
+                                      disabled={!paymentAmount || recordPayment.isPending}
+                                      onClick={() => {
+                                        setPasswordDialog({
+                                          open: true,
+                                          targetId: a.id,
+                                          amount: Number(paymentAmount),
+                                        });
+                                        setAdminPassword("");
+                                      }}
+                                    >
+                                      Pay
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8"
+                                      onClick={() => setPayingId(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-8"
+                                      onClick={() => setPayingId(a.id)}
+                                    >
+                                      Record Payment
+                                    </Button>
+                                    <button
+                                      onClick={() => {
+                                        setPasswordDialog({
+                                          open: true,
+                                          targetId: a.id,
+                                          amount: null,
+                                        });
+                                        setAdminPassword("");
+                                      }}
+                                      className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors"
+                                      title="Mark Settled"
+                                    >
+                                      <CreditCard className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
                             </td>
                           </tr>
-                        )}
-                      </Fragment>
-                    ))}
+                          {expandedArrear === a.id && (a.payments?.length ?? 0) > 0 && (
+                            <tr className="bg-bg-secondary/30">
+                              <td colSpan={7} className="px-4 py-3">
+                                <div className="rounded-lg border border-border/60 overflow-hidden">
+                                  <DataTable
+                                    columns={paymentHistoryColumns}
+                                    data={a.payments ?? []}
+                                    keyExtractor={(p: ArrearPayment) => p.id}
+                                  />
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -241,14 +398,19 @@ export default function CustomerDetail() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={passwordDialog.open} onOpenChange={(o) => setPasswordDialog({ ...passwordDialog, open: o })}>
+      <Dialog
+        open={passwordDialog.open}
+        onOpenChange={(o) => setPasswordDialog({ ...passwordDialog, open: o })}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
               Admin Password Required
             </DialogTitle>
-            <DialogDescription>Enter your admin password to confirm this payment.</DialogDescription>
+            <DialogDescription>
+              Enter your admin password to confirm this payment.
+            </DialogDescription>
           </DialogHeader>
           <div className="px-5 pb-5 space-y-3">
             <div>
@@ -262,9 +424,14 @@ export default function CustomerDetail() {
             </div>
             {passwordError && <p className="text-sm text-danger">{passwordError}</p>}
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setPasswordDialog({ open: false, targetId: "", amount: null })}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => setPasswordDialog({ open: false, targetId: "", amount: null })}
+              >
+                Cancel
+              </Button>
               <Button onClick={handleAdminAction} disabled={!adminPassword}>
-                {(recordPayment.isPending || settleMutation.isPending) ? "Confirming..." : "Confirm"}
+                {recordPayment.isPending || settleMutation.isPending ? "Confirming..." : "Confirm"}
               </Button>
             </div>
           </div>

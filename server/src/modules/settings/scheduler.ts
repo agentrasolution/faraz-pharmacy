@@ -67,4 +67,8 @@ function stopAutoBackupScheduler() {
   }
 }
 
-export { startAutoBackupScheduler, stopAutoBackupScheduler, schedule as rescheduleAutoBackupScheduler };
+export {
+  startAutoBackupScheduler,
+  stopAutoBackupScheduler,
+  schedule as rescheduleAutoBackupScheduler,
+};

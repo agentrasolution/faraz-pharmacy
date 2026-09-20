@@ -107,10 +107,7 @@ export function useMultiSale() {
     [activeSale.items]
   );
 
-  const profit = useMemo(
-    () => Math.round(total - costOfGoods),
-    [total, costOfGoods]
-  );
+  const profit = useMemo(() => Math.round(total - costOfGoods), [total, costOfGoods]);
 
   const toggleDiscountType = useCallback(() => {
     updateActive((s) => {
@@ -129,7 +126,13 @@ export function useMultiSale() {
   }, [updateActive, subtotal, discount]);
 
   const addItem = useCallback(
-    (product: { id: string; name: string; barcode: string; sale_price: number; purchase_price?: number }) => {
+    (product: {
+      id: string;
+      name: string;
+      barcode: string;
+      sale_price: number;
+      purchase_price?: number;
+    }) => {
       updateActive((s) => {
         const existing = s.items.find((i) => i.productId === product.id);
         if (existing) {
@@ -217,10 +220,7 @@ export function useMultiSale() {
     [updateActive]
   );
 
-  const setNotes = useCallback(
-    (notes: string) => updateActive({ notes }),
-    [updateActive]
-  );
+  const setNotes = useCallback((notes: string) => updateActive({ notes }), [updateActive]);
 
   const setAmountPaid = useCallback(
     (amountPaid: string) => updateActive({ amountPaid }),

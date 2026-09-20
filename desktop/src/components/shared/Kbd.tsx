@@ -33,7 +33,9 @@ export function ShortcutHint({ shortcut, className }: { shortcut: string; classN
       {parts.map((part, i) => (
         <span key={i} className="inline-flex items-center">
           <Kbd>{part}</Kbd>
-          {i < parts.length - 1 && <span className="text-[9px] text-text-secondary/50 mx-0.5">+</span>}
+          {i < parts.length - 1 && (
+            <span className="text-[9px] text-text-secondary/50 mx-0.5">+</span>
+          )}
         </span>
       ))}
     </span>

@@ -2,7 +2,12 @@ import { Router } from "express";
 import { authController } from "./auth.controller";
 import { authenticate } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
-import { verifyPasswordSchema, recoverPasswordSchema, refreshSchema, logoutSchema } from "./auth.schema";
+import {
+  verifyPasswordSchema,
+  recoverPasswordSchema,
+  refreshSchema,
+  logoutSchema,
+} from "./auth.schema";
 
 const router = Router();
 

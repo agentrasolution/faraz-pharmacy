@@ -23,31 +23,36 @@ export default function InvoiceDetail() {
     enabled: !!id,
   });
 
-  const generateReceiptHtml = useCallback(async (paperSize: string): Promise<string> => {
-    if (!sale) return "";
-    const printData = {
-      ...sale,
-      customer_total_arrears: 0,
-      items: sale.items?.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: i.subtotal,
-      })) || [],
-    };
-    const result = await window.generateReceiptHTML(printData, paperSize);
-    return result.success ? result.html : "";
-  }, [sale]);
+  const generateReceiptHtml = useCallback(
+    async (paperSize: string): Promise<string> => {
+      if (!sale) return "";
+      const printData = {
+        ...sale,
+        customer_total_arrears: 0,
+        items:
+          sale.items?.map((i) => ({
+            product_name: i.product_name,
+            quantity: i.quantity,
+            subtotal: i.subtotal,
+          })) || [],
+      };
+      const result = await window.generateReceiptHTML(printData, paperSize);
+      return result.success ? result.html : "";
+    },
+    [sale]
+  );
 
   async function handlePrint(config: PrinterConfig) {
     if (!sale) return;
     const printData = {
       ...sale,
       customer_total_arrears: 0,
-      items: sale.items?.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: i.subtotal,
-      })) || [],
+      items:
+        sale.items?.map((i) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          subtotal: i.subtotal,
+        })) || [],
     };
     const result = await window.printReceipt(printData, config);
     if (!result.success) {
@@ -86,7 +91,9 @@ export default function InvoiceDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-base font-semibold text-text-primary tracking-tight">Invoice Detail</h1>
+            <h1 className="text-base font-semibold text-text-primary tracking-tight">
+              Invoice Detail
+            </h1>
             <p className="text-xs text-text-secondary font-mono">{sale.id}</p>
           </div>
         </div>
@@ -102,38 +109,56 @@ export default function InvoiceDetail() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div>
-                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">Date & Time</p>
-                  <p className="text-sm font-medium text-text-primary">{formatDateTime(sale.created_at)}</p>
+                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">
+                    Date & Time
+                  </p>
+                  <p className="text-sm font-medium text-text-primary">
+                    {formatDateTime(sale.created_at)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">Invoice ID</p>
+                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">
+                    Invoice ID
+                  </p>
                   <p className="text-sm font-mono text-text-primary">{sale.id}</p>
                 </div>
                 {sale.invoice_no && (
                   <div>
-                    <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">Invoice No</p>
+                    <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">
+                      Invoice No
+                    </p>
                     <p className="text-sm font-mono text-text-primary">{sale.invoice_no}</p>
                   </div>
                 )}
               </div>
               <div className="space-y-3">
                 <div>
-                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">Customer</p>
+                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">
+                    Customer
+                  </p>
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-text-secondary" />
-                    <p className="text-sm font-medium text-text-primary">{sale.customer_name || "Walk-in Customer"}</p>
+                    <p className="text-sm font-medium text-text-primary">
+                      {sale.customer_name || "Walk-in Customer"}
+                    </p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">Status</p>
+                  <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">
+                    Status
+                  </p>
                   <StatusBadge status={sale.status} />
                 </div>
                 {sale.payment_method && (
                   <div>
-                    <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">Payment Method</p>
+                    <p className="text-[11px] text-text-secondary uppercase tracking-wider mb-1">
+                      Payment Method
+                    </p>
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-text-secondary" />
-                      <p className="text-sm font-medium text-text-primary capitalize">{sale.payment_method}</p>
+                      <p className="text-sm font-medium text-text-primary capitalize">
+                        {sale.payment_method}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -150,9 +175,14 @@ export default function InvoiceDetail() {
             </div>
             <div className="space-y-px">
               {(sale.items || []).map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-surface-2 transition-colors">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-surface-2 transition-colors"
+                >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">{item.product_name}</p>
+                    <p className="text-sm font-medium text-text-primary truncate">
+                      {item.product_name}
+                    </p>
                     <p className="text-[11px] text-text-secondary">
                       {item.quantity} &times; {formatCurrency(item.unit_price)}
                       {item.barcode && <span className="ml-2 font-mono">({item.barcode})</span>}
@@ -176,12 +206,16 @@ export default function InvoiceDetail() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-text-secondary">Subtotal</span>
-                <span className="font-mono text-text-primary tabular-nums">{formatCurrency(sale.subtotal)}</span>
+                <span className="font-mono text-text-primary tabular-nums">
+                  {formatCurrency(sale.subtotal)}
+                </span>
               </div>
               {sale.discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-secondary">Discount</span>
-                  <span className="font-mono text-danger tabular-nums">&minus;{formatCurrency(sale.discount)}</span>
+                  <span className="font-mono text-danger tabular-nums">
+                    &minus;{formatCurrency(sale.discount)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
@@ -190,12 +224,16 @@ export default function InvoiceDetail() {
               </div>
               <div className="flex justify-between">
                 <span className="text-text-secondary">Paid</span>
-                <span className="font-mono text-success tabular-nums">{formatCurrency(sale.amount_paid)}</span>
+                <span className="font-mono text-success tabular-nums">
+                  {formatCurrency(sale.amount_paid)}
+                </span>
               </div>
               {sale.change > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-secondary">Change</span>
-                  <span className="font-mono text-text-primary tabular-nums">{formatCurrency(sale.change)}</span>
+                  <span className="font-mono text-text-primary tabular-nums">
+                    {formatCurrency(sale.change)}
+                  </span>
                 </div>
               )}
               {sale.status === "partial" && (
@@ -211,7 +249,9 @@ export default function InvoiceDetail() {
                 className="flex justify-between pt-2 border-t border-border w-full cursor-pointer hover:bg-surface-2 -mx-5 px-5 -mb-5 pb-5 rounded-b-lg transition-colors"
               >
                 <span className="text-text-secondary">Profit</span>
-                <span className={`font-mono font-medium tabular-nums ${(sale.profit ?? 0) >= 0 ? "text-success" : "text-danger"}`}>
+                <span
+                  className={`font-mono font-medium tabular-nums ${(sale.profit ?? 0) >= 0 ? "text-success" : "text-danger"}`}
+                >
                   {showProfit ? formatCurrency(sale.profit ?? 0) : "••••"}
                 </span>
               </button>

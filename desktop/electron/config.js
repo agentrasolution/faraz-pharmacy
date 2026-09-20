@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import os from "os";  
+import os from "os";
 
 const DATA_DIR = path.join(os.homedir(), ".faraz-pharmacy");
 const CONFIG_PATH = path.join(DATA_DIR, "config.json");
@@ -14,7 +14,13 @@ function loadConfig() {
     const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
     return JSON.parse(raw);
   } catch {
-    return { mode: null, serverUrl: "", serverPort: 3001, printer: { paperSize: "thermal", deviceName: null }, backupDirectory: "" };
+    return {
+      mode: null,
+      serverUrl: "",
+      serverPort: 3001,
+      printer: { paperSize: "thermal", deviceName: null },
+      backupDirectory: "",
+    };
   }
 }
 
@@ -32,5 +38,4 @@ function isConfigured() {
   return loadConfig().mode !== null;
 }
 
-
-export { loadConfig , saveConfig, isConfigured , getBackupsDir}
+export { loadConfig, saveConfig, isConfigured, getBackupsDir };

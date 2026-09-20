@@ -26,11 +26,34 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
 contextBridge.exposeInMainWorld("saveConfig", (cfg) => ipcRenderer.invoke("config:save", cfg));
 contextBridge.exposeInMainWorld("getServerIp", () => ipcRenderer.invoke("server:ip"));
-contextBridge.exposeInMainWorld("printReceipt", (sale, printerConfig) => ipcRenderer.invoke("print:receipt", sale, printerConfig));
-contextBridge.exposeInMainWorld("printReturnReceipt", (returnData, sale, printerConfig) => ipcRenderer.invoke("print:return-receipt", returnData, sale, printerConfig));
-contextBridge.exposeInMainWorld("printBarcodeLabel", (barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName) => ipcRenderer.invoke("print:barcode-label", barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName));
-contextBridge.exposeInMainWorld("generateReceiptHTML", (sale, paperSize) => ipcRenderer.invoke("print:generate-receipt-html", sale, paperSize));
-contextBridge.exposeInMainWorld("generateReturnReceiptHTML", (returnData, sale, paperSize) => ipcRenderer.invoke("print:generate-return-receipt-html", returnData, sale, paperSize));
-contextBridge.exposeInMainWorld("toggleFullscreen", () => ipcRenderer.invoke("window:toggle-fullscreen"));
+contextBridge.exposeInMainWorld("printReceipt", (sale, printerConfig) =>
+  ipcRenderer.invoke("print:receipt", sale, printerConfig)
+);
+contextBridge.exposeInMainWorld("printReturnReceipt", (returnData, sale, printerConfig) =>
+  ipcRenderer.invoke("print:return-receipt", returnData, sale, printerConfig)
+);
+contextBridge.exposeInMainWorld(
+  "printBarcodeLabel",
+  (barcode, copies, svgHtml, labelWidth, labelHeight, deviceName, productName) =>
+    ipcRenderer.invoke(
+      "print:barcode-label",
+      barcode,
+      copies,
+      svgHtml,
+      labelWidth,
+      labelHeight,
+      deviceName,
+      productName
+    )
+);
+contextBridge.exposeInMainWorld("generateReceiptHTML", (sale, paperSize) =>
+  ipcRenderer.invoke("print:generate-receipt-html", sale, paperSize)
+);
+contextBridge.exposeInMainWorld("generateReturnReceiptHTML", (returnData, sale, paperSize) =>
+  ipcRenderer.invoke("print:generate-return-receipt-html", returnData, sale, paperSize)
+);
+contextBridge.exposeInMainWorld("toggleFullscreen", () =>
+  ipcRenderer.invoke("window:toggle-fullscreen")
+);
 contextBridge.exposeInMainWorld("openPosWindow", () => ipcRenderer.invoke("pos:open-window"));
 contextBridge.exposeInMainWorld("getPosWindowCount", () => ipcRenderer.invoke("pos:window-count"));

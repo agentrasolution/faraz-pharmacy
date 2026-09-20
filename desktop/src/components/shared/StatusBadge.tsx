@@ -1,6 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 
-const statusMap: Record<string, { label: string; variant: "default" | "success" | "warning" | "danger" | "outline" }> = {
+const statusMap: Record<
+  string,
+  { label: string; variant: "default" | "success" | "warning" | "danger" | "outline" }
+> = {
   paid: { label: "Paid", variant: "success" },
   pending: { label: "Pending", variant: "warning" },
   settled: { label: "Settled", variant: "success" },

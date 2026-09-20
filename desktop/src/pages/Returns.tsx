@@ -1,7 +1,21 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Minus, Trash2, AlertCircle, Loader2, Calendar, Package, RotateCcw, CheckCircle2, Clock, FileText, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Minus,
+  Trash2,
+  AlertCircle,
+  Loader2,
+  Calendar,
+  Package,
+  RotateCcw,
+  CheckCircle2,
+  Clock,
+  FileText,
+  ChevronRight,
+} from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
@@ -40,7 +54,10 @@ export default function Returns() {
   const [customRefundAmount, setCustomRefundAmount] = useState<string>("");
   const [isEditingRefund, setIsEditingRefund] = useState(false);
 
-  const { data: returns = [], isLoading } = useQuery({ queryKey: ["returns"], queryFn: api.returns.list });
+  const { data: returns = [], isLoading } = useQuery({
+    queryKey: ["returns"],
+    queryFn: api.returns.list,
+  });
 
   const { data: recentSales = [], isLoading: loadingRecent } = useQuery({
     queryKey: ["sales", "recent"],
@@ -53,13 +70,15 @@ export default function Returns() {
     enabled: !!selectedSaleId,
   });
 
-  const filtered = returns.filter((r: ReturnEntry) =>
-    !search || r.sale_id.includes(search) || r.reason.toLowerCase().includes(search.toLowerCase())
+  const filtered = returns.filter(
+    (r: ReturnEntry) =>
+      !search || r.sale_id.includes(search) || r.reason.toLowerCase().includes(search.toLowerCase())
   );
 
   const hasReturns = (selectedSale?.return_count ?? 0) > 0;
-  const fullyReturned = (selectedSale?.items?.length ?? 0) > 0 &&
-    (selectedSale?.items ?? []).every((i: SaleItem) => (i.quantity - (i.returned_qty ?? 0)) <= 0);
+  const fullyReturned =
+    (selectedSale?.items?.length ?? 0) > 0 &&
+    (selectedSale?.items ?? []).every((i: SaleItem) => i.quantity - (i.returned_qty ?? 0) <= 0);
 
   function getDateRange(filter: DateFilter): { from?: string; to?: string } {
     const now = new Date();
@@ -132,7 +151,9 @@ export default function Returns() {
       setInvoiceSearch("");
       return;
     }
-    const exact = invoiceResults.find((s) => s.id.toLowerCase() === invoiceSearch.trim().toLowerCase());
+    const exact = invoiceResults.find(
+      (s) => s.id.toLowerCase() === invoiceSearch.trim().toLowerCase()
+    );
     if (exact) {
       selectSale(exact);
       setInvoiceResults([]);
@@ -142,7 +163,8 @@ export default function Returns() {
 
   function calcRefundAmount(): number {
     if (!selectedSale?.items) return 0;
-    const discountRatio = selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
+    const discountRatio =
+      selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
     return Object.entries(returnQtys).reduce((sum, [id, qty]) => {
       const item = selectedSale.items?.find((i: SaleItem) => i.product_id === id);
       if (!item) return sum;
@@ -164,14 +186,20 @@ export default function Returns() {
     mutationFn: async () => {
       if (!selectedSale?.items) throw new Error("Sale items not loaded");
       const saleItems = selectedSale.items;
-      const discountRatio = selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
+      const discountRatio =
+        selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
       const items = Object.entries(returnQtys)
         .filter(([_, qty]) => qty > 0)
         .map(([productId, quantity]) => {
           const item = saleItems.find((i: SaleItem) => i.product_id === productId);
           const rawAmount = (item?.unit_price || 0) * quantity;
           const discountedAmount = rawAmount * (1 - discountRatio);
-          return { productId, productName: item?.product_name || "", quantity, refundAmount: Math.round(discountedAmount) };
+          return {
+            productId,
+            productName: item?.product_name || "",
+            quantity,
+            refundAmount: Math.round(discountedAmount),
+          };
         });
       const calculatedRefund = items.reduce((s, i) => s + i.refundAmount, 0);
       const finalRefund = customRefundAmount ? Number(customRefundAmount) : calculatedRefund;
@@ -204,16 +232,19 @@ export default function Returns() {
     },
   });
 
-  const generateReturnHtml = useCallback(async (paperSize: string): Promise<string> => {
-    if (!pendingReturnData || !pendingSale) return "";
-    const printPayload = {
-      ...pendingReturnData,
-      items: pendingReturnData.items || [],
-      reason: pendingReturnData.reason,
-    };
-    const result = await window.generateReturnReceiptHTML(printPayload, pendingSale, paperSize);
-    return result.success ? result.html : "";
-  }, [pendingReturnData, pendingSale]);
+  const generateReturnHtml = useCallback(
+    async (paperSize: string): Promise<string> => {
+      if (!pendingReturnData || !pendingSale) return "";
+      const printPayload = {
+        ...pendingReturnData,
+        items: pendingReturnData.items || [],
+        reason: pendingReturnData.reason,
+      };
+      const result = await window.generateReturnReceiptHTML(printPayload, pendingSale, paperSize);
+      return result.success ? result.html : "";
+    },
+    [pendingReturnData, pendingSale]
+  );
 
   async function handlePrintReturn(config: PrinterConfig) {
     if (!pendingReturnData || !pendingSale) return;
@@ -229,25 +260,77 @@ export default function Returns() {
   }
 
   const columns = [
-    { key: "created_at", header: "Date", cell: (r: ReturnEntry) => <span className="font-mono text-xs text-text-secondary">{formatDateTime(r.created_at)}</span> },
-    { key: "sale_id", header: "Sale ID", cell: (r: ReturnEntry) => <span className="font-mono text-xs text-text-secondary">{r.sale_id}</span> },
-    { key: "customer_name", header: "Customer", cell: (r: ReturnEntry) => <span className="text-text-secondary">{r.customer_name || "—"}</span> },
-    { key: "refund_amount", header: "Refund Amount", cell: (r: ReturnEntry) => <span className="font-mono font-medium text-danger">{formatCurrency(r.refund_amount)}</span> },
-    { key: "reason", header: "Reason", cell: (r: ReturnEntry) => <span className="text-text-secondary">{r.reason}</span> },
+    {
+      key: "created_at",
+      header: "Date",
+      cell: (r: ReturnEntry) => (
+        <span className="font-mono text-xs text-text-secondary">
+          {formatDateTime(r.created_at)}
+        </span>
+      ),
+    },
+    {
+      key: "sale_id",
+      header: "Sale ID",
+      cell: (r: ReturnEntry) => (
+        <span className="font-mono text-xs text-text-secondary">{r.sale_id}</span>
+      ),
+    },
+    {
+      key: "customer_name",
+      header: "Customer",
+      cell: (r: ReturnEntry) => (
+        <span className="text-text-secondary">{r.customer_name || "—"}</span>
+      ),
+    },
+    {
+      key: "refund_amount",
+      header: "Refund Amount",
+      cell: (r: ReturnEntry) => (
+        <span className="font-mono font-medium text-danger">{formatCurrency(r.refund_amount)}</span>
+      ),
+    },
+    {
+      key: "reason",
+      header: "Reason",
+      cell: (r: ReturnEntry) => <span className="text-text-secondary">{r.reason}</span>,
+    },
   ];
 
   function handleExportPDF() {
-    downloadPDF(`returns_${new Date().toISOString().split("T")[0]}.pdf`, "Returns List",
+    downloadPDF(
+      `returns_${new Date().toISOString().split("T")[0]}.pdf`,
+      "Returns List",
       ["Date", "Sale ID", "Customer", "Refund Amount", "Reason"],
-      filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]));
+      filtered.map((r: ReturnEntry) => [
+        r.created_at,
+        r.sale_id,
+        r.customer_name || "",
+        r.refund_amount,
+        r.reason,
+      ])
+    );
   }
   function handleExportCSV() {
-    downloadCSV(`returns_${new Date().toISOString().split("T")[0]}.csv`,
+    downloadCSV(
+      `returns_${new Date().toISOString().split("T")[0]}.csv`,
       ["Date", "Sale ID", "Customer", "Refund Amount", "Reason"],
-      filtered.map((r: ReturnEntry) => [r.created_at, r.sale_id, r.customer_name || "", r.refund_amount, r.reason]));
+      filtered.map((r: ReturnEntry) => [
+        r.created_at,
+        r.sale_id,
+        r.customer_name || "",
+        r.refund_amount,
+        r.reason,
+      ])
+    );
   }
 
-  useModuleShortcuts({ onAdd: () => setOpen(true), onSearch: () => searchRef.current?.focus(), onExportPDF: handleExportPDF, onExportCSV: handleExportCSV });
+  useModuleShortcuts({
+    onAdd: () => setOpen(true),
+    onSearch: () => searchRef.current?.focus(),
+    onExportPDF: handleExportPDF,
+    onExportCSV: handleExportCSV,
+  });
 
   function openDialog() {
     setOpen(true);
@@ -263,17 +346,37 @@ export default function Returns() {
 
   function getStatusBadge(sale: Sale) {
     const rc = sale.return_count ?? 0;
-    if (rc === 0) return <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium"><CheckCircle2 className="h-2.5 w-2.5" /> Full</span>;
-    return <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium"><RotateCcw className="h-2.5 w-2.5" /> Partial</span>;
+    if (rc === 0)
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium">
+          <CheckCircle2 className="h-2.5 w-2.5" /> Full
+        </span>
+      );
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium">
+        <RotateCcw className="h-2.5 w-2.5" /> Partial
+      </span>
+    );
   }
 
   return (
     <div>
-      <PageHeader title="Returns" description="Process and track product returns" action={{ label: "New Return", onClick: openDialog, shortcut: "Mod+N" }} />
+      <PageHeader
+        title="Returns"
+        description="Process and track product returns"
+        action={{ label: "New Return", onClick: openDialog, shortcut: "Mod+N" }}
+      />
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-          <Input autoFocus ref={searchRef} placeholder="Search returns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input
+            autoFocus
+            ref={searchRef}
+            placeholder="Search returns..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <ExportButton type="csv" onClick={handleExportCSV} />
         <ExportButton type="pdf" onClick={handleExportPDF} />
@@ -289,19 +392,22 @@ export default function Returns() {
       </div>
 
       {/* New Return Dialog */}
-      <Dialog open={open} onOpenChange={(v) => {
-        if (!v) {
-          setSelectedSaleId("");
-          setReason("");
-          setReturnQtys({});
-          setInvoiceSearch("");
-          setInvoiceResults([]);
-          setError("");
-          setCustomRefundAmount("");
-          setIsEditingRefund(false);
-        }
-        setOpen(v);
-      }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v) {
+            setSelectedSaleId("");
+            setReason("");
+            setReturnQtys({});
+            setInvoiceSearch("");
+            setInvoiceResults([]);
+            setError("");
+            setCustomRefundAmount("");
+            setIsEditingRefund(false);
+          }
+          setOpen(v);
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -344,7 +450,13 @@ export default function Returns() {
                       : "bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-surface-3"
                   }`}
                 >
-                  {f === "all" ? "All Time" : f === "today" ? "Today" : f === "week" ? "This Week" : "This Month"}
+                  {f === "all"
+                    ? "All Time"
+                    : f === "today"
+                      ? "Today"
+                      : f === "week"
+                        ? "This Week"
+                        : "This Month"}
                 </button>
               ))}
             </div>
@@ -352,13 +464,19 @@ export default function Returns() {
             {/* No Search: Show Recent Sales */}
             {!invoiceSearch.trim() && dateFilter === "all" && !selectedSaleId && (
               <div>
-                <Label className="mb-2 block text-text-secondary">Recent Sales (click to select)</Label>
+                <Label className="mb-2 block text-text-secondary">
+                  Recent Sales (click to select)
+                </Label>
                 {loadingRecent ? (
                   <div className="space-y-2">
-                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
                   </div>
                 ) : recentSales.length === 0 ? (
-                  <p className="text-sm text-text-secondary text-center py-6">No recent sales found.</p>
+                  <p className="text-sm text-text-secondary text-center py-6">
+                    No recent sales found.
+                  </p>
                 ) : (
                   <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                     {recentSales.map((sale: Sale) => (
@@ -378,13 +496,19 @@ export default function Returns() {
                                 <span className="font-mono text-xs font-medium">{sale.id}</span>
                                 {getStatusBadge(sale)}
                               </div>
-                              <p className="text-xs text-text-secondary truncate">{sale.customer_name || "Walk-in"}</p>
+                              <p className="text-xs text-text-secondary truncate">
+                                {sale.customer_name || "Walk-in"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <div className="text-right">
-                              <p className="font-mono text-sm font-medium">{formatCurrency(sale.total)}</p>
-                              <p className="text-[10px] text-text-secondary">{formatDate(sale.created_at)}</p>
+                              <p className="font-mono text-sm font-medium">
+                                {formatCurrency(sale.total)}
+                              </p>
+                              <p className="text-[10px] text-text-secondary">
+                                {formatDate(sale.created_at)}
+                              </p>
                             </div>
                             <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-accent transition-colors" />
                           </div>
@@ -405,7 +529,11 @@ export default function Returns() {
                       <button
                         key={sale.id}
                         type="button"
-                        onClick={() => { selectSale(sale); setInvoiceSearch(""); setInvoiceResults([]); }}
+                        onClick={() => {
+                          selectSale(sale);
+                          setInvoiceSearch("");
+                          setInvoiceResults([]);
+                        }}
                         className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -418,13 +546,19 @@ export default function Returns() {
                                 <span className="font-mono text-xs font-medium">{sale.id}</span>
                                 {getStatusBadge(sale)}
                               </div>
-                              <p className="text-xs text-text-secondary truncate">{sale.customer_name || "Walk-in"}</p>
+                              <p className="text-xs text-text-secondary truncate">
+                                {sale.customer_name || "Walk-in"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <div className="text-right">
-                              <p className="font-mono text-sm font-medium">{formatCurrency(sale.total)}</p>
-                              <p className="text-[10px] text-text-secondary">{formatDate(sale.created_at)}</p>
+                              <p className="font-mono text-sm font-medium">
+                                {formatCurrency(sale.total)}
+                              </p>
+                              <p className="text-[10px] text-text-secondary">
+                                {formatDate(sale.created_at)}
+                              </p>
                             </div>
                             <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-accent transition-colors" />
                           </div>
@@ -449,7 +583,11 @@ export default function Returns() {
                       <button
                         key={sale.id}
                         type="button"
-                        onClick={() => { selectSale(sale); setInvoiceSearch(""); setInvoiceResults([]); }}
+                        onClick={() => {
+                          selectSale(sale);
+                          setInvoiceSearch("");
+                          setInvoiceResults([]);
+                        }}
                         className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -462,13 +600,19 @@ export default function Returns() {
                                 <span className="font-mono text-xs font-medium">{sale.id}</span>
                                 {getStatusBadge(sale)}
                               </div>
-                              <p className="text-xs text-text-secondary truncate">{sale.customer_name || "Walk-in"}</p>
+                              <p className="text-xs text-text-secondary truncate">
+                                {sale.customer_name || "Walk-in"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <div className="text-right">
-                              <p className="font-mono text-sm font-medium">{formatCurrency(sale.total)}</p>
-                              <p className="text-[10px] text-text-secondary">{formatDate(sale.created_at)}</p>
+                              <p className="font-mono text-sm font-medium">
+                                {formatCurrency(sale.total)}
+                              </p>
+                              <p className="text-[10px] text-text-secondary">
+                                {formatDate(sale.created_at)}
+                              </p>
                             </div>
                             <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-accent transition-colors" />
                           </div>
@@ -485,8 +629,8 @@ export default function Returns() {
             )}
 
             {/* Selected Sale Detail */}
-            {selectedSaleId && (
-              loadingSale ? (
+            {selectedSaleId &&
+              (loadingSale ? (
                 <div className="space-y-3">
                   <Skeleton className="h-24 w-full" />
                   <Skeleton className="h-32 w-full" />
@@ -501,11 +645,18 @@ export default function Returns() {
                           <span className="font-mono text-sm font-semibold">{selectedSale.id}</span>
                           {getStatusBadge(selectedSale)}
                         </div>
-                        <p className="text-sm text-text-primary">{selectedSale.customer_name || "Walk-in Customer"}</p>
-                        <p className="text-xs text-text-secondary mt-0.5">{formatDateTime(selectedSale.created_at)}</p>
+                        <p className="text-sm text-text-primary">
+                          {selectedSale.customer_name || "Walk-in Customer"}
+                        </p>
+                        <p className="text-xs text-text-secondary mt-0.5">
+                          {formatDateTime(selectedSale.created_at)}
+                        </p>
                       </div>
                       <button
-                        onClick={() => { setSelectedSaleId(""); setReturnQtys({}); }}
+                        onClick={() => {
+                          setSelectedSaleId("");
+                          setReturnQtys({});
+                        }}
                         className="text-xs text-text-secondary hover:text-danger transition-colors shrink-0"
                       >
                         Change
@@ -521,7 +672,9 @@ export default function Returns() {
                       {selectedSale.discount > 0 && (
                         <div className="flex justify-between text-danger">
                           <span>Discount</span>
-                          <span className="font-mono">-{formatCurrency(selectedSale.discount)}</span>
+                          <span className="font-mono">
+                            -{formatCurrency(selectedSale.discount)}
+                          </span>
                         </div>
                       )}
                       <div className="flex justify-between font-medium pt-1 border-t border-border">
@@ -533,7 +686,9 @@ export default function Returns() {
 
                   {/* Return Status */}
                   {hasReturns && (
-                    <div className={`rounded-lg border p-3 text-sm flex items-center gap-2 ${fullyReturned ? "border-danger/20 bg-danger/5 text-danger" : "border-accent/20 bg-accent/5 text-accent"}`}>
+                    <div
+                      className={`rounded-lg border p-3 text-sm flex items-center gap-2 ${fullyReturned ? "border-danger/20 bg-danger/5 text-danger" : "border-accent/20 bg-accent/5 text-accent"}`}
+                    >
                       <AlertCircle className="h-4 w-4 shrink-0" />
                       {fullyReturned
                         ? "This invoice has been fully returned. No items left to return."
@@ -561,11 +716,18 @@ export default function Returns() {
                             const remaining = item.quantity - returnedQty;
                             const qty = returnQtys[item.product_id] || 0;
                             return (
-                              <div key={item.product_id} className="grid grid-cols-[1fr_60px_60px_80px_40px] gap-2 items-center px-3 py-2.5 hover:bg-surface-2/50">
+                              <div
+                                key={item.product_id}
+                                className="grid grid-cols-[1fr_60px_60px_80px_40px] gap-2 items-center px-3 py-2.5 hover:bg-surface-2/50"
+                              >
                                 <div className="min-w-0">
-                                  <p className="text-sm font-medium truncate">{item.product_name}</p>
+                                  <p className="text-sm font-medium truncate">
+                                    {item.product_name}
+                                  </p>
                                   {returnedQty > 0 && (
-                                    <p className="text-[10px] text-success">{returnedQty} already returned</p>
+                                    <p className="text-[10px] text-success">
+                                      {returnedQty} already returned
+                                    </p>
                                   )}
                                 </div>
                                 <div className="text-center">
@@ -573,14 +735,32 @@ export default function Returns() {
                                 </div>
                                 <div className="flex items-center justify-center gap-0.5">
                                   <button
-                                    onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.max(0, (prev[item.product_id] || 0) - 1) }))}
+                                    onClick={() =>
+                                      setReturnQtys((prev) => ({
+                                        ...prev,
+                                        [item.product_id]: Math.max(
+                                          0,
+                                          (prev[item.product_id] || 0) - 1
+                                        ),
+                                      }))
+                                    }
                                     className="h-6 w-6 rounded bg-surface-2 flex items-center justify-center hover:bg-border transition-colors"
                                   >
                                     <Minus className="h-3 w-3" />
                                   </button>
-                                  <span className="w-6 text-center text-sm font-mono font-medium">{qty}</span>
+                                  <span className="w-6 text-center text-sm font-mono font-medium">
+                                    {qty}
+                                  </span>
                                   <button
-                                    onClick={() => setReturnQtys(prev => ({ ...prev, [item.product_id]: Math.min(remaining, (prev[item.product_id] || 0) + 1) }))}
+                                    onClick={() =>
+                                      setReturnQtys((prev) => ({
+                                        ...prev,
+                                        [item.product_id]: Math.min(
+                                          remaining,
+                                          (prev[item.product_id] || 0) + 1
+                                        ),
+                                      }))
+                                    }
                                     disabled={remaining <= 0}
                                     className={`h-6 w-6 rounded flex items-center justify-center transition-colors ${remaining <= 0 ? "opacity-30 cursor-not-allowed bg-surface-2" : "bg-surface-2 hover:bg-border"}`}
                                   >
@@ -588,12 +768,18 @@ export default function Returns() {
                                   </button>
                                 </div>
                                 <div className="text-right">
-                                  <span className="font-mono text-sm">{formatCurrency(item.unit_price)}</span>
+                                  <span className="font-mono text-sm">
+                                    {formatCurrency(item.unit_price)}
+                                  </span>
                                 </div>
                                 <div>
                                   {qty > 0 && (
                                     <button
-                                      onClick={() => { const next = { ...returnQtys }; delete next[item.product_id]; setReturnQtys(next); }}
+                                      onClick={() => {
+                                        const next = { ...returnQtys };
+                                        delete next[item.product_id];
+                                        setReturnQtys(next);
+                                      }}
                                       className="h-6 w-6 rounded bg-danger/10 flex items-center justify-center hover:bg-danger/20 transition-colors"
                                     >
                                       <Trash2 className="h-3 w-3 text-danger" />
@@ -609,85 +795,119 @@ export default function Returns() {
                   )}
 
                   {selectedSale.items && selectedSale.items.length === 0 && (
-                    <p className="text-sm text-text-secondary text-center py-4">No items found for this sale.</p>
+                    <p className="text-sm text-text-secondary text-center py-4">
+                      No items found for this sale.
+                    </p>
                   )}
 
                   {!fullyReturned && (
                     <>
                       <div>
                         <Label>Reason (optional)</Label>
-                        <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Damaged, Expired, Wrong item" />
+                        <Input
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder="e.g. Damaged, Expired, Wrong item"
+                        />
                       </div>
 
                       {/* Refund Summary */}
-                      {Object.values(returnQtys).some(q => q > 0) && (() => {
-                        const rawTotal = calcRawRefundAmount();
-                        const calculatedRefund = calcRefundAmount();
-                        const discountApplied = rawTotal - calculatedRefund;
-                        const discountRatio = selectedSale.subtotal > 0 ? selectedSale.discount / selectedSale.subtotal : 0;
-                        const hasDiscount = selectedSale.discount > 0;
-                        const finalRefund = customRefundAmount ? Number(customRefundAmount) : calculatedRefund;
-                        return (
-                          <div className="rounded-lg border border-danger/20 bg-danger/5 p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-text-secondary">Items Subtotal</span>
-                              <span className="font-mono text-sm">{formatCurrency(rawTotal)}</span>
-                            </div>
-                            {hasDiscount && discountApplied > 0 && (
-                              <>
-                                <div className="flex items-center justify-between text-danger">
-                                  <span className="text-sm">Discount ({(discountRatio * 100).toFixed(1)}%)</span>
-                                  <span className="font-mono text-sm">-{formatCurrency(discountApplied)}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-[10px] text-text-secondary">
-                                  <span>Discount is distributed proportionally across returned items</span>
-                                </div>
-                              </>
-                            )}
-                            <div className="pt-2 border-t border-danger/10">
-                              {isEditingRefund ? (
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-sm font-medium text-text-primary">Refund Amount</span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-sm text-text-secondary">PKR</span>
-                                    <input
-                                      type="number"
-                                      value={customRefundAmount}
-                                      onChange={(e) => setCustomRefundAmount(e.target.value)}
-                                      className="w-28 font-mono font-bold text-lg text-danger bg-transparent border-b-2 border-accent outline-none text-right"
-                                      autoFocus
-                                    />
-                                    <button
-                                      onClick={() => { setIsEditingRefund(false); setCustomRefundAmount(""); }}
-                                      className="text-[10px] text-accent hover:underline ml-1"
-                                    >
-                                      Reset
-                                    </button>
+                      {Object.values(returnQtys).some((q) => q > 0) &&
+                        (() => {
+                          const rawTotal = calcRawRefundAmount();
+                          const calculatedRefund = calcRefundAmount();
+                          const discountApplied = rawTotal - calculatedRefund;
+                          const discountRatio =
+                            selectedSale.subtotal > 0
+                              ? selectedSale.discount / selectedSale.subtotal
+                              : 0;
+                          const hasDiscount = selectedSale.discount > 0;
+                          const finalRefund = customRefundAmount
+                            ? Number(customRefundAmount)
+                            : calculatedRefund;
+                          return (
+                            <div className="rounded-lg border border-danger/20 bg-danger/5 p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-text-secondary">Items Subtotal</span>
+                                <span className="font-mono text-sm">
+                                  {formatCurrency(rawTotal)}
+                                </span>
+                              </div>
+                              {hasDiscount && discountApplied > 0 && (
+                                <>
+                                  <div className="flex items-center justify-between text-danger">
+                                    <span className="text-sm">
+                                      Discount ({(discountRatio * 100).toFixed(1)}%)
+                                    </span>
+                                    <span className="font-mono text-sm">
+                                      -{formatCurrency(discountApplied)}
+                                    </span>
                                   </div>
-                                </div>
-                              ) : (
-                                <div
-                                  className="flex items-center justify-between cursor-pointer hover:bg-danger/5 -mx-1 px-1 py-0.5 rounded transition-colors"
-                                  onClick={() => { setCustomRefundAmount(String(calculatedRefund)); setIsEditingRefund(true); }}
-                                  title="Click to edit refund amount"
-                                >
-                                  <span className="text-sm font-medium text-text-primary">Refund Amount</span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="font-mono font-bold text-lg text-danger">{formatCurrency(finalRefund)}</span>
-                                    <span className="text-[10px] text-text-secondary">(click to edit)</span>
+                                  <div className="flex items-center justify-between text-[10px] text-text-secondary">
+                                    <span>
+                                      Discount is distributed proportionally across returned items
+                                    </span>
                                   </div>
-                                </div>
+                                </>
                               )}
+                              <div className="pt-2 border-t border-danger/10">
+                                {isEditingRefund ? (
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-sm font-medium text-text-primary">
+                                      Refund Amount
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm text-text-secondary">PKR</span>
+                                      <input
+                                        type="number"
+                                        value={customRefundAmount}
+                                        onChange={(e) => setCustomRefundAmount(e.target.value)}
+                                        className="w-28 font-mono font-bold text-lg text-danger bg-transparent border-b-2 border-accent outline-none text-right"
+                                        autoFocus
+                                      />
+                                      <button
+                                        onClick={() => {
+                                          setIsEditingRefund(false);
+                                          setCustomRefundAmount("");
+                                        }}
+                                        className="text-[10px] text-accent hover:underline ml-1"
+                                      >
+                                        Reset
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className="flex items-center justify-between cursor-pointer hover:bg-danger/5 -mx-1 px-1 py-0.5 rounded transition-colors"
+                                    onClick={() => {
+                                      setCustomRefundAmount(String(calculatedRefund));
+                                      setIsEditingRefund(true);
+                                    }}
+                                    title="Click to edit refund amount"
+                                  >
+                                    <span className="text-sm font-medium text-text-primary">
+                                      Refund Amount
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-mono font-bold text-lg text-danger">
+                                        {formatCurrency(finalRefund)}
+                                      </span>
+                                      <span className="text-[10px] text-text-secondary">
+                                        (click to edit)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })()}
+                          );
+                        })()}
                     </>
                   )}
 
                   <Button
                     className="w-full"
-                    disabled={!selectedSaleId || !Object.values(returnQtys).some(q => q > 0)}
+                    disabled={!selectedSaleId || !Object.values(returnQtys).some((q) => q > 0)}
                     onClick={() => createMutation.mutate()}
                   >
                     {createMutation.isPending ? "Processing..." : "Process Return"}
@@ -697,8 +917,7 @@ export default function Returns() {
                 <p className="text-sm text-danger text-center py-4 flex items-center justify-center gap-1">
                   <AlertCircle className="h-4 w-4" /> Invoice not found
                 </p>
-              )
-            )}
+              ))}
 
             {error && (
               <p className="text-sm text-danger flex items-center gap-1">
@@ -727,17 +946,41 @@ export default function Returns() {
       )}
 
       {/* Return Detail Dialog */}
-      <Dialog open={!!selectedReturn} onOpenChange={(v) => { if (!v) setSelectedReturn(null); }}>
+      <Dialog
+        open={!!selectedReturn}
+        onOpenChange={(v) => {
+          if (!v) setSelectedReturn(null);
+        }}
+      >
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Return Details</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Return Details</DialogTitle>
+          </DialogHeader>
           {selectedReturn && (
             <div className="px-5 pb-5 space-y-3">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-text-secondary">Sale ID:</span> <span className="font-mono">{selectedReturn.sale_id}</span></div>
-                <div><span className="text-text-secondary">Customer:</span> <span>{selectedReturn.customer_name || "—"}</span></div>
-                <div><span className="text-text-secondary">Date:</span> <span>{formatDateTime(selectedReturn.created_at)}</span></div>
-                <div><span className="text-text-secondary">Refund:</span> <span className="font-mono text-danger">{formatCurrency(selectedReturn.refund_amount)}</span></div>
-                <div className="col-span-2"><span className="text-text-secondary">Reason:</span> <span>{selectedReturn.reason}</span></div>
+                <div>
+                  <span className="text-text-secondary">Sale ID:</span>{" "}
+                  <span className="font-mono">{selectedReturn.sale_id}</span>
+                </div>
+                <div>
+                  <span className="text-text-secondary">Customer:</span>{" "}
+                  <span>{selectedReturn.customer_name || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-text-secondary">Date:</span>{" "}
+                  <span>{formatDateTime(selectedReturn.created_at)}</span>
+                </div>
+                <div>
+                  <span className="text-text-secondary">Refund:</span>{" "}
+                  <span className="font-mono text-danger">
+                    {formatCurrency(selectedReturn.refund_amount)}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-text-secondary">Reason:</span>{" "}
+                  <span>{selectedReturn.reason}</span>
+                </div>
               </div>
               {selectedReturn.items && selectedReturn.items.length > 0 && (
                 <div>
@@ -745,7 +988,9 @@ export default function Returns() {
                   <div className="border border-border rounded-lg divide-y divide-border text-sm">
                     {selectedReturn.items.map((item, i) => (
                       <div key={i} className="flex items-center justify-between px-3 py-2">
-                        <span>{item.product_name} × {item.quantity}</span>
+                        <span>
+                          {item.product_name} × {item.quantity}
+                        </span>
                         <span className="font-mono">{formatCurrency(item.refund_amount)}</span>
                       </div>
                     ))}

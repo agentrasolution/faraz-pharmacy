@@ -83,7 +83,10 @@ export function generatePDF(options: PDFExportOptions): void {
 
   ${summaryHtml}
 
-  ${rows.length === 0 ? '<div class="no-data">No data available for the selected period.</div>' : `
+  ${
+    rows.length === 0
+      ? '<div class="no-data">No data available for the selected period.</div>'
+      : `
   <table>
     <thead>
       <tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}</tr>
@@ -91,7 +94,8 @@ export function generatePDF(options: PDFExportOptions): void {
     <tbody>
       ${tableRows}
     </tbody>
-  </table>`}
+  </table>`
+  }
 
   <div class="footer">
     <span>Faraz Pharmacy — Confidential Business Report</span>

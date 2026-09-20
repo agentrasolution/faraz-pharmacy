@@ -1,7 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Barcode, Printer, LayoutGrid, List, Plus, Trash2, Archive, RotateCcw } from "lucide-react";
+import {
+  Search,
+  Barcode,
+  Printer,
+  LayoutGrid,
+  List,
+  Plus,
+  Trash2,
+  Archive,
+  RotateCcw,
+} from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,7 +39,9 @@ export default function Barcodes() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [showArchived, setShowArchived] = useState(false);
-  const [printTarget, setPrintTarget] = useState<{ barcode: string; productName?: string } | undefined>(undefined);
+  const [printTarget, setPrintTarget] = useState<
+    { barcode: string; productName?: string } | undefined
+  >(undefined);
   const [printOpen, setPrintOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BarcodeEntry | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<BarcodeEntry | null>(null);
@@ -45,7 +57,7 @@ export default function Barcodes() {
 
   const { data: barcodes, isLoading } = useQuery({
     queryKey: ["barcodes", showArchived],
-    queryFn: () => showArchived ? api.barcodes.listAll() : api.barcodes.list(),
+    queryFn: () => (showArchived ? api.barcodes.listAll() : api.barcodes.list()),
   });
 
   const deleteMutation = useMutation({
@@ -92,8 +104,7 @@ export default function Barcodes() {
     if (!q) return barcodes;
     return barcodes.filter(
       (b) =>
-        b.code.toLowerCase().includes(q) ||
-        (b.product && b.product.name.toLowerCase().includes(q))
+        b.code.toLowerCase().includes(q) || (b.product && b.product.name.toLowerCase().includes(q))
     );
   }, [barcodes, search]);
 
@@ -176,14 +187,17 @@ export default function Barcodes() {
   function confirmHardDelete() {
     if (!hardDeleteTarget) return;
     // Hard delete the product which will also delete the barcode
-    api.products.hardDelete(hardDeleteTarget.productId!).then(() => {
-      queryClient.invalidateQueries({ queryKey: ["barcodes"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Product and barcode permanently deleted");
-      setHardDeleteTarget(null);
-    }).catch((err) => {
-      toast.error(err.message);
-    });
+    api.products
+      .hardDelete(hardDeleteTarget.productId!)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["barcodes"] });
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+        toast.success("Product and barcode permanently deleted");
+        setHardDeleteTarget(null);
+      })
+      .catch((err) => {
+        toast.error(err.message);
+      });
   }
 
   const canDelete = (b: BarcodeEntry) => !b.productId || (b.product && b.product.active === 0);
@@ -313,7 +327,11 @@ export default function Barcodes() {
                   {b.code}
                 </span>
                 <span className="text-[10px] font-medium text-text-primary text-center leading-tight line-clamp-1 min-h-[1.2em]">
-                  {b.product ? b.product.name : <span className="text-text-secondary italic text-[9px]">No product</span>}
+                  {b.product ? (
+                    b.product.name
+                  ) : (
+                    <span className="text-text-secondary italic text-[9px]">No product</span>
+                  )}
                 </span>
                 <Button
                   size="sm"
@@ -334,16 +352,27 @@ export default function Barcodes() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-surface-2">
-                  <th className="text-[10px] font-medium text-text-secondary text-left px-3 py-2">Barcode</th>
-                  <th className="text-[10px] font-medium text-text-secondary text-left px-3 py-2">Product</th>
-                  <th className="text-[10px] font-medium text-text-secondary text-right px-3 py-2 w-36">Actions</th>
+                  <th className="text-[10px] font-medium text-text-secondary text-left px-3 py-2">
+                    Barcode
+                  </th>
+                  <th className="text-[10px] font-medium text-text-secondary text-left px-3 py-2">
+                    Product
+                  </th>
+                  <th className="text-[10px] font-medium text-text-secondary text-right px-3 py-2 w-36">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((b, idx) => (
-                  <tr key={b.id} className={`border-b border-border last:border-0 hover:bg-surface-2/50 transition-colors ${idx % 2 === 0 ? "bg-surface" : "bg-surface-2/50"}`}>
+                  <tr
+                    key={b.id}
+                    className={`border-b border-border last:border-0 hover:bg-surface-2/50 transition-colors ${idx % 2 === 0 ? "bg-surface" : "bg-surface-2/50"}`}
+                  >
                     <td className="px-3 py-2.5">
-                      <span className="font-mono text-[11px] text-text-primary tracking-wider">{b.code}</span>
+                      <span className="font-mono text-[11px] text-text-primary tracking-wider">
+                        {b.code}
+                      </span>
                     </td>
                     <td className="px-3 py-2.5">
                       {b.product ? (
@@ -354,7 +383,12 @@ export default function Barcodes() {
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button size="sm" variant="outline" onClick={() => openPrint(b.code, b.product?.name)} className="h-7 text-[10px] gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openPrint(b.code, b.product?.name)}
+                          className="h-7 text-[10px] gap-1.5"
+                        >
                           <Printer className="h-3 w-3" />
                           Print
                         </Button>
@@ -410,39 +444,74 @@ export default function Barcodes() {
 
       <PasswordConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}
+        onOpenChange={(v) => {
+          if (!v) setDeleteTarget(null);
+        }}
         title="Delete Barcode"
-        description={<>Delete barcode <span className="font-mono font-medium">{deleteTarget?.code}</span>? This action cannot be undone.</>}
+        description={
+          <>
+            Delete barcode <span className="font-mono font-medium">{deleteTarget?.code}</span>? This
+            action cannot be undone.
+          </>
+        }
         confirmLabel="Delete"
-        onConfirm={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); }}
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+        }}
         loading={deleteMutation.isPending}
       />
 
       <PasswordConfirmDialog
         open={!!archiveTarget}
-        onOpenChange={(v) => { if (!v) setArchiveTarget(null); }}
+        onOpenChange={(v) => {
+          if (!v) setArchiveTarget(null);
+        }}
         title="Archive Product"
-        description={<>Archive product <span className="font-medium">{archiveTarget?.product?.name}</span>? This will also archive the barcode.</>}
+        description={
+          <>
+            Archive product <span className="font-medium">{archiveTarget?.product?.name}</span>?
+            This will also archive the barcode.
+          </>
+        }
         confirmLabel="Archive"
-        onConfirm={() => { if (archiveTarget) archiveMutation.mutate(archiveTarget.id); }}
+        onConfirm={() => {
+          if (archiveTarget) archiveMutation.mutate(archiveTarget.id);
+        }}
         loading={archiveMutation.isPending}
       />
 
       <PasswordConfirmDialog
         open={!!restoreTarget}
-        onOpenChange={(v) => { if (!v) setRestoreTarget(null); }}
+        onOpenChange={(v) => {
+          if (!v) setRestoreTarget(null);
+        }}
         title="Restore Product"
-        description={<>Restore product <span className="font-medium">{restoreTarget?.product?.name}</span>? This will also restore the barcode.</>}
+        description={
+          <>
+            Restore product <span className="font-medium">{restoreTarget?.product?.name}</span>?
+            This will also restore the barcode.
+          </>
+        }
         confirmLabel="Restore"
-        onConfirm={() => { if (restoreTarget) restoreMutation.mutate(restoreTarget.id); }}
+        onConfirm={() => {
+          if (restoreTarget) restoreMutation.mutate(restoreTarget.id);
+        }}
         loading={restoreMutation.isPending}
       />
 
       <PasswordConfirmDialog
         open={!!hardDeleteTarget}
-        onOpenChange={(v) => { if (!v) setHardDeleteTarget(null); }}
+        onOpenChange={(v) => {
+          if (!v) setHardDeleteTarget(null);
+        }}
         title="Delete Product Permanently"
-        description={<>Permanently delete product <span className="font-medium">{hardDeleteTarget?.product?.name}</span> and its barcode? This action cannot be undone.</>}
+        description={
+          <>
+            Permanently delete product{" "}
+            <span className="font-medium">{hardDeleteTarget?.product?.name}</span> and its barcode?
+            This action cannot be undone.
+          </>
+        }
         confirmLabel="Delete Permanently"
         onConfirm={confirmHardDelete}
         loading={false}

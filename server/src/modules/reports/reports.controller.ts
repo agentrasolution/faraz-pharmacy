@@ -6,6 +6,8 @@ export const reportsController = {
     try {
       const stats = await reportsService.getStats();
       res.json(stats);
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 };

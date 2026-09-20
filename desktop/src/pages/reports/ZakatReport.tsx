@@ -19,7 +19,10 @@ export default function ZakatReport() {
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
 
   function calculateZakat() {
-    const total = products.reduce((sum: number, p: Product) => sum + p.stock_qty * p.purchase_price, 0);
+    const total = products.reduce(
+      (sum: number, p: Product) => sum + p.stock_qty * p.purchase_price,
+      0
+    );
     setEligibleValue(total);
     setCalculated(true);
   }
@@ -30,16 +33,38 @@ export default function ZakatReport() {
     if (!calculated) return;
     generatePDF({
       title: "Investment / Zakat Report",
-      summary: [{ label: "Eligible Stock Value", value: formatCurrency(eligibleValue) }, { label: "Zakat Rate", value: "2.5%" }, { label: "Estimated Zakat", value: formatCurrency(zakatAmount) }],
+      summary: [
+        { label: "Eligible Stock Value", value: formatCurrency(eligibleValue) },
+        { label: "Zakat Rate", value: "2.5%" },
+        { label: "Estimated Zakat", value: formatCurrency(zakatAmount) },
+      ],
       headers: ["Product", "Qty", "Purchase Price", "Stock Value"],
-      rows: products.filter((p: Product) => p.stock_qty > 0).map((p: Product) => [p.name, p.stock_qty, formatCurrency(p.purchase_price), formatCurrency(p.stock_qty * p.purchase_price)]),
+      rows: products
+        .filter((p: Product) => p.stock_qty > 0)
+        .map((p: Product) => [
+          p.name,
+          p.stock_qty,
+          formatCurrency(p.purchase_price),
+          formatCurrency(p.stock_qty * p.purchase_price),
+        ]),
       filename: `zakat_report_${new Date().toISOString().split("T")[0]}.pdf`,
     });
   }
 
   function handleExcel() {
     if (!calculated) return;
-    downloadExcelFile(`zakat_report_${new Date().toISOString().split("T")[0]}.xlsx`, ["Product", "Qty", "Purchase Price", "Stock Value"], products.filter((p: Product) => p.stock_qty > 0).map((p: Product) => [p.name, p.stock_qty, p.purchase_price, p.stock_qty * p.purchase_price]));
+    downloadExcelFile(
+      `zakat_report_${new Date().toISOString().split("T")[0]}.xlsx`,
+      ["Product", "Qty", "Purchase Price", "Stock Value"],
+      products
+        .filter((p: Product) => p.stock_qty > 0)
+        .map((p: Product) => [
+          p.name,
+          p.stock_qty,
+          p.purchase_price,
+          p.stock_qty * p.purchase_price,
+        ])
+    );
   }
 
   return (
@@ -47,7 +72,9 @@ export default function ZakatReport() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">Investment / Zakat Report</h2>
-          <p className="text-sm text-text-secondary mt-0.5">Calculate zakat based on pharmacy inventory purchase value</p>
+          <p className="text-sm text-text-secondary mt-0.5">
+            Calculate zakat based on pharmacy inventory purchase value
+          </p>
         </div>
         {calculated && <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />}
       </div>
@@ -61,9 +88,14 @@ export default function ZakatReport() {
               </div>
               <h3 className="text-xl font-semibold text-text-primary mb-2">Calculate Zakat</h3>
               <p className="text-sm text-text-secondary mb-8 max-w-sm mx-auto leading-relaxed">
-                Calculate zakat based on your pharmacy inventory. The zakat rate is <span className="font-semibold text-accent">2.5%</span> of eligible stock value.
+                Calculate zakat based on your pharmacy inventory. The zakat rate is{" "}
+                <span className="font-semibold text-accent">2.5%</span> of eligible stock value.
               </p>
-              <Button size="lg" onClick={calculateZakat} className="px-10 h-12 text-base font-medium">
+              <Button
+                size="lg"
+                onClick={calculateZakat}
+                className="px-10 h-12 text-base font-medium"
+              >
                 <Calculator className="h-5 w-5 mr-2" />
                 Calculate / Load
               </Button>
@@ -75,8 +107,12 @@ export default function ZakatReport() {
               <CardContent className="p-10">
                 <div className="text-center space-y-8">
                   <div>
-                    <p className="text-sm font-medium text-text-secondary mb-2 uppercase tracking-wide">Eligible Stock Value</p>
-                    <p className="text-4xl font-bold font-mono text-accent">{formatCurrency(eligibleValue)}</p>
+                    <p className="text-sm font-medium text-text-secondary mb-2 uppercase tracking-wide">
+                      Eligible Stock Value
+                    </p>
+                    <p className="text-4xl font-bold font-mono text-accent">
+                      {formatCurrency(eligibleValue)}
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-center gap-4">
@@ -89,15 +125,26 @@ export default function ZakatReport() {
                   </div>
 
                   <div>
-                    <p className="text-sm font-medium text-text-secondary mb-2 uppercase tracking-wide">Estimated Zakat</p>
-                    <p className="text-5xl font-bold font-mono text-success">{formatCurrency(zakatAmount)}</p>
+                    <p className="text-sm font-medium text-text-secondary mb-2 uppercase tracking-wide">
+                      Estimated Zakat
+                    </p>
+                    <p className="text-5xl font-bold font-mono text-success">
+                      {formatCurrency(zakatAmount)}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="flex items-center justify-between">
-              <Button variant="outline" onClick={() => { setCalculated(false); setEligibleValue(0); }} className="h-9">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCalculated(false);
+                  setEligibleValue(0);
+                }}
+                className="h-9"
+              >
                 Recalculate
               </Button>
             </div>

@@ -48,7 +48,9 @@ export const salesController = {
     try {
       const sale = await salesService.create(req.body);
       res.json(normalizeSale(sale));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async listRecent(req: Request, res: Response, next: NextFunction) {
@@ -56,7 +58,9 @@ export const salesController = {
       const limit = parseInt(req.query.limit as string) || 10;
       const sales = await salesService.listRecent(limit);
       res.json(sales.map(normalizeSale));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async search(req: Request, res: Response, next: NextFunction) {
@@ -65,7 +69,9 @@ export const salesController = {
       if (!q.trim()) return res.json([]);
       const sales = await salesService.search(q);
       res.json(sales.map(normalizeSale));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async listByDate(req: Request, res: Response, next: NextFunction) {
@@ -73,7 +79,9 @@ export const salesController = {
       const tzOffsetMinutes = parseInt(req.query.tzOffset as string, 10) || 0;
       const sales = await salesService.listByDate(req.params.date, tzOffsetMinutes);
       res.json(sales.map(normalizeSale));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async listAll(req: Request, res: Response, next: NextFunction) {
@@ -85,13 +93,17 @@ export const salesController = {
         tzOffsetMinutes: parseInt(req.query.tzOffset as string, 10) || 0,
       });
       res.json(sales.map(normalizeSale));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const sale = await salesService.getById(req.params.id);
       res.json(normalizeSale(sale));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 };

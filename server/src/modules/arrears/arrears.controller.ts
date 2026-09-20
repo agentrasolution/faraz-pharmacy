@@ -27,34 +27,48 @@ export const arrearsController = {
       const status = req.query.status as string | undefined;
       const arrears = await arrearsService.list(status);
       res.json(arrears.map(normalizeArrear));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const arrear = await arrearsService.create(req.body);
       res.json(normalizeArrear(arrear));
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async recordPayment(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await arrearsService.recordPayment(req.params.id, req.body.amount, req.body.password);
+      const result = await arrearsService.recordPayment(
+        req.params.id,
+        req.body.amount,
+        req.body.password
+      );
       res.json({ ...result, arrear: normalizeArrear(result.arrear) });
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async settle(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await arrearsService.settle(req.params.id, req.body.password);
       res.json({ ...result, arrear: normalizeArrear(result.arrear) });
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await arrearsService.delete(req.params.id);
       res.json(result);
-    } catch (err) { next(err); }
+    } catch (err) {
+      next(err);
+    }
   },
 };
