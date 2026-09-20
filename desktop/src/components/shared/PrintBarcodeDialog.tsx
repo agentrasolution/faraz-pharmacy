@@ -38,9 +38,9 @@ export default function PrintBarcodeDialog({
   const barcodeId = useRef(0);
   const [labelSize, setLabelSize] = useState(() => {
     try {
-      return localStorage.getItem("faraz_label_size") || "35x20";
+      return localStorage.getItem("faraz_label_size") || "30x20";
     } catch {
-      return "35x20";
+      return "30x20";
     }
   });
 
@@ -103,12 +103,13 @@ export default function PrintBarcodeDialog({
     if (!svg) return;
     requestAnimationFrame(() => {
       if (id !== barcodeId.current) return;
-      const [, h] = labelSize.split("x").map(Number);
+      const [w, h] = labelSize.split("x").map(Number);
       const isSmall = (h || 20) <= 22;
+      const isNarrow = (w || 30) <= 30;
       renderBarcode(svg, barcode, {
-        width: isSmall ? 1.2 : 1.4,
-        height: isSmall ? 25 : 36,
-        fontSize: isSmall ? 9 : 11,
+        width: isNarrow ? 1.05 : isSmall ? 1.2 : 1.4,
+        height: isSmall ? 24 : 36,
+        fontSize: isNarrow ? 8.5 : isSmall ? 9 : 11,
         margin: 0,
         displayValue: true,
       });
@@ -184,6 +185,7 @@ export default function PrintBarcodeDialog({
                       <SelectValue placeholder="Label size" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="30x20">30 × 20 mm (Default)</SelectItem>
                       <SelectItem value="35x20">35 × 20 mm</SelectItem>
                       <SelectItem value="40x25">40 × 25 mm</SelectItem>
                       <SelectItem value="50x25">50 × 25 mm</SelectItem>
