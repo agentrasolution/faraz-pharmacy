@@ -1960,11 +1960,11 @@ function generateBarcodeLabelHTML(
   svgHtml,
   copies,
   productName,
-  labelWidth = 35,
+  labelWidth = 30,
   labelHeight = 20
 ) {
   const count = Math.max(1, copies || 1);
-  const w = Number(labelWidth) || 35;
+  const w = Number(labelWidth) || 30;
   const h = Number(labelHeight) || 20;
 
   const escapeHtml = (str) =>
@@ -1981,9 +1981,10 @@ function generateBarcodeLabelHTML(
     : "";
 
   const isSmall = h <= 22;
-  const bcHeight = isSmall ? 25 : 36;
-  const bcFontSize = isSmall ? 9 : 11;
-  const bcWidth = isSmall ? 1.2 : 1.4;
+  const isNarrow = w <= 30;
+  const bcHeight = isSmall ? 24 : 36;
+  const bcFontSize = isNarrow ? 8.5 : isSmall ? 9 : 11;
+  const bcWidth = isNarrow ? 1.05 : isSmall ? 1.2 : 1.4;
 
   let body;
   if (jsBarcodeSource) {
@@ -2075,9 +2076,9 @@ html, body {
 }
 .label .product-name {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: ${isSmall ? "2.2mm" : "2.8mm"};
+  font-size: ${isNarrow ? "1.9mm" : isSmall ? "2.2mm" : "2.8mm"};
   line-height: 1.1;
-  max-height: ${isSmall ? "2.8mm" : "3.6mm"};
+  max-height: ${isSmall ? "2.6mm" : "3.6mm"};
   font-weight: bold;
   text-align: center;
   overflow: hidden;
@@ -2085,7 +2086,7 @@ html, body {
   white-space: nowrap;
   width: 100%;
   color: #000;
-  margin-bottom: 0.5mm;
+  margin-bottom: 0.3mm;
   flex-shrink: 0;
 }
 .label svg.bc {
@@ -2121,7 +2122,7 @@ html, body {
 }
 
 function doBarcodePrintJob(html, deviceName, labelWidth, labelHeight) {
-  const widthMicrons = Math.round((Number(labelWidth) || 35) * 1000);
+  const widthMicrons = Math.round((Number(labelWidth) || 30) * 1000);
   const heightMicrons = Math.round((Number(labelHeight) || 20) * 1000);
 
   return new Promise((resolve, reject) => {
@@ -2226,7 +2227,7 @@ async function printBarcodeLabel(
   deviceName,
   productName
 ) {
-  const width = Number(labelWidth) || 35;
+  const width = Number(labelWidth) || 30;
   const height = Number(labelHeight) || 20;
   const html = generateBarcodeLabelHTML(barcode, svgHtml, copies || 1, productName, width, height);
   await doBarcodePrintJob(html, deviceName, width, height);
