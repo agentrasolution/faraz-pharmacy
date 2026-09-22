@@ -14,6 +14,7 @@ import { expensesRoutes } from "./modules/expenses/expenses.routes";
 import { reportsRoutes } from "./modules/reports/reports.routes";
 import { settingsRoutes } from "./modules/settings/settings.routes";
 import { categoriesRoutes } from "./modules/categories/categories.routes";
+import { companiesRoutes } from "./modules/companies/companies.routes";
 import { barcodesRoutes } from "./modules/barcodes/barcodes.routes";
 
 const app = express();
@@ -37,6 +38,7 @@ app.use("/api/returns", returnsRoutes);
 app.use("/api/expenses", expensesRoutes);
 app.use("/api/dashboard", reportsRoutes);
 app.use("/api/categories", categoriesRoutes);
+app.use("/api/companies", companiesRoutes);
 app.use("/api/barcodes", barcodesRoutes);
 app.use("/api/settings", settingsRoutes);
 

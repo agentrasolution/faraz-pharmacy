@@ -67,7 +67,8 @@ export const ModelName = {
   ReturnEntry: 'ReturnEntry',
   ReturnItem: 'ReturnItem',
   Category: 'Category',
-  Expense: 'Expense'
+  Expense: 'Expense',
+  Company: 'Company'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -125,7 +126,6 @@ export const ProductScalarFieldEnum = {
   id: 'id',
   barcode: 'barcode',
   name: 'name',
-  company: 'company',
   category: 'category',
   location: 'location',
   distributorId: 'distributorId',
@@ -135,7 +135,8 @@ export const ProductScalarFieldEnum = {
   stockQty: 'stockQty',
   expiry: 'expiry',
   active: 'active',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  companyId: 'companyId'
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -248,7 +249,6 @@ export const StockPurchaseScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
   distributorId: 'distributorId',
-  company: 'company',
   invoiceNumber: 'invoiceNumber',
   quantity: 'quantity',
   purchasePrice: 'purchasePrice',
@@ -306,6 +306,16 @@ export const ExpenseScalarFieldEnum = {
 } as const
 
 export type ExpenseScalarFieldEnum = (typeof ExpenseScalarFieldEnum)[keyof typeof ExpenseScalarFieldEnum]
+
+
+export const CompanyScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CompanyScalarFieldEnum = (typeof CompanyScalarFieldEnum)[keyof typeof CompanyScalarFieldEnum]
 
 
 export const SortOrder = {

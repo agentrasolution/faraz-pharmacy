@@ -126,3 +126,8 @@ export type Category = Prisma.CategoryModel
  * 
  */
 export type Expense = Prisma.ExpenseModel
+/**
+ * Model Company
+ * 
+ */
+export type Company = Prisma.CompanyModel

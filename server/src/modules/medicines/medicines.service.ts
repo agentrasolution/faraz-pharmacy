@@ -2,39 +2,49 @@ import { prisma } from "../../services/prisma";
 import { NotFoundError } from "../../utils/errors";
 import type { CreateProductInput } from "./medicines.schema";
 
+function formatProduct(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    company: p.company?.name || "",
+  };
+}
+
 export const medicinesService = {
   async list(includeArchived = false) {
     const where = includeArchived ? {} : { active: 1 };
-    return prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where,
       orderBy: { name: "asc" },
-      include: { prices: true },
+      include: { prices: true, company: true },
     });
+    return products.map(formatProduct);
   },
 
   async search(query: string) {
     const q = `%${query}%`;
     const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-      `SELECT * FROM products WHERE active = 1 AND (barcode ILIKE $1 OR name ILIKE $1) ORDER BY name LIMIT 50`,
+      `SELECT products.*, companies.name as company FROM products LEFT JOIN companies ON products.company_id = companies.id WHERE active = 1 AND (barcode ILIKE $1 OR name ILIKE $1) ORDER BY name LIMIT 50`,
       q
     );
     return rows;
   },
 
   async getByBarcode(barcode: string) {
-    return prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { barcode },
-      include: { prices: true },
+      include: { prices: true, company: true },
     });
+    return formatProduct(product);
   },
 
   async getById(id: string) {
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { prices: true },
+      include: { prices: true, company: true },
     });
     if (!product) throw new NotFoundError("Product");
-    return product;
+    return formatProduct(product);
   },
 
   async create(data: CreateProductInput) {
@@ -55,11 +65,24 @@ export const medicinesService = {
           }))
         : [];
 
-    return prisma.product.create({
+
+    let companyId = null;
+    if (data.company && data.company.trim()) {
+      const companyName = data.company.trim();
+      const existingCompany = await prisma.company.findFirst({ where: { name: { equals: companyName, mode: 'insensitive' } } });
+      if (existingCompany) {
+        companyId = existingCompany.id;
+      } else {
+        const newCompany = await prisma.company.create({ data: { name: companyName } });
+        companyId = newCompany.id;
+      }
+    }
+
+    const product = await prisma.product.create({
       data: {
         barcode: data.barcode,
         name: data.name,
-        company: data.company ?? "",
+        companyId,
         category: data.category ?? "",
         location: data.location ?? "",
         distributorId: data.distributorId ?? null,
@@ -76,8 +99,9 @@ export const medicinesService = {
           },
         },
       },
-      include: { prices: true },
+      include: { prices: true, company: true },
     });
+    return formatProduct(product);
   },
 
   async update(id: string, data: CreateProductInput) {
@@ -89,10 +113,23 @@ export const medicinesService = {
         ? data.salePrice
         : Math.round(data.purchasePrice * (1 + (data.markupPercent ?? old.markupPercent) / 100));
 
+
+    let companyId = null;
+    if (data.company && data.company.trim()) {
+      const companyName = data.company.trim();
+      const existingCompany = await prisma.company.findFirst({ where: { name: { equals: companyName, mode: 'insensitive' } } });
+      if (existingCompany) {
+        companyId = existingCompany.id;
+      } else {
+        const newCompany = await prisma.company.create({ data: { name: companyName } });
+        companyId = newCompany.id;
+      }
+    }
+
     const updateData: Record<string, unknown> = {
       barcode: data.barcode,
       name: data.name,
-      company: data.company ?? "",
+      companyId,
       category: data.category ?? "",
       location: data.location ?? "",
       distributorId: data.distributorId ?? null,
@@ -124,11 +161,12 @@ export const medicinesService = {
       },
     };
 
-    return prisma.product.update({
+    const product = await prisma.product.update({
       where: { id },
       data: updateData as any,
-      include: { prices: true },
+      include: { prices: true, company: true },
     });
+    return formatProduct(product);
   },
 
   async archive(id: string) {

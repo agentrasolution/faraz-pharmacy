@@ -4,7 +4,7 @@ import type { CreateExpenseInput } from "./expenses.schema";
 
 export const expensesService = {
   async list() {
-    return prisma.expense.findMany({ orderBy: { date: "desc" } });
+    return prisma.expense.findMany({ orderBy: { createdAt: "desc" } });
   },
 
   async create(data: CreateExpenseInput) {

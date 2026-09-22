@@ -45,7 +45,6 @@ model Product {
   id             String           @id @default(uuid())
   barcode        String           @unique
   name           String
-  company        String           @default("")
   category       String           @default("")
   location       String           @default("")
   distributorId  String?          @map("distributor_id")
@@ -56,6 +55,8 @@ model Product {
   expiry         String?
   active         Int              @default(1)
   createdAt      DateTime         @default(now()) @map("created_at")
+  companyId      String?          @map("company_id")
+  company        Company?         @relation(fields: [companyId], references: [id])
   distributor    Distributor?     @relation(fields: [distributorId], references: [id])
   saleItems      SaleItem[]
   stockPurchases StockPurchase[]
@@ -181,7 +182,6 @@ model StockPurchase {
   id             String       @id @default(uuid())
   productId      String       @map("product_id")
   distributorId  String?      @map("distributor_id")
-  company        String?      @map("company")
   invoiceNumber  String       @default("") @map("invoice_number")
   quantity       Int          @default(0)
   purchasePrice  Float        @default(0) @map("purchase_price")
@@ -240,4 +240,14 @@ model Expense {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("expenses")
+}
+
+model Company {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  products  Product[]
+
+  @@map("companies")
 }
