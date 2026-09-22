@@ -27,7 +27,7 @@ import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import { ShortcutHint } from "@/components/shared/Kbd";
-import type { StockPurchase, Product, Company, Distributor } from "@/types";
+import type { StockPurchase, Product, Distributor } from "@/types";
 
 export default function Stock() {
   const queryClient = useQueryClient();
@@ -42,6 +42,7 @@ export default function Stock() {
   const [form, setForm] = useState({
     productId: "",
     distributorId: "",
+    company: "",
     invoiceNumber: "",
     quantity: "",
     expiry: "",
@@ -81,7 +82,6 @@ export default function Stock() {
   function handleExportCSV() {
     downloadCSV(
       `stock_${new Date().toISOString().split("T")[0]}.csv`,
-      "Stock / Purchases",
       stockHeaders,
       stockExportRows(searched)
     );
@@ -105,7 +105,7 @@ export default function Stock() {
     (s: StockPurchase) =>
       !search ||
       (s.product_name && s.product_name.toLowerCase().includes(search.toLowerCase())) ||
-      (s.company_name && s.company_name.toLowerCase().includes(search.toLowerCase())) ||
+      (s.company && s.company.toLowerCase().includes(search.toLowerCase())) ||
       (s.distributor_name && s.distributor_name.toLowerCase().includes(search.toLowerCase())) ||
       (s.invoice_number && s.invoice_number.toLowerCase().includes(search.toLowerCase()))
   );
@@ -122,6 +122,7 @@ export default function Stock() {
       api.stock.create({
         productId: form.productId,
         distributorId: form.distributorId || undefined,
+        company: form.company || undefined,
         invoiceNumber: form.invoiceNumber,
         quantity: Number(form.quantity),
         expiry: form.expiry || undefined,
@@ -130,7 +131,7 @@ export default function Stock() {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
-      setForm({ productId: "", distributorId: "", invoiceNumber: "", quantity: "", expiry: "" });
+      setForm({ productId: "", distributorId: "", company: "", invoiceNumber: "", quantity: "", expiry: "" });
       toast.success("Stock purchase recorded");
     },
     onError: (err) => {
@@ -157,7 +158,7 @@ export default function Stock() {
       api.stock.update(editingId!, {
         productId: form.productId,
         distributorId: form.distributorId || undefined,
-        companyId: form.companyId || undefined,
+        company: form.company || undefined,
         invoiceNumber: form.invoiceNumber,
         quantity: Number(form.quantity),
         expiry: form.expiry || undefined,
@@ -170,7 +171,7 @@ export default function Stock() {
       setForm({
         productId: "",
         distributorId: "",
-        companyId: "",
+        company: "",
         invoiceNumber: "",
         quantity: "",
         expiry: "",
@@ -205,7 +206,7 @@ export default function Stock() {
     setForm({
       productId: "",
       distributorId: "",
-      companyId: "",
+      company: "",
       invoiceNumber: "",
       quantity: "",
       expiry: "",
@@ -219,7 +220,7 @@ export default function Stock() {
     setForm({
       productId: entry.product_id,
       distributorId: entry.distributor_id || "",
-      companyId: entry.company_id || "",
+      company: entry.company || "",
       invoiceNumber: entry.invoice_number || "",
       quantity: String(entry.quantity),
       expiry: entry.expiry || "",
@@ -245,10 +246,10 @@ export default function Stock() {
       ),
     },
     {
-      key: "company_name",
+      key: "company",
       header: "Company",
       cell: (s: StockPurchase) => (
-        <span className="text-[11px] text-text-secondary">{s.company_name || "\u2014"}</span>
+        <span className="text-[11px] text-text-secondary">{s.company || "\u2014"}</span>
       ),
     },
     {
@@ -452,11 +453,10 @@ export default function Stock() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Company</Label>
-                <SearchableSelect
-                  options={companies.map((c: Company) => ({ value: c.id, label: c.name }))}
-                  value={form.companyId}
-                  onChange={(v) => setForm({ ...form, companyId: v })}
-                  placeholder="Select company"
+                <Input
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  placeholder="Company name (optional)"
                 />
               </div>
               <div className="space-y-1">
