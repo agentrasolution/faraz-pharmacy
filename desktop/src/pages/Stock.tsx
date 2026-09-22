@@ -42,8 +42,7 @@ export default function Stock() {
   const [form, setForm] = useState({
     productId: "",
     distributorId: "",
-    company: "",
-    invoiceNumber: "",
+        invoiceNumber: "",
     quantity: "",
     expiry: "",
   });
@@ -105,7 +104,6 @@ export default function Stock() {
     (s: StockPurchase) =>
       !search ||
       (s.product_name && s.product_name.toLowerCase().includes(search.toLowerCase())) ||
-      (s.company && s.company.toLowerCase().includes(search.toLowerCase())) ||
       (s.distributor_name && s.distributor_name.toLowerCase().includes(search.toLowerCase())) ||
       (s.invoice_number && s.invoice_number.toLowerCase().includes(search.toLowerCase()))
   );
@@ -122,8 +120,7 @@ export default function Stock() {
       api.stock.create({
         productId: form.productId,
         distributorId: form.distributorId || undefined,
-        company: form.company || undefined,
-        invoiceNumber: form.invoiceNumber,
+                invoiceNumber: form.invoiceNumber,
         quantity: Number(form.quantity),
         expiry: form.expiry || undefined,
       }),
@@ -158,8 +155,7 @@ export default function Stock() {
       api.stock.update(editingId!, {
         productId: form.productId,
         distributorId: form.distributorId || undefined,
-        company: form.company || undefined,
-        invoiceNumber: form.invoiceNumber,
+                invoiceNumber: form.invoiceNumber,
         quantity: Number(form.quantity),
         expiry: form.expiry || undefined,
       }),
@@ -171,8 +167,7 @@ export default function Stock() {
       setForm({
         productId: "",
         distributorId: "",
-        company: "",
-        invoiceNumber: "",
+                invoiceNumber: "",
         quantity: "",
         expiry: "",
       });
@@ -206,8 +201,7 @@ export default function Stock() {
     setForm({
       productId: "",
       distributorId: "",
-      company: "",
-      invoiceNumber: "",
+            invoiceNumber: "",
       quantity: "",
       expiry: "",
     });
@@ -220,8 +214,7 @@ export default function Stock() {
     setForm({
       productId: entry.product_id,
       distributorId: entry.distributor_id || "",
-      company: entry.company || "",
-      invoiceNumber: entry.invoice_number || "",
+            invoiceNumber: entry.invoice_number || "",
       quantity: String(entry.quantity),
       expiry: entry.expiry || "",
     });
@@ -243,13 +236,6 @@ export default function Stock() {
       header: "Product",
       cell: (s: StockPurchase) => (
         <span className="text-xs font-medium text-text-primary">{s.product_name}</span>
-      ),
-    },
-    {
-      key: "company",
-      header: "Company",
-      cell: (s: StockPurchase) => (
-        <span className="text-[11px] text-text-secondary">{s.company || "\u2014"}</span>
       ),
     },
     {
@@ -451,14 +437,6 @@ export default function Stock() {
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Company</Label>
-                <Input
-                  value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value })}
-                  placeholder="Company name (optional)"
-                />
-              </div>
               <div className="space-y-1">
                 <Label>Distributor</Label>
                 <SearchableSelect

@@ -44,6 +44,7 @@ interface CsvRow {
   name: string;
   category: string;
   location: string;
+  company: string;
   purchasePrice: string;
   salePrice: string;
   expiry: string;
@@ -137,6 +138,7 @@ interface ProductForm {
   name: string;
   category: string;
   location: string;
+  company: string;
   purchasePrice: string;
   salePrice: string;
   prices: PriceTierForm[];
@@ -152,6 +154,7 @@ const emptyForm = (): ProductForm => ({
   name: "",
   category: "",
   location: "",
+  company: "",
   purchasePrice: "",
   salePrice: "",
   prices: [],
@@ -236,7 +239,8 @@ export default function Products() {
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.barcode.includes(search) ||
       p.category.toLowerCase().includes(search.toLowerCase()) ||
-      p.location.toLowerCase().includes(search.toLowerCase())
+      p.location.toLowerCase().includes(search.toLowerCase()) ||
+      (p.company && p.company.toLowerCase().includes(search.toLowerCase()))
   );
 
   function buildPricesPayload(): ProductPriceInput[] | undefined {
@@ -255,6 +259,7 @@ export default function Products() {
         name: form.name,
         category: form.category,
         location: form.location,
+        company: form.company,
         purchasePrice: Number(form.purchasePrice),
         salePrice: Number(form.salePrice) || 0,
         prices: buildPricesPayload(),
@@ -282,6 +287,7 @@ export default function Products() {
         name: form.name,
         category: form.category,
         location: form.location,
+        company: form.company,
         purchasePrice: Number(form.purchasePrice),
         salePrice: Number(form.salePrice) || 0,
         prices: buildPricesPayload(),
@@ -387,6 +393,7 @@ export default function Products() {
       name: product.name,
       category: product.category,
       location: product.location,
+      company: product.company || "",
       purchasePrice: String(product.purchase_price),
       salePrice: String(product.sale_price),
       prices: p
@@ -656,6 +663,13 @@ export default function Products() {
         >
           {p.name}
         </span>
+      ),
+    },
+    {
+      key: "company",
+      header: "Company",
+      cell: (p: Product) => (
+        <span className="text-[11px] text-text-secondary">{p.company || "—"}</span>
       ),
     },
     {
@@ -1176,6 +1190,14 @@ export default function Products() {
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Company</Label>
+              <Input
+                value={form.company}
+                onChange={(e) => setForm({ ...form, company: e.target.value })}
+                placeholder="e.g. GSK, Abbott"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">

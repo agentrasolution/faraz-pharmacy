@@ -182,6 +182,8 @@ const api = {
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/expenses/${id}`),
   },
+
+
   categories: {
     list: (): Promise<Category[]> => fetchJson("GET", "/api/categories"),
     create: (c: CategoryInput): Promise<Category> => fetchJson("POST", "/api/categories", c),

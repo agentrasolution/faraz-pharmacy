@@ -20,6 +20,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +38,7 @@ const navItems = [
   { href: "/stock", label: "Stock", icon: Boxes, shortcut: "F8", key: "F8" },
   { href: "/barcodes", label: "Barcodes", icon: Barcode, shortcut: "F9", key: "F9" },
   { href: "/distributors", label: "Distributors", icon: Factory, shortcut: "F10", key: "F10" },
+  { href: "/companies", label: "Companies", icon: Building2, shortcut: "", key: "companies" },
   { href: "/expenses", label: "Expenses", icon: Wallet, shortcut: "F11", key: "F11" },
   { href: "/reports", label: "Reports", icon: BarChart3, shortcut: "F12", key: "F12" },
   { href: "/settings", label: "Settings", icon: Settings, shortcut: "F13", key: "F13" },

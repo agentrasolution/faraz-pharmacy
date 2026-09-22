@@ -44,7 +44,7 @@ model RecoveryKey {
 model Product {
   id             String           @id @default(uuid())
   barcode        String           @unique
-  name           String
+  name           String           @unique
   category       String           @default("")
   location       String           @default("")
   distributorId  String?          @map("distributor_id")
@@ -92,7 +92,7 @@ model ProductPrice {
 
 model Distributor {
   id               String    @id @default(uuid())
-  name             String    @default("")
+  name             String    @unique @default("")
   salesmanName     String    @default("") @map("salesman_name")
   salesmanContact  String    @default("") @map("salesman_contact")
   deliveryManName  String    @default("") @map("delivery_man_name")
@@ -106,7 +106,7 @@ model Distributor {
 
 model Customer {
   id         String    @id @default(uuid())
-  name       String
+  name       String    @unique
   phone      String    @default("")
   address    String    @default("")
   fatherName String    @default("") @map("father_name")
