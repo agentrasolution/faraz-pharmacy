@@ -162,8 +162,7 @@ export interface StockPurchase {
   product_name?: string;
   distributor_id?: string;
   distributor_name?: string;
-  company_id?: string;
-  company_name?: string;
+  company?: string;
   invoice_no?: string;
   invoice_number: string;
   quantity: number;
@@ -185,7 +184,7 @@ export interface StockPurchase {
 export interface StockInput {
   productId: string;
   distributorId?: string;
-  companyId?: string;
+  company?: string;
   invoiceNumber?: string;
   purchasePrice?: number;
   salePrice?: number;

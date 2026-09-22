@@ -19,3 +19,9 @@ coverage/
 skills-lock.json
 SKILL.md
 
+# Build artifacts
+dist-electron/
+desktop-app/
+*.log
+*.tsbuildinfo
+
