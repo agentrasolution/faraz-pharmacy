@@ -2,6 +2,7 @@ declare module "sonner" {
   import type { ComponentType, ReactNode } from "react";
 
   interface ToastOptions {
+    
     description?: ReactNode;
     duration?: number;
     position?:
