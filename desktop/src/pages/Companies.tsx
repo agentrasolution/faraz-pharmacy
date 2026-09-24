@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Search, Plus, Pencil, Trash2, Download } from "lucide-react";
+import { Building2, Search, Plus, Pencil, Trash2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,23 +14,27 @@ import { downloadCSV, downloadPDF } from "@/lib/export";
 import { formatDate } from "@/lib/utils";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import type { Company } from "@/types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Companies() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
 
-  const { data: companies = [], isLoading } = useQuery({
-    queryKey: ["companies"],
-    queryFn: api.companies.list,
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["companies", page, limit, debouncedSearch],
+    queryFn: () => api.companies.listPaginated({ page, limit, search: debouncedSearch }),
   });
 
-  const filtered = companies.filter(
-    (c: Company) => !search || c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const companies = data?.data ?? [];
+  const meta = data?.meta;
 
   const createMutation = useMutation({
     mutationFn: () => api.companies.create({ name }),
@@ -80,6 +84,23 @@ export default function Companies() {
     setOpen(true);
   }
 
+  function handleExportCSV() {
+    downloadCSV(
+      `companies_${new Date().toISOString().split("T")[0]}.csv`,
+      ["Name"],
+      companies.map((c: Company) => [c.name])
+    );
+  }
+
+  function handleExportPDF() {
+    downloadPDF(
+      `companies_${new Date().toISOString().split("T")[0]}.pdf`,
+      "Companies List",
+      ["Name"],
+      companies.map((c: Company) => [c.name])
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -93,34 +114,21 @@ export default function Companies() {
             autoFocus
             placeholder="Search companies..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="pl-9"
           />
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            downloadCSV(
-              `companies_${new Date().toISOString().split("T")[0]}.csv`,
-              ["Name"],
-              filtered.map((c: Company) => [c.name])
-            )
-          }
+          onClick={handleExportCSV}
         >
           <Download className="h-4 w-4 mr-1" /> CSV
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            downloadPDF(
-              `companies_${new Date().toISOString().split("T")[0]}.pdf`,
-              "Companies List",
-              ["Name"],
-              filtered.map((c: Company) => [c.name])
-            )
-          }
+          onClick={handleExportPDF}
         >
           <Download className="h-4 w-4 mr-1" /> PDF
         </Button>
@@ -128,14 +136,14 @@ export default function Companies() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
-        ) : filtered.length === 0 ? (
+        ) : companies.length === 0 ? (
           <div className="col-span-full text-center py-12 text-sm text-text-secondary">
-            {search
+            {debouncedSearch
               ? "No companies match your search"
               : "No companies yet. Companies are added automatically when creating products."}
           </div>
         ) : (
-          filtered.map((company: Company) => (
+          companies.map((company: Company) => (
             <Card key={company.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -147,7 +155,6 @@ export default function Companies() {
                       <h3 className="font-medium text-sm text-text-primary truncate">{company.name}</h3>
                       <p className="text-[10px] text-text-secondary mt-0.5">Added: {formatDate(company.created_at)}</p>
                     </div>
-
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -171,6 +178,35 @@ export default function Companies() {
           ))
         )}
       </div>
+
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 px-1">
+          <p className="text-sm text-text-secondary">
+            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-text-secondary px-2">
+              Page {page} of {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog
         open={open}

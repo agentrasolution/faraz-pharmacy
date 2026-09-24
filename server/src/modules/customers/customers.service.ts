@@ -15,25 +15,41 @@ const customerStatsSelect = `
   (SELECT MAX(s.created_at) FROM sales s WHERE s.customer_id = c.id) AS last_purchase`;
 
 export const customersService = {
-  async list() {
-    return prisma.$queryRawUnsafe<unknown[]>(
-      `SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
-        ${customerStatsSelect}
-       FROM customers c
-       ORDER BY c.name ASC`
-    );
-  },
+  async list({ page = 1, limit = 100000, search }: { page?: number; limit?: number; search?: string } = {}) {
+    const skip = (page - 1) * limit;
+    
+    let whereClause = "";
+    let params: any[] = [];
+    
+    if (search) {
+      whereClause = `WHERE c.name ILIKE $1 OR c.phone ILIKE $1 OR c.father_name ILIKE $1 OR c.father_phone ILIKE $1`;
+      params.push(`%${search}%`);
+    }
 
-  async search(query: string) {
-    const q = `%${query}%`;
-    return prisma.$queryRawUnsafe<unknown[]>(
-      `SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
+    const countQuery = `SELECT COUNT(*)::int as total FROM customers c ${whereClause}`;
+    const countResult = await prisma.$queryRawUnsafe<{total: number}[]>(countQuery, ...params);
+    const total = Number(countResult[0]?.total || 0);
+
+    const dataQuery = `
+      SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
         ${customerStatsSelect}
-       FROM customers c
-       WHERE c.name ILIKE $1 OR c.phone ILIKE $1 OR c.father_name ILIKE $1 OR c.father_phone ILIKE $1
-       ORDER BY c.name LIMIT 20`,
-      q
-    );
+      FROM customers c
+      ${whereClause}
+      ORDER BY c.name ASC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+
+    const data = await prisma.$queryRawUnsafe<unknown[]>(dataQuery, ...params, limit, skip);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   },
 
   async getById(id: string) {

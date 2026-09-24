@@ -31,6 +31,7 @@ import { formatCurrency, generateBarcode } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import { useDebounce } from "@/hooks/useDebounce";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
@@ -195,15 +196,32 @@ export default function Products() {
   const [hardDeletePasswordOpen, setHardDeletePasswordOpen] = useState(false);
   const [hardDeleteTargetId, setHardDeleteTargetId] = useState<string | null>(null);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products", showArchived],
-    queryFn: () => (showArchived ? api.products.listAll() : api.products.list()),
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, showArchived, limit]);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["products", showArchived, page, limit, debouncedSearch],
+    queryFn: () => api.products.listPaginated({
+      page,
+      limit,
+      search: debouncedSearch,
+      includeArchived: showArchived,
+    }),
   });
 
-  const { data: categories = [] } = useQuery({
+  const products = paginatedData?.data || [];
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
+
+  const { data: categoriesResponse } = useQuery({
     queryKey: ["categories"],
-    queryFn: api.categories.list,
+    queryFn: () => api.categories.listPaginated({ limit: 1000 }),
   });
+  const categories = categoriesResponse?.data ?? [];
 
   useEffect(() => {
     if (open && barcodeInputRef.current) {
@@ -232,15 +250,7 @@ export default function Products() {
     }
   }
 
-  const filtered = products.filter(
-    (p: Product) =>
-      !search ||
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.barcode.includes(search) ||
-      p.category.toLowerCase().includes(search.toLowerCase()) ||
-      p.location.toLowerCase().includes(search.toLowerCase()) ||
-      (p.company && p.company.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Frontend filtering replaced by backend search
 
   function buildPricesPayload(): ProductPriceInput[] | undefined {
     const validPrices = form.prices.filter((p) => p.purchasePrice);
@@ -804,7 +814,7 @@ export default function Products() {
         "Expiry",
         "Status",
       ],
-      filtered.map((p: Product) => [
+      products.map((p: Product) => [
         p.barcode,
         p.name,
         p.company,
@@ -833,7 +843,7 @@ export default function Products() {
         "Expiry",
         "Status",
       ],
-      filtered.map((p: Product) => [
+      products.map((p: Product) => [
         p.barcode,
         p.name,
         p.company,
@@ -974,10 +984,55 @@ export default function Products() {
       <div className="rounded-xl border border-border">
         <DataTable
           columns={columns}
-          data={filtered}
+          data={products}
           loading={isLoading}
           keyExtractor={(p: Product) => p.id}
         />
+        
+        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="limit-select">Rows per page:</label>
+              <select
+                id="limit-select"
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1); // Reset to page 1 when changing limit
+                }}
+                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              >
+                {[10, 20, 30, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {meta.page} of {meta.totalPages || 1}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page >= (meta.totalPages || 1)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Dialog

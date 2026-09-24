@@ -216,10 +216,10 @@ export type DistributorOrderByWithRelationInput = {
 
 export type DistributorWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  name?: string
   AND?: Prisma.DistributorWhereInput | Prisma.DistributorWhereInput[]
   OR?: Prisma.DistributorWhereInput[]
   NOT?: Prisma.DistributorWhereInput | Prisma.DistributorWhereInput[]
-  name?: Prisma.StringFilter<"Distributor"> | string
   salesmanName?: Prisma.StringFilter<"Distributor"> | string
   salesmanContact?: Prisma.StringFilter<"Distributor"> | string
   deliveryManName?: Prisma.StringFilter<"Distributor"> | string
@@ -227,7 +227,7 @@ export type DistributorWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Distributor"> | Date | string
   products?: Prisma.ProductListRelationFilter
   stockPurchases?: Prisma.StockPurchaseListRelationFilter
-}, "id">
+}, "id" | "name">
 
 export type DistributorOrderByWithAggregationInput = {
   id?: Prisma.SortOrder

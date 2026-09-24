@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Plus, Wallet, Pencil, Trash2, Search } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
@@ -85,19 +86,20 @@ export default function Expenses() {
     onExportCSV: handleExportCSV,
   });
 
-  const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ["expenses"],
-    queryFn: api.expenses.list,
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["expenses", page, limit, debouncedSearch, category],
+    queryFn: () => api.expenses.listPaginated({ page, limit, search: debouncedSearch }),
   });
 
-  const filtered = expenses.filter((e: Expense) => {
-    const catMatch = category === "All" || e.category === category;
-    const searchMatch =
-      !search ||
-      e.title.toLowerCase().includes(search.toLowerCase()) ||
-      e.notes?.toLowerCase().includes(search.toLowerCase());
-    return catMatch && searchMatch;
-  });
+  const rawExpenses = paginatedData?.data || [];
+  const expenses = rawExpenses.filter((e: Expense) => category === "All" || e.category === category);
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
+
+  const filtered = expenses;
 
   const totalThisMonth = expenses
     .filter((e: Expense) => e.date?.startsWith(new Date().toISOString().slice(0, 7)))
@@ -256,7 +258,10 @@ export default function Expenses() {
             key={cat}
             variant={category === cat ? "default" : "outline"}
             size="sm"
-            onClick={() => setCategory(cat)}
+            onClick={() => {
+              setCategory(cat);
+              setPage(1);
+            }}
           >
             {cat}
           </Button>
@@ -283,6 +288,51 @@ export default function Expenses() {
           loading={isLoading}
           keyExtractor={(e: Expense) => e.id}
         />
+        
+        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="limit-select">Rows per page:</label>
+              <select
+                id="limit-select"
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              >
+                {[10, 20, 30, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {meta.page} of {meta.totalPages || 1}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page >= (meta.totalPages || 1)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
       <Dialog
         open={open}

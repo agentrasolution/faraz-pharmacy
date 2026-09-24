@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Pencil, Trash2, LayoutGrid, List } from "lucide-react";
+import { Search, Pencil, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -17,10 +17,13 @@ import { ShortcutHint } from "@/components/shared/Kbd";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import type { Distributor } from "@/types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Distributors() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -34,17 +37,15 @@ export default function Distributors() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const { data: distributors = [], isLoading } = useQuery({
-    queryKey: ["distributors"],
-    queryFn: api.distributors.list,
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["distributors", page, limit, debouncedSearch],
+    queryFn: () => api.distributors.listPaginated({ page, limit, search: debouncedSearch }),
   });
 
-  const filtered = distributors.filter(
-    (d: Distributor) =>
-      !search ||
-      d.name?.toLowerCase().includes(search.toLowerCase()) ||
-      d.salesman_name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const distributors = data?.data ?? [];
+  const meta = data?.meta;
 
   const createMutation = useMutation({
     mutationFn: () => api.distributors.create(form),
@@ -99,7 +100,7 @@ export default function Distributors() {
       `distributors_${new Date().toISOString().split("T")[0]}.pdf`,
       "Distributors List",
       ["Proprietor", "Salesman", "Salesman Contact", "Delivery Man", "Delivery Man Contact"],
-      filtered.map((d: Distributor) => [
+      distributors.map((d: Distributor) => [
         d.name,
         d.salesman_name,
         d.salesman_contact,
@@ -112,7 +113,7 @@ export default function Distributors() {
     downloadCSV(
       `distributors_${new Date().toISOString().split("T")[0]}.csv`,
       ["Proprietor", "Salesman", "Salesman Contact", "Delivery Man", "Delivery Man Contact"],
-      filtered.map((d: Distributor) => [
+      distributors.map((d: Distributor) => [
         d.name,
         d.salesman_name,
         d.salesman_contact,
@@ -176,7 +177,7 @@ export default function Distributors() {
             ref={searchRef}
             placeholder="Search distributors..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="pl-9"
           />
         </div>
@@ -272,7 +273,7 @@ export default function Distributors() {
                 ),
               },
             ]}
-            data={filtered}
+            data={distributors}
             loading={isLoading}
             keyExtractor={(d: Distributor) => d.id}
             emptyMessage="No distributors found"
@@ -284,12 +285,12 @@ export default function Distributors() {
             Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-28 rounded-xl" />
             ))
-          ) : filtered.length === 0 ? (
+          ) : distributors.length === 0 ? (
             <div className="col-span-full text-center py-12 text-sm text-text-secondary">
               No distributors found
             </div>
           ) : (
-            filtered.map((dist: Distributor) => (
+            distributors.map((dist: Distributor) => (
               <div
                 key={dist.id}
                 className="rounded-xl border border-border bg-surface p-4 hover:border-accent/30 hover:shadow-sm transition-all group"
@@ -321,7 +322,7 @@ export default function Distributors() {
                       Salesman
                     </p>
                     <p className="text-xs text-text-primary font-medium truncate">
-                      {dist.salesman_name || "—"}
+                      {dist.salesman_name || "\u2014"}
                     </p>
                   </div>
                   <div>
@@ -329,7 +330,7 @@ export default function Distributors() {
                       Salesman Contact
                     </p>
                     <p className="text-xs text-text-primary font-mono truncate">
-                      {dist.salesman_contact || "—"}
+                      {dist.salesman_contact || "\u2014"}
                     </p>
                   </div>
                   <div>
@@ -337,7 +338,7 @@ export default function Distributors() {
                       Delivery Man
                     </p>
                     <p className="text-xs text-text-primary font-medium truncate">
-                      {dist.delivery_man_name || "—"}
+                      {dist.delivery_man_name || "\u2014"}
                     </p>
                   </div>
                   <div>
@@ -345,13 +346,42 @@ export default function Distributors() {
                       Delivery Contact
                     </p>
                     <p className="text-xs text-text-primary font-mono truncate">
-                      {dist.delivery_man_contact || "—"}
+                      {dist.delivery_man_contact || "\u2014"}
                     </p>
                   </div>
                 </div>
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 px-1">
+          <p className="text-sm text-text-secondary">
+            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-text-secondary px-2">
+              Page {page} of {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

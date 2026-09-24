@@ -23,6 +23,7 @@ import { formatCurrency } from "@/lib/utils";
 import { setLastReceipt } from "@/lib/receiptStore";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Product, PrinterConfig, ProductPrice } from "@/types";
 
 export default function POS() {
@@ -91,22 +92,34 @@ export default function POS() {
     return () => window.removeEventListener("keydown", onKey);
   }, [cart, lastSaleData]);
 
-  const { data: products = [] } = useQuery({
-    queryKey: ["products", debouncedSearch],
-    queryFn: () => api.products.search(debouncedSearch),
+  const [page, setPage] = useState(1);
+  
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const { data: searchResults, isLoading: searchLoading } = useQuery({
+    queryKey: ["products", debouncedSearch, page],
+    queryFn: () => api.products.listPaginated({ search: debouncedSearch, limit: 50, page }),
     enabled: debouncedSearch.length > 0,
   });
 
   const allProducts = useQuery({
-    queryKey: ["products", "all"],
-    queryFn: api.products.list,
+    queryKey: ["products", "all", page],
+    queryFn: () => api.products.listPaginated({ limit: 50, page }),
     enabled: debouncedSearch.length === 0,
   });
 
   const displayProducts = useMemo(() => {
-    if (debouncedSearch.length > 0) return products;
-    return allProducts.data ?? [];
-  }, [debouncedSearch, products, allProducts.data]);
+    if (debouncedSearch.length > 0) return searchResults?.data ?? [];
+    return allProducts.data?.data ?? [];
+  }, [debouncedSearch, searchResults?.data, allProducts.data?.data]);
+
+  const currentMeta = useMemo(() => {
+    if (debouncedSearch.length > 0) return searchResults?.meta;
+    return allProducts.data?.meta;
+  }, [debouncedSearch, searchResults?.meta, allProducts.data?.meta]);
 
   function addProductToCart(product: Product, salePrice: number, purchasePrice?: number) {
     if (product.stock_qty === 0) {
@@ -305,6 +318,36 @@ export default function POS() {
                 </AnimatePresence>
               </div>
             )}
+            
+            {currentMeta && currentMeta.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                <span className="text-sm text-text-secondary">
+                  Showing {(currentMeta.page - 1) * currentMeta.limit + 1} to {Math.min(currentMeta.page * currentMeta.limit, currentMeta.total)} of {currentMeta.total}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={currentMeta.page <= 1}
+                    onClick={() => setPage(p => p - 1)}
+                  >
+                    Prev
+                  </Button>
+                  <div className="text-sm font-medium">
+                    {currentMeta.page} / {currentMeta.totalPages}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={currentMeta.page >= currentMeta.totalPages}
+                    onClick={() => setPage(p => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
 

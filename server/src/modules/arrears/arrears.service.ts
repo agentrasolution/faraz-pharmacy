@@ -19,16 +19,52 @@ function makeSalePrefix(): string {
 }
 
 export const arrearsService = {
-  async list(status?: string) {
-    const where = status && status !== "all" ? { status } : {};
-    return prisma.arrear.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        customer: { select: { name: true } },
-        payments: { orderBy: { createdAt: "asc" } },
+  async list({ status, page = 1, limit = 100000, search, dateFrom, dateTo }: { status?: string; page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string } = {}) {
+    const where: Prisma.ArrearWhereInput = status && status !== "all" ? { status } : {};
+
+    if (search) {
+      const q = search.trim();
+      where.OR = [
+        { id: { contains: q, mode: "insensitive" } },
+        { customer: { is: { name: { contains: q, mode: "insensitive" } } } },
+      ];
+    }
+
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(`${dateFrom}T00:00:00.000Z`);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(`${dateTo}T23:59:59.999Z`);
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await prisma.$transaction([
+      prisma.arrear.count({ where }),
+      prisma.arrear.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          customer: { select: { name: true } },
+          payments: { orderBy: { createdAt: "asc" } },
+        },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   },
 
   async create(data: {

@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, ShoppingCart, DollarSign, BarChart3 } from "lucide-react";
+import { TrendingUp, ShoppingCart, DollarSign, BarChart3, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import DateRangePicker, { type DateRange } from "@/components/reports/DateRangePicker";
 import KPICard from "@/components/reports/KPICard";
 import ExportButtons from "@/components/reports/ExportButtons";
@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { generatePDF } from "@/lib/pdfExport";
 import { downloadExcelFile } from "@/lib/excelExport";
 import type { Sale } from "@/types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function SalesReport() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -27,10 +29,31 @@ export default function SalesReport() {
   });
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [chartPeriod, setChartPeriod] = useState<"week" | "month">("week");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(50);
+  const [search, setSearch] = useState("");
 
-  const { data: allSales = [], isLoading } = useQuery({
-    queryKey: ["sales", "all"],
-    queryFn: () => api.sales.listAll(),
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Paginated table data
+  const { data: salesData, isLoading } = useQuery({
+    queryKey: ["sales", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to, paymentFilter],
+    queryFn: () => api.sales.listPaginated({
+      page,
+      limit,
+      search: debouncedSearch || undefined,
+      dateFrom: dateRange.from,
+      dateTo: dateRange.to,
+    }),
+  });
+
+  const sales = salesData?.data ?? [];
+  const meta = salesData?.meta;
+
+  // Summary data (load all for KPIs/charts - could be optimized with separate summary endpoint later)
+  const { data: allSales = [] } = useQuery({
+    queryKey: ["sales", "summary", dateRange.from, dateRange.to, paymentFilter],
+    queryFn: () => api.sales.listAll({ dateFrom: dateRange.from, dateTo: dateRange.to }),
   });
 
   const filteredSales = useMemo(() => {
@@ -66,12 +89,19 @@ export default function SalesReport() {
 
   const maxRevenue = Math.max(...chartData.map((d) => d.revenue), 1);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [dateRange, paymentFilter, debouncedSearch]);
+
   function handleReset() {
     setDateRange({
       from: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
       to: new Date().toISOString().split("T")[0],
     });
     setPaymentFilter("all");
+    setSearch("");
+    setPage(1);
   }
 
   function handlePDF() {
@@ -96,7 +126,7 @@ export default function SalesReport() {
         "Status",
       ],
       rows: filteredSales.map((s: Sale) => [
-        s.invoice_no || "—",
+        s.invoice_no || "\u2014",
         formatDate(s.created_at),
         s.customer_name || "Walk-in",
         s.items?.length || 0,
@@ -115,7 +145,7 @@ export default function SalesReport() {
       `sales_report_${dateRange.from}_${dateRange.to}.xlsx`,
       ["Invoice", "Date", "Customer", "Items", "Subtotal", "Discount", "Total", "Paid", "Status"],
       filteredSales.map((s: Sale) => [
-        s.invoice_no || "—",
+        s.invoice_no || "\u2014",
         formatDate(s.created_at),
         s.customer_name || "Walk-in",
         s.items?.length || 0,
@@ -133,7 +163,7 @@ export default function SalesReport() {
       key: "invoice_no",
       header: "Invoice",
       cell: (s: Sale) => (
-        <span className="font-mono text-xs text-text-secondary">{s.invoice_no || "—"}</span>
+        <span className="font-mono text-xs text-text-secondary">{s.invoice_no || "\u2014"}</span>
       ),
     },
     {
@@ -192,7 +222,6 @@ export default function SalesReport() {
 
   return (
     <div>
-      {/* Report Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">Sales Report</h2>
@@ -203,8 +232,7 @@ export default function SalesReport() {
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
 
-      {/* Filters */}
-      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50">
+      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50 flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
         <Select value={paymentFilter} onValueChange={setPaymentFilter}>
           <SelectTrigger className="w-40 h-9">
@@ -217,12 +245,20 @@ export default function SalesReport() {
             <SelectItem value="transfer">Transfer</SelectItem>
           </SelectContent>
         </Select>
+        <div className="relative flex-1 max-w-sm min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+          <Input
+            placeholder="Search invoices, customers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Button variant="ghost" size="sm" className="h-9 text-text-secondary" onClick={handleReset}>
           Reset
         </Button>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KPICard
           title="Revenue"
@@ -248,7 +284,6 @@ export default function SalesReport() {
         />
       </div>
 
-      {/* Chart */}
       <Card className="mb-6 border-border/50">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-sm font-medium text-text-secondary">Revenue Trend</CardTitle>
@@ -296,16 +331,44 @@ export default function SalesReport() {
         </CardContent>
       </Card>
 
-      {/* Table */}
       <div className="rounded-xl border border-border/50 overflow-hidden">
         <DataTable
           columns={columns}
-          data={filteredSales}
+          data={sales}
           loading={isLoading}
           keyExtractor={(s: Sale) => s.id}
           emptyMessage="No sales found for the selected period"
         />
       </div>
+
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 px-1">
+          <p className="text-sm text-text-secondary">
+            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-text-secondary px-2">
+              Page {page} of {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

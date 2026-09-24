@@ -2,10 +2,20 @@ import type { Request, Response, NextFunction } from "express";
 import { customersService } from "./customers.service";
 
 export const customersController = {
-  async list(_req: Request, res: Response, next: NextFunction) {
+  async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const customers = await customersService.list();
-      res.json(customers);
+      const isPaginated = req.query.paginated === "true";
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
+      const search = req.query.search as string | undefined;
+      
+      const result = await customersService.list({ page, limit, search });
+      
+      if (isPaginated) {
+        res.json(result);
+      } else {
+        res.json(result.data);
+      }
     } catch (err) {
       next(err);
     }
@@ -15,8 +25,8 @@ export const customersController = {
     try {
       const q = req.query.q as string;
       if (!q) return res.json([]);
-      const customers = await customersService.search(q);
-      res.json(customers);
+      const result = await customersService.list({ search: q, limit: 20 });
+      res.json(result.data); // maintain array return for /search
     } catch (err) {
       next(err);
     }

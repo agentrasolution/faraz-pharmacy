@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Search, Calendar, Printer, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/shared/PageHeader";
 import ExportButton from "@/components/shared/ExportButton";
 import DataTable from "@/components/shared/DataTable";
@@ -22,15 +24,24 @@ export default function Invoices() {
   const [printSale, setPrintSale] = useState<Sale | null>(null);
   const [showProfitId, setShowProfitId] = useState<string | null>(null);
 
-  const { data: sales = [], isLoading } = useQuery({
-    queryKey: ["invoices", search, dateFrom, dateTo],
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["invoices", page, limit, debouncedSearch, dateFrom, dateTo],
     queryFn: () =>
-      api.sales.listAll({
-        search: search || undefined,
+      api.sales.listPaginated({
+        search: debouncedSearch || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
+        page,
+        limit,
       }),
   });
+
+  const sales = paginatedData?.data || [];
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const exportData = useCallback(() => {
     const headers = [
@@ -270,6 +281,51 @@ export default function Invoices() {
           keyExtractor={(s: Sale) => s.id}
           onRowClick={(s: Sale) => navigate(`/invoices/${s.id}`)}
         />
+        
+        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="limit-select">Rows per page:</label>
+              <select
+                id="limit-select"
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              >
+                {[10, 20, 30, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {meta.page} of {meta.totalPages || 1}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page >= (meta.totalPages || 1)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {printSale && (

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
 import {
   Plus,
@@ -74,7 +75,7 @@ export default function Stock() {
       `stock_${new Date().toISOString().split("T")[0]}.pdf`,
       "Stock / Purchases",
       stockHeaders,
-      stockExportRows(searched)
+      stockExportRows(stockEntries)
     );
   }
 
@@ -82,7 +83,7 @@ export default function Stock() {
     downloadCSV(
       `stock_${new Date().toISOString().split("T")[0]}.csv`,
       stockHeaders,
-      stockExportRows(searched)
+      stockExportRows(stockEntries)
     );
   }
 
@@ -93,27 +94,27 @@ export default function Stock() {
     onExportCSV: handleExportCSV,
   });
 
-  const { data: stockEntries = [], isLoading } = useQuery({
-    queryKey: ["stock"],
-    queryFn: api.stock.list,
-  });
-  const filtered = showArchived
-    ? stockEntries
-    : stockEntries.filter((s: StockPurchase) => s.active !== 0);
-  const searched = filtered.filter(
-    (s: StockPurchase) =>
-      !search ||
-      (s.product_name && s.product_name.toLowerCase().includes(search.toLowerCase())) ||
-      (s.distributor_name && s.distributor_name.toLowerCase().includes(search.toLowerCase())) ||
-      (s.invoice_number && s.invoice_number.toLowerCase().includes(search.toLowerCase()))
-  );
-  const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
-  const { data: distributors = [] } = useQuery({
-    queryKey: ["distributors"],
-    queryFn: api.distributors.list,
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["stock", page, limit, debouncedSearch, showArchived],
+    queryFn: () => api.stock.listPaginated({ page, limit, search: debouncedSearch }),
   });
 
-  const totalValue = searched.reduce((s: number, i: StockPurchase) => s + i.total_value, 0);
+  const rawStock = paginatedData?.data || [];
+  const stockEntries = showArchived ? rawStock : rawStock.filter((s: StockPurchase) => s.active !== 0);
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
+
+  const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
+  const { data: distributorsResponse } = useQuery({
+    queryKey: ["distributors"],
+    queryFn: () => api.distributors.listPaginated({ limit: 1000 }),
+  });
+  const distributors = distributorsResponse?.data ?? [];
+
+  const totalValue = stockEntries.reduce((s: number, i: StockPurchase) => s + i.total_value, 0);
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -389,10 +390,55 @@ export default function Stock() {
       <div className="rounded-xl border border-border">
         <DataTable
           columns={columns}
-          data={searched}
+          data={stockEntries}
           loading={isLoading}
           keyExtractor={(s: StockPurchase) => s.id}
         />
+
+        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="limit-select">Rows per page:</label>
+              <select
+                id="limit-select"
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              >
+                {[10, 20, 30, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {meta.page} of {meta.totalPages || 1}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page >= (meta.totalPages || 1)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Dialog

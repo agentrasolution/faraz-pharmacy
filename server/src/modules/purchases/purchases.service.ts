@@ -4,14 +4,53 @@ import { emitEvent } from "../../socket";
 import type { CreateStockInput } from "./purchases.schema";
 
 export const purchasesService = {
-  async list() {
-    return prisma.stockPurchase.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        product: { select: { name: true } },
-        distributor: { select: { name: true } },
+  async list({ page = 1, limit = 100000, search, dateFrom, dateTo }: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string } = {}) {
+    const where: Prisma.StockPurchaseWhereInput = {};
+
+    if (search) {
+      const q = search.trim();
+      where.OR = [
+        { invoiceNumber: { contains: q, mode: "insensitive" } },
+        { product: { name: { contains: q, mode: "insensitive" } } },
+        { distributor: { name: { contains: q, mode: "insensitive" } } },
+      ];
+    }
+
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(`${dateFrom}T00:00:00.000Z`);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(`${dateTo}T23:59:59.999Z`);
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await prisma.$transaction([
+      prisma.stockPurchase.count({ where }),
+      prisma.stockPurchase.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          product: { select: { name: true } },
+          distributor: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   },
 
   async create(data: CreateStockInput) {

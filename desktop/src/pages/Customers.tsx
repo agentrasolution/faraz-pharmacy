@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Search, Plus, Phone, MapPin, Pencil, Trash2, LayoutGrid, List } from "lucide-react";
@@ -42,10 +43,17 @@ export default function Customers() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const { data: customers = [], isLoading } = useQuery({
-    queryKey: ["customers"],
-    queryFn: api.customers.list,
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["customers", page, limit, debouncedSearch],
+    queryFn: () => api.customers.listPaginated({ page, limit, search: debouncedSearch }),
   });
+
+  const customers = paginatedData?.data || [];
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const createMutation = useMutation({
     mutationFn: () => api.customers.create({ name, phone, address, fatherName, fatherPhone }),
@@ -125,14 +133,7 @@ export default function Customers() {
     }
   }
 
-  const filtered = customers.filter(
-    (c: Customer) =>
-      !search ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone.includes(search) ||
-      (c.father_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (c.father_phone ?? "").includes(search)
-  );
+
 
   function openAdd() {
     setEditingId(null);
@@ -268,7 +269,7 @@ export default function Customers() {
         "Arrear",
         "Last Purchase",
       ],
-      filtered.map((c: Customer) => [
+      customers.map((c: Customer) => [
         c.name,
         c.phone,
         c.father_name || "",
@@ -293,7 +294,7 @@ export default function Customers() {
         "Arrear",
         "Last Purchase",
       ],
-      filtered.map((c: Customer) => [
+      customers.map((c: Customer) => [
         c.name,
         c.phone,
         c.father_name || "",
@@ -371,7 +372,7 @@ export default function Customers() {
         <div className="rounded-xl border border-border">
           <DataTable
             columns={columns}
-            data={filtered}
+            data={customers}
             loading={isLoading}
             keyExtractor={(c: Customer) => c.id}
             onRowClick={(c: Customer) => navigate(`/customers/${c.id}`)}
@@ -383,12 +384,12 @@ export default function Customers() {
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-28 rounded-xl bg-surface-2 animate-pulse" />
             ))
-          ) : filtered.length === 0 ? (
+          ) : customers.length === 0 ? (
             <div className="col-span-full text-center py-12 text-sm text-text-secondary">
               {search ? "No customers match your search" : "No customers yet."}
             </div>
           ) : (
-            filtered.map((c: Customer) => (
+            customers.map((c: Customer) => (
               <Card
                 key={c.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
@@ -460,6 +461,52 @@ export default function Customers() {
           )}
         </div>
       )}
+
+      <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+        <div className="flex items-center gap-4 text-sm text-text-secondary">
+          <span>
+            Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+          </span>
+          <div className="flex items-center gap-2">
+            <label htmlFor="limit-select">Rows per page:</label>
+            <select
+              id="limit-select"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+            >
+              {[10, 20, 30, 50, 100].map(val => (
+                <option key={val} value={val}>{val}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            disabled={meta.page <= 1}
+            onClick={() => setPage(p => p - 1)}
+          >
+            Previous
+          </Button>
+          <div className="text-sm font-medium">
+            Page {meta.page} of {meta.totalPages || 1}
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            disabled={meta.page >= (meta.totalPages || 1)}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+
       <PasswordConfirmDialog
         open={forceDeleteOpen}
         onOpenChange={(v) => {

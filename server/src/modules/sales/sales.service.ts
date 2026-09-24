@@ -128,6 +128,8 @@ export const salesService = {
     dateFrom?: string;
     dateTo?: string;
     tzOffsetMinutes?: number;
+    page?: number;
+    limit?: number;
   }) {
     const where: Record<string, unknown> = {};
     const offsetMs = (opts?.tzOffsetMinutes ?? 0) * 60000;
@@ -155,20 +157,28 @@ export const salesService = {
       ];
     }
 
-    const sales = await prisma.sale.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: 500,
-      include: {
-        customer: { select: { name: true } },
-        items: {
-          include: { product: { select: { purchasePrice: true } } },
-        },
-        _count: { select: { items: true, returns: true } },
-      },
-    });
+    const page = opts?.page || 1;
+    const limit = opts?.limit || 100000;
+    const skip = (page - 1) * limit;
 
-    return sales.map((sale) => {
+    const [total, sales] = await prisma.$transaction([
+      prisma.sale.count({ where }),
+      prisma.sale.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip,
+        include: {
+          customer: { select: { name: true } },
+          items: {
+            include: { product: { select: { purchasePrice: true } } },
+          },
+          _count: { select: { items: true, returns: true } },
+        },
+      }),
+    ]);
+
+    const data = sales.map((sale) => {
       const rawProfit = sale.items.reduce((sum, item) => {
         const purchasePrice = item.product?.purchasePrice ?? 0;
         return sum + (item.unitPrice - purchasePrice) * item.quantity;
@@ -178,6 +188,16 @@ export const salesService = {
       const { items, ...rest } = sale;
       return { ...rest, profit: Math.round(adjustedProfit) };
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   },
 
   async getById(id: string) {

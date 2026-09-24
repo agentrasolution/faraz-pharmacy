@@ -29,6 +29,7 @@ import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import ExportButton from "@/components/shared/ExportButton";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { ReturnEntry, Sale, SaleItem, PrinterConfig } from "@/types";
 
 type DateFilter = "all" | "today" | "week" | "month";
@@ -54,10 +55,17 @@ export default function Returns() {
   const [customRefundAmount, setCustomRefundAmount] = useState<string>("");
   const [isEditingRefund, setIsEditingRefund] = useState(false);
 
-  const { data: returns = [], isLoading } = useQuery({
-    queryKey: ["returns"],
-    queryFn: api.returns.list,
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["returns", page, limit, debouncedSearch],
+    queryFn: () => api.returns.listPaginated({ page, limit, search: debouncedSearch }),
   });
+
+  const returns = paginatedData?.data || [];
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const { data: recentSales = [], isLoading: loadingRecent } = useQuery({
     queryKey: ["sales", "recent"],
@@ -70,10 +78,7 @@ export default function Returns() {
     enabled: !!selectedSaleId,
   });
 
-  const filtered = returns.filter(
-    (r: ReturnEntry) =>
-      !search || r.sale_id.includes(search) || r.reason.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = returns;
 
   const hasReturns = (selectedSale?.return_count ?? 0) > 0;
   const fullyReturned =
@@ -389,6 +394,51 @@ export default function Returns() {
           keyExtractor={(r: ReturnEntry) => r.id}
           onRowClick={(r: ReturnEntry) => setSelectedReturn(r)}
         />
+        
+        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="limit-select">Rows per page:</label>
+              <select
+                id="limit-select"
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              >
+                {[10, 20, 30, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {meta.page} of {meta.totalPages || 1}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page >= (meta.totalPages || 1)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* New Return Dialog */}

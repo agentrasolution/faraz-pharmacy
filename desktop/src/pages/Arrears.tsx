@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   CreditCard,
   Plus,
@@ -59,10 +60,23 @@ export default function Arrears() {
   });
   const [viewSaleId, setViewSaleId] = useState<string | null>(null);
 
-  const { data: arrears = [], isLoading } = useQuery({
-    queryKey: ["arrears", filter],
-    queryFn: () => api.arrears.list(filter === "all" ? undefined : filter),
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["arrears", filter, page, limit, debouncedSearch],
+    queryFn: () =>
+      api.arrears.listPaginated({
+        status: filter === "all" ? undefined : filter,
+        page,
+        limit,
+        search: debouncedSearch || undefined,
+      }),
   });
+
+  const arrears = paginatedData?.data || [];
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
@@ -158,14 +172,7 @@ export default function Arrears() {
     .filter((a: Arrear) => a.status === "pending")
     .reduce((s: number, a: Arrear) => s + a.balance_due, 0);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return arrears;
-    const q = search.toLowerCase();
-    return arrears.filter(
-      (a: Arrear) =>
-        a.customer_name?.toLowerCase().includes(q) || a.status.toLowerCase().includes(q)
-    );
-  }, [arrears, search]);
+  const filtered = arrears;
 
   const arrearHeaders = ["Customer", "Date", "Total Bill", "Paid", "Balance Due", "Status"];
   const arrearRows = filtered.map((a: Arrear) => [
@@ -372,6 +379,7 @@ export default function Arrears() {
         onValueChange={(v) => {
           setFilter(v);
           setPayingId(null);
+          setPage(1);
         }}
       >
         <TabsList className="mb-4">
@@ -388,6 +396,51 @@ export default function Arrears() {
           loading={isLoading}
           keyExtractor={(a: Arrear) => a.id}
         />
+        
+        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="limit-select">Rows per page:</label>
+              <select
+                id="limit-select"
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              >
+                {[10, 20, 30, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {meta.page} of {meta.totalPages || 1}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={meta.page >= (meta.totalPages || 1)}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {expanded &&

@@ -3,10 +3,17 @@ import { suppliersService } from "./suppliers.service";
 import { normalizeDistributor, normalizeDistributorList } from "../../utils/normalize";
 
 export const suppliersController = {
-  async list(_req: Request, res: Response, next: NextFunction) {
+  async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const distributors = await suppliersService.list();
-      res.json(normalizeDistributorList(distributors));
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 50);
+      const search = req.query.search as string | undefined;
+
+      const result = await suppliersService.list({ page, limit, search });
+      res.json({
+        data: normalizeDistributorList(result.data),
+        meta: result.meta,
+      });
     } catch (err) {
       next(err);
     }

@@ -1,15 +1,46 @@
-import { prisma } from "../../services/prisma";
+import { prisma, Prisma } from "../../services/prisma";
 import { NotFoundError } from "../../utils/errors";
 import type { CreateDistributorInput } from "./suppliers.schema";
 
 export const suppliersService = {
-  async list() {
-    return prisma.distributor.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: { select: { products: true } },
+  async list({ page = 1, limit = 100000, search }: { page?: number; limit?: number; search?: string } = {}) {
+    const where: Prisma.DistributorWhereInput = {};
+
+    if (search) {
+      const q = search.trim();
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { salesmanName: { contains: q, mode: "insensitive" } },
+        { salesmanContact: { contains: q, mode: "insensitive" } },
+        { deliveryManName: { contains: q, mode: "insensitive" } },
+        { deliveryManContact: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await prisma.$transaction([
+      prisma.distributor.count({ where }),
+      prisma.distributor.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          _count: { select: { products: true } },
+        },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   },
 
   async create(data: CreateDistributorInput) {

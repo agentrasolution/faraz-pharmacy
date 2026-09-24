@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart, Truck, DollarSign } from "lucide-react";
+import { ShoppingCart, Truck, DollarSign, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import DateRangePicker, { type DateRange } from "@/components/reports/DateRangePicker";
 import KPICard from "@/components/reports/KPICard";
 import ExportButtons from "@/components/reports/ExportButtons";
@@ -13,11 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { generatePDF } from "@/lib/pdfExport";
 import { downloadExcelFile } from "@/lib/excelExport";
 import type { StockPurchase } from "@/types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function PurchaseReport() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -25,19 +27,40 @@ export default function PurchaseReport() {
     to: new Date().toISOString().split("T")[0],
   });
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(50);
+  const [search, setSearch] = useState("");
 
-  const { data: purchases = [], isLoading } = useQuery({
-    queryKey: ["stock"],
-    queryFn: api.stock.list,
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Paginated table data
+  const { data: purchaseData, isLoading } = useQuery({
+    queryKey: ["stock", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to, paymentFilter],
+    queryFn: () => api.stock.listPaginated({
+      page,
+      limit,
+      search: debouncedSearch || undefined,
+      dateFrom: dateRange.from,
+      dateTo: dateRange.to,
+    }),
+  });
+
+  const purchases = purchaseData?.data ?? [];
+  const meta = purchaseData?.meta;
+
+  // Summary data (load all for KPIs - could be optimized with separate summary endpoint later)
+  const { data: allPurchases = [] } = useQuery({
+    queryKey: ["stock", "summary", dateRange.from, dateRange.to, paymentFilter],
+    queryFn: () => api.stock.list(),
   });
 
   const filteredPurchases = useMemo(() => {
-    return purchases.filter((p: StockPurchase) => {
+    return allPurchases.filter((p: StockPurchase) => {
       const inDateRange = p.date >= dateRange.from && p.date <= dateRange.to;
       const matchesPayment = paymentFilter === "all" || p.payment_status === paymentFilter;
       return inDateRange && matchesPayment;
     });
-  }, [purchases, dateRange, paymentFilter]);
+  }, [allPurchases, dateRange, paymentFilter]);
 
   const totalPurchases = filteredPurchases.reduce(
     (sum: number, p: StockPurchase) => sum + p.total_amount,
@@ -51,12 +74,19 @@ export default function PurchaseReport() {
     filteredPurchases.map((p: StockPurchase) => p.distributor_name).filter(Boolean)
   ).size;
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [dateRange, paymentFilter, debouncedSearch]);
+
   function handleReset() {
     setDateRange({
       from: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
       to: new Date().toISOString().split("T")[0],
     });
     setPaymentFilter("all");
+    setSearch("");
+    setPage(1);
   }
 
   function handlePDF() {
@@ -71,9 +101,9 @@ export default function PurchaseReport() {
       ],
       headers: ["Invoice", "Date", "Supplier", "Total", "Paid", "Balance", "Status"],
       rows: filteredPurchases.map((p: StockPurchase) => [
-        p.invoice_no || "—",
+        p.invoice_no || "\u2014",
         formatDate(p.date),
-        p.distributor_name || "—",
+        p.distributor_name || "\u2014",
         formatCurrency(p.total_amount),
         formatCurrency(p.amount_paid),
         formatCurrency(p.total_amount - p.amount_paid),
@@ -88,9 +118,9 @@ export default function PurchaseReport() {
       `purchase_report_${dateRange.from}_${dateRange.to}.xlsx`,
       ["Invoice", "Date", "Supplier", "Total", "Paid", "Balance", "Status"],
       filteredPurchases.map((p: StockPurchase) => [
-        p.invoice_no || "—",
+        p.invoice_no || "\u2014",
         formatDate(p.date),
-        p.distributor_name || "—",
+        p.distributor_name || "\u2014",
         p.total_amount,
         p.amount_paid,
         p.total_amount - p.amount_paid,
@@ -104,7 +134,7 @@ export default function PurchaseReport() {
       key: "invoice_no",
       header: "Invoice",
       cell: (p: StockPurchase) => (
-        <span className="font-mono text-xs text-text-secondary">{p.invoice_no || "—"}</span>
+        <span className="font-mono text-xs text-text-secondary">{p.invoice_no || "\u2014"}</span>
       ),
     },
     {
@@ -116,7 +146,7 @@ export default function PurchaseReport() {
       key: "distributor_name",
       header: "Supplier",
       cell: (p: StockPurchase) => (
-        <span className="font-medium text-text-primary">{p.distributor_name || "—"}</span>
+        <span className="font-medium text-text-primary">{p.distributor_name || "\u2014"}</span>
       ),
     },
     {
@@ -172,7 +202,7 @@ export default function PurchaseReport() {
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
 
-      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50">
+      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50 flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
         <Select value={paymentFilter} onValueChange={setPaymentFilter}>
           <SelectTrigger className="w-40 h-9">
@@ -184,6 +214,15 @@ export default function PurchaseReport() {
             <SelectItem value="pending">Pending</SelectItem>
           </SelectContent>
         </Select>
+        <div className="relative flex-1 max-w-sm min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+          <Input
+            placeholder="Search invoices, suppliers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Button variant="ghost" size="sm" className="h-9 text-text-secondary" onClick={handleReset}>
           Reset
         </Button>
@@ -212,12 +251,41 @@ export default function PurchaseReport() {
       <div className="rounded-xl border border-border/50 overflow-hidden">
         <DataTable
           columns={columns}
-          data={filteredPurchases}
+          data={purchases}
           loading={isLoading}
           keyExtractor={(p: StockPurchase) => p.id}
           emptyMessage="No purchases found"
         />
       </div>
+
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 px-1">
+          <p className="text-sm text-text-secondary">
+            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-text-secondary px-2">
+              Page {page} of {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -86,13 +86,29 @@ export const salesController = {
 
   async listAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const sales = await salesService.listAll({
+      const isPaginated = req.query.paginated === "true";
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
+
+      const result = await salesService.listAll({
         search: req.query.search as string,
         dateFrom: req.query.dateFrom as string,
         dateTo: req.query.dateTo as string,
         tzOffsetMinutes: parseInt(req.query.tzOffset as string, 10) || 0,
+        page,
+        limit,
       });
-      res.json(sales.map(normalizeSale));
+
+      const normalizedData = result.data.map(normalizeSale);
+
+      if (isPaginated) {
+        res.json({
+          data: normalizedData,
+          meta: result.meta
+        });
+      } else {
+        res.json(normalizedData);
+      }
     } catch (err) {
       next(err);
     }

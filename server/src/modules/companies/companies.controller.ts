@@ -5,8 +5,12 @@ import { createCompanySchema } from "./companies.schema";
 export const companiesController = {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const companies = await companiesService.list();
-      res.json(companies);
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 50);
+      const search = req.query.search as string | undefined;
+
+      const result = await companiesService.list({ page, limit, search });
+      res.json(result);
     } catch (error) {
       next(error);
     }

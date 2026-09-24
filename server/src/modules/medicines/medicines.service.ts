@@ -11,14 +11,40 @@ function formatProduct(p: any) {
 }
 
 export const medicinesService = {
-  async list(includeArchived = false) {
-    const where = includeArchived ? {} : { active: 1 };
-    const products = await prisma.product.findMany({
-      where,
-      orderBy: { name: "asc" },
-      include: { prices: true, company: true },
-    });
-    return products.map(formatProduct);
+  async list({ page = 1, limit = 50, search, includeArchived = false }: { page?: number; limit?: number; search?: string; includeArchived?: boolean }) {
+    const where: any = includeArchived ? {} : { active: 1 };
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { barcode: { contains: search, mode: "insensitive" } },
+        { category: { contains: search, mode: "insensitive" } },
+        { company: { name: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, products] = await prisma.$transaction([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+        include: { prices: true, company: true },
+      })
+    ]);
+
+    return {
+      data: products.map(formatProduct),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   },
 
   async search(query: string) {
@@ -33,7 +59,7 @@ export const medicinesService = {
   async getByBarcode(barcode: string) {
     const product = await prisma.product.findUnique({
       where: { barcode },
-      include: { prices: true, company: true },
+      include: { prices: true },
     });
     return formatProduct(product);
   },
@@ -41,7 +67,7 @@ export const medicinesService = {
   async getById(id: string) {
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { prices: true, company: true },
+      include: { prices: true },
     });
     if (!product) throw new NotFoundError("Product");
     return formatProduct(product);

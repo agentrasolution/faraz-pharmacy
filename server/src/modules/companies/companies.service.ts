@@ -1,12 +1,39 @@
-import { prisma } from "../../services/prisma";
+import { prisma, Prisma } from "../../services/prisma";
 import { NotFoundError } from "../../utils/errors";
 import type { CreateCompanyInput } from "./companies.schema";
 
 export const companiesService = {
-  async list() {
-    return prisma.company.findMany({
-      orderBy: { name: "asc" },
-    });
+  async list({ page = 1, limit = 50, search }: { page?: number; limit?: number; search?: string } = {}) {
+    const where: Prisma.CompanyWhereInput = {};
+
+    if (search) {
+      const q = search.trim();
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await prisma.$transaction([
+      prisma.company.count({ where }),
+      prisma.company.findMany({
+        where,
+        orderBy: { name: "asc" },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 
   async create(data: CreateCompanyInput) {

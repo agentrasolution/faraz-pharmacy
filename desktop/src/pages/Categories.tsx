@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Tags, Search, Plus, Pencil, Trash2, Download } from "lucide-react";
+import { Tags, Search, Plus, Pencil, Trash2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,23 +14,27 @@ import { downloadCSV, downloadPDF } from "@/lib/export";
 import { formatDate } from "@/lib/utils";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import type { Category } from "@/types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Categories() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
 
-  const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: api.categories.list,
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["categories", page, limit, debouncedSearch],
+    queryFn: () => api.categories.listPaginated({ page, limit, search: debouncedSearch }),
   });
 
-  const filtered = categories.filter(
-    (c: Category) => !search || c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const categories = data?.data ?? [];
+  const meta = data?.meta;
 
   const createMutation = useMutation({
     mutationFn: () => api.categories.create({ name }),
@@ -80,6 +84,23 @@ export default function Categories() {
     setOpen(true);
   }
 
+  function handleExportCSV() {
+    downloadCSV(
+      `categories_${new Date().toISOString().split("T")[0]}.csv`,
+      ["Name"],
+      categories.map((c: Category) => [c.name])
+    );
+  }
+
+  function handleExportPDF() {
+    downloadPDF(
+      `categories_${new Date().toISOString().split("T")[0]}.pdf`,
+      "Categories List",
+      ["Name"],
+      categories.map((c: Category) => [c.name])
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -94,34 +115,21 @@ export default function Categories() {
             autoFocus
             placeholder="Search categories..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="pl-9"
           />
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            downloadCSV(
-              `categories_${new Date().toISOString().split("T")[0]}.csv`,
-              ["Name"],
-              filtered.map((c: Category) => [c.name])
-            )
-          }
+          onClick={handleExportCSV}
         >
           <Download className="h-4 w-4 mr-1" /> CSV
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            downloadPDF(
-              `categories_${new Date().toISOString().split("T")[0]}.pdf`,
-              "Categories List",
-              ["Name"],
-              filtered.map((c: Category) => [c.name])
-            )
-          }
+          onClick={handleExportPDF}
         >
           <Download className="h-4 w-4 mr-1" /> PDF
         </Button>
@@ -129,14 +137,14 @@ export default function Categories() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
-        ) : filtered.length === 0 ? (
+        ) : categories.length === 0 ? (
           <div className="col-span-full text-center py-12 text-sm text-text-secondary">
-            {search
+            {debouncedSearch
               ? "No categories match your search"
               : "No categories yet. Add your first category to get started."}
           </div>
         ) : (
-          filtered.map((cat: Category) => (
+          categories.map((cat: Category) => (
             <Card key={cat.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -148,7 +156,6 @@ export default function Categories() {
                       <h3 className="font-medium text-sm text-text-primary truncate">{cat.name}</h3>
                       <p className="text-[10px] text-text-secondary mt-0.5">Added: {formatDate(cat.created_at)}</p>
                     </div>
-
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -172,6 +179,35 @@ export default function Categories() {
           ))
         )}
       </div>
+
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 px-1">
+          <p className="text-sm text-text-secondary">
+            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-text-secondary px-2">
+              Page {page} of {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog
         open={open}

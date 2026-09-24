@@ -2,10 +2,14 @@ import type { Request, Response, NextFunction } from "express";
 import { categoriesService } from "./categories.service";
 
 export const categoriesController = {
-  async list(_req: Request, res: Response, next: NextFunction) {
+  async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const categories = await categoriesService.list();
-      res.json(categories);
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 50);
+      const search = req.query.search as string | undefined;
+
+      const result = await categoriesService.list({ page, limit, search });
+      res.json(result);
     } catch (err) {
       next(err);
     }

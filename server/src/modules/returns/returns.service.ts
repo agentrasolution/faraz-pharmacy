@@ -5,14 +5,43 @@ import type { CreateReturnInput } from "./returns.schema";
 import { Prisma } from "../../generated/prisma/client";
 
 export const returnsService = {
-  async list() {
-    return prisma.returnEntry.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        items: true,
-        sale: { include: { customer: { select: { name: true } } } },
+  async list({ page = 1, limit = 100000, search }: { page?: number; limit?: number; search?: string } = {}) {
+    const where: Prisma.ReturnEntryWhereInput = {};
+
+    if (search) {
+      const q = search.trim();
+      where.OR = [
+        { id: { contains: q, mode: "insensitive" } },
+        { saleId: { contains: q, mode: "insensitive" } },
+        { sale: { is: { customer: { is: { name: { contains: q, mode: "insensitive" } } } } } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await prisma.$transaction([
+      prisma.returnEntry.count({ where }),
+      prisma.returnEntry.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          items: true,
+          sale: { include: { customer: { select: { name: true } } } },
+        },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   },
 
   async getById(id: string) {

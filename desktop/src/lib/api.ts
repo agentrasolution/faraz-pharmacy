@@ -1,4 +1,5 @@
 import type {
+  PaginatedResponse,
   Product,
   ProductInput,
   Customer,
@@ -86,6 +87,26 @@ const api = {
   products: {
     list: (): Promise<Product[]> => fetchJson("GET", "/api/products"),
     listAll: (): Promise<Product[]> => fetchJson("GET", "/api/products?includeArchived=true"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; includeArchived?: boolean }): Promise<PaginatedResponse<Product>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.includeArchived) params.set("includeArchived", "true");
+      
+      const res = await fetchJson<any>("GET", `/api/products?${params.toString()}`);
+      
+      // Fallback for when the backend server hasn't been restarted yet and still returns a raw array
+      if (Array.isArray(res)) {
+        return { 
+          data: res, 
+          meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } 
+        };
+      }
+      
+      return res;
+    },
     search: (q: string): Promise<Product[]> =>
       fetchJson("GET", `/api/products/search?q=${encodeURIComponent(q)}`),
     getByBarcode: (b: string): Promise<Product | null> =>
@@ -118,9 +139,38 @@ const api = {
       params.set("tzOffset", String(-new Date().getTimezoneOffset()));
       return fetchJson("GET", `/api/sales${params.toString() ? `?${params.toString()}` : ""}`);
     },
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string }): Promise<PaginatedResponse<Sale>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
+      if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      params.set("tzOffset", String(-new Date().getTimezoneOffset()));
+      
+      const res = await fetchJson<any>("GET", `/api/sales?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
   },
   customers: {
     list: (): Promise<Customer[]> => fetchJson("GET", "/api/customers"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Customer>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      
+      const res = await fetchJson<any>("GET", `/api/customers?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     search: (q: string): Promise<Customer[]> =>
       fetchJson("GET", `/api/customers/search?q=${encodeURIComponent(q)}`),
     create: (c: CustomerInput): Promise<Customer> => fetchJson("POST", "/api/customers", c),
@@ -133,6 +183,22 @@ const api = {
   arrears: {
     list: (status?: string): Promise<Arrear[]> =>
       fetchJson("GET", `/api/arrears${status ? `?status=${status}` : ""}`),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; status?: string; dateFrom?: string; dateTo?: string }): Promise<PaginatedResponse<Arrear>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.status) params.set("status", opts.status);
+      if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
+      if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      
+      const res = await fetchJson<any>("GET", `/api/arrears?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (a: ArrearInput): Promise<Arrear> => fetchJson("POST", "/api/arrears", a),
     recordPayment: (
       id: string,
@@ -147,6 +213,21 @@ const api = {
   },
   stock: {
     list: (): Promise<StockPurchase[]> => fetchJson("GET", "/api/stock"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string }): Promise<PaginatedResponse<StockPurchase>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
+      if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      
+      const res = await fetchJson<any>("GET", `/api/stock?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (p: StockInput): Promise<StockPurchase> => fetchJson("POST", "/api/stock", p),
     update: (id: string, p: StockInput): Promise<StockPurchase> =>
       fetchJson("PUT", `/api/stock/${id}`, p),
@@ -154,6 +235,19 @@ const api = {
   },
   distributors: {
     list: (): Promise<Distributor[]> => fetchJson("GET", "/api/distributors"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Distributor>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      
+      const res = await fetchJson<any>("GET", `/api/distributors?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (d: DistributorInput): Promise<Distributor> =>
       fetchJson("POST", "/api/distributors", d),
     update: (id: string, d: DistributorInput): Promise<Distributor> =>
@@ -163,6 +257,19 @@ const api = {
   },
   companies: {
     list: (): Promise<Company[]> => fetchJson("GET", "/api/companies"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Company>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      
+      const res = await fetchJson<any>("GET", `/api/companies?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (c: CompanyInput): Promise<Company> => fetchJson("POST", "/api/companies", c),
     update: (id: string, c: CompanyInput): Promise<Company> =>
       fetchJson("PUT", `/api/companies/${id}`, c),
@@ -171,11 +278,39 @@ const api = {
   },
   returns: {
     list: (): Promise<ReturnEntry[]> => fetchJson("GET", "/api/returns"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<ReturnEntry>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      
+      const res = await fetchJson<any>("GET", `/api/returns?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     getById: (id: string): Promise<ReturnEntry> => fetchJson("GET", `/api/returns/${id}`),
     create: (r: ReturnInput): Promise<ReturnEntry> => fetchJson("POST", "/api/returns", r),
   },
   expenses: {
     list: (): Promise<Expense[]> => fetchJson("GET", "/api/expenses"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string }): Promise<PaginatedResponse<Expense>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
+      if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      
+      const res = await fetchJson<any>("GET", `/api/expenses?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (e: ExpenseInput): Promise<Expense> => fetchJson("POST", "/api/expenses", e),
     update: (id: string, e: ExpenseInput): Promise<Expense> =>
       fetchJson("PUT", `/api/expenses/${id}`, e),
@@ -186,6 +321,19 @@ const api = {
 
   categories: {
     list: (): Promise<Category[]> => fetchJson("GET", "/api/categories"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Category>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      
+      const res = await fetchJson<any>("GET", `/api/categories?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (c: CategoryInput): Promise<Category> => fetchJson("POST", "/api/categories", c),
     update: (id: string, c: CategoryInput): Promise<Category> =>
       fetchJson("PUT", `/api/categories/${id}`, c),

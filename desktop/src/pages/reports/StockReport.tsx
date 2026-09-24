@@ -57,10 +57,11 @@ export default function StockReport() {
     queryFn: api.products.list,
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categoriesResponse } = useQuery({
     queryKey: ["categories"],
-    queryFn: api.categories.list,
+    queryFn: () => api.categories.listPaginated({ limit: 1000 }),
   });
+  const categories = categoriesResponse?.data ?? [];
 
   const filteredProducts = useMemo(() => {
     return products.filter((p: Product) => {

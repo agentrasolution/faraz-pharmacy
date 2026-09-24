@@ -3,10 +3,26 @@ import { purchasesService } from "./purchases.service";
 import { normalizeStockPurchase, normalizeStockPurchaseList } from "../../utils/normalize";
 
 export const purchasesController = {
-  async list(_req: Request, res: Response, next: NextFunction) {
+  async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const stock = await purchasesService.list();
-      res.json(normalizeStockPurchaseList(stock));
+      const isPaginated = req.query.paginated === "true";
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
+      const search = req.query.search as string | undefined;
+      const dateFrom = req.query.dateFrom as string | undefined;
+      const dateTo = req.query.dateTo as string | undefined;
+
+      const result = await purchasesService.list({ page, limit, search, dateFrom, dateTo });
+      const normalizedData = normalizeStockPurchaseList(result.data);
+
+      if (isPaginated) {
+        res.json({
+          data: normalizedData,
+          meta: result.meta
+        });
+      } else {
+        res.json(normalizedData);
+      }
     } catch (err) {
       next(err);
     }
