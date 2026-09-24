@@ -48,7 +48,6 @@ interface CsvRow {
   purchasePrice: string;
   salePrice: string;
   expiry: string;
-  company: string;
   error?: string;
 }
 

@@ -128,7 +128,7 @@ export default function Stock() {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
-      setForm({ productId: "", distributorId: "", company: "", invoiceNumber: "", quantity: "", expiry: "" });
+      setForm({ productId: "", distributorId: "", invoiceNumber: "", quantity: "", expiry: "" });
       toast.success("Stock purchase recorded");
     },
     onError: (err) => {

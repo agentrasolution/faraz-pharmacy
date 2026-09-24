@@ -1,9 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
 import type { SaleItemInput, DiscountType } from "@/types";
+import { toast } from "sonner";
 
 export interface CartItem extends SaleItemInput {
   id: string;
   purchasePrice: number;
+  stockQty: number;
 }
 
 export interface SaleState {
@@ -132,10 +134,15 @@ export function useMultiSale() {
       barcode: string;
       sale_price: number;
       purchase_price?: number;
+      stock_qty: number;
     }) => {
       updateActive((s) => {
         const existing = s.items.find((i) => i.productId === product.id);
         if (existing) {
+          if (existing.quantity + 1 > existing.stockQty) {
+            toast.error(`Cannot add more. Only ${existing.stockQty} in stock.`);
+            return s;
+          }
           return {
             ...s,
             items: s.items.map((i) =>
@@ -144,6 +151,10 @@ export function useMultiSale() {
                 : i
             ),
           };
+        }
+        if (product.stock_qty < 1) {
+          toast.error("Out of stock");
+          return s;
         }
         return {
           ...s,
@@ -157,6 +168,7 @@ export function useMultiSale() {
               quantity: 1,
               unitPrice: product.sale_price,
               purchasePrice: product.purchase_price ?? 0,
+              stockQty: product.stock_qty,
               subtotal: product.sale_price,
             },
           ],
@@ -170,11 +182,17 @@ export function useMultiSale() {
     (productId: string, amount: number) => {
       updateActive((s) => ({
         ...s,
-        items: s.items.map((i) =>
-          i.productId === productId
-            ? { ...i, quantity: i.quantity + amount, subtotal: (i.quantity + amount) * i.unitPrice }
-            : i
-        ),
+        items: s.items.map((i) => {
+          if (i.productId === productId) {
+            const nextQty = i.quantity + amount;
+            if (nextQty > i.stockQty) {
+              toast.error(`Cannot add more. Only ${i.stockQty} in stock.`);
+              return i;
+            }
+            return { ...i, quantity: nextQty, subtotal: nextQty * i.unitPrice };
+          }
+          return i;
+        }),
       }));
     },
     [updateActive]
@@ -188,9 +206,16 @@ export function useMultiSale() {
       }
       updateActive((s) => ({
         ...s,
-        items: s.items.map((i) =>
-          i.productId === productId ? { ...i, quantity, subtotal: quantity * i.unitPrice } : i
-        ),
+        items: s.items.map((i) => {
+          if (i.productId === productId) {
+            if (quantity > i.stockQty) {
+              toast.error(`Cannot add more. Only ${i.stockQty} in stock.`);
+              return { ...i, quantity: i.stockQty, subtotal: i.stockQty * i.unitPrice };
+            }
+            return { ...i, quantity, subtotal: quantity * i.unitPrice };
+          }
+          return i;
+        }),
       }));
     },
     [updateActive]
