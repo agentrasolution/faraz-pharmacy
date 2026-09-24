@@ -29,8 +29,8 @@ export default function ProductCard({ product, onAdd }: ProductCardProps) {
             outOfStock ? "bg-danger" : lowStock ? "bg-warning" : "bg-success"
           }`}
         />
-        <span className="text-[9px] font-medium text-text-secondary tracking-wider">
-          {outOfStock ? "OUT OF STOCK" : lowStock ? `Only ${product.stock_qty} left` : "In Stock"}
+        <span className="text-[9px] font-medium text-text-secondary tracking-wider uppercase">
+          {outOfStock ? "OUT OF STOCK" : lowStock ? `Only ${product.stock_qty} left` : `${product.stock_qty} IN STOCK`}
         </span>
       </div>
       <h3 className="font-display font-semibold text-sm text-text-primary leading-tight">

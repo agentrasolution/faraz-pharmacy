@@ -1,8 +1,7 @@
-import { prisma } from "../../services/prisma";
+import { prisma, Prisma } from "../../services/prisma";
 import { NotFoundError } from "../../utils/errors";
 import { emitEvent } from "../../socket";
 import type { CreateStockInput } from "./purchases.schema";
-import { Prisma } from "../../generated/prisma/client";
 
 export const purchasesService = {
   async list() {
@@ -30,7 +29,6 @@ export const purchasesService = {
         data: {
           productId: data.productId,
           distributorId: data.distributorId ?? null,
-          company: data.company ?? null,
           invoiceNumber: data.invoiceNumber ?? "",
           quantity: data.quantity,
           purchasePrice: price,
@@ -71,7 +69,6 @@ export const purchasesService = {
           quantity: data.quantity ?? old.quantity,
           expiry: data.expiry ?? old.expiry,
           totalValue,
-          company: data.company ?? old.company,
           invoiceNumber: data.invoiceNumber ?? old.invoiceNumber,
           distributorId: data.distributorId ?? old.distributorId,
         },
