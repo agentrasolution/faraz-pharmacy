@@ -234,6 +234,12 @@ export interface CompanyInput {
   address?: string;
 }
 
+export interface CompanyDetail extends Company {
+  product_count: number;
+  total_stock: number;
+  products: Product[];
+}
+
 export interface ReturnEntry {
   id: string;
   sale_id: string;

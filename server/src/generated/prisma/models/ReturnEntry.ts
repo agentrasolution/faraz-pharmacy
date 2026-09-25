@@ -216,8 +216,8 @@ export type ReturnEntryWhereInput = {
   refundAmount?: Prisma.FloatFilter<"ReturnEntry"> | number
   reason?: Prisma.StringFilter<"ReturnEntry"> | string
   createdAt?: Prisma.DateTimeFilter<"ReturnEntry"> | Date | string
-  sale?: Prisma.XOR<Prisma.SaleScalarRelationFilter, Prisma.SaleWhereInput>
   items?: Prisma.ReturnItemListRelationFilter
+  sale?: Prisma.XOR<Prisma.SaleScalarRelationFilter, Prisma.SaleWhereInput>
 }
 
 export type ReturnEntryOrderByWithRelationInput = {
@@ -226,8 +226,8 @@ export type ReturnEntryOrderByWithRelationInput = {
   refundAmount?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  sale?: Prisma.SaleOrderByWithRelationInput
   items?: Prisma.ReturnItemOrderByRelationAggregateInput
+  sale?: Prisma.SaleOrderByWithRelationInput
 }
 
 export type ReturnEntryWhereUniqueInput = Prisma.AtLeast<{
@@ -239,8 +239,8 @@ export type ReturnEntryWhereUniqueInput = Prisma.AtLeast<{
   refundAmount?: Prisma.FloatFilter<"ReturnEntry"> | number
   reason?: Prisma.StringFilter<"ReturnEntry"> | string
   createdAt?: Prisma.DateTimeFilter<"ReturnEntry"> | Date | string
-  sale?: Prisma.XOR<Prisma.SaleScalarRelationFilter, Prisma.SaleWhereInput>
   items?: Prisma.ReturnItemListRelationFilter
+  sale?: Prisma.XOR<Prisma.SaleScalarRelationFilter, Prisma.SaleWhereInput>
 }, "id">
 
 export type ReturnEntryOrderByWithAggregationInput = {
@@ -272,8 +272,8 @@ export type ReturnEntryCreateInput = {
   refundAmount?: number
   reason?: string
   createdAt?: Date | string
-  sale: Prisma.SaleCreateNestedOneWithoutReturnsInput
   items?: Prisma.ReturnItemCreateNestedManyWithoutReturnEntryInput
+  sale: Prisma.SaleCreateNestedOneWithoutReturnsInput
 }
 
 export type ReturnEntryUncheckedCreateInput = {
@@ -290,8 +290,8 @@ export type ReturnEntryUpdateInput = {
   refundAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  sale?: Prisma.SaleUpdateOneRequiredWithoutReturnsNestedInput
   items?: Prisma.ReturnItemUpdateManyWithoutReturnEntryNestedInput
+  sale?: Prisma.SaleUpdateOneRequiredWithoutReturnsNestedInput
 }
 
 export type ReturnEntryUncheckedUpdateInput = {
@@ -597,8 +597,8 @@ export type ReturnEntrySelect<ExtArgs extends runtime.Types.Extensions.InternalA
   refundAmount?: boolean
   reason?: boolean
   createdAt?: boolean
-  sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
   items?: boolean | Prisma.ReturnEntry$itemsArgs<ExtArgs>
+  sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.ReturnEntryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["returnEntry"]>
 
@@ -630,8 +630,8 @@ export type ReturnEntrySelectScalar = {
 
 export type ReturnEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "saleId" | "refundAmount" | "reason" | "createdAt", ExtArgs["result"]["returnEntry"]>
 export type ReturnEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
   items?: boolean | Prisma.ReturnEntry$itemsArgs<ExtArgs>
+  sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.ReturnEntryCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ReturnEntryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -644,8 +644,8 @@ export type ReturnEntryIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.
 export type $ReturnEntryPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ReturnEntry"
   objects: {
-    sale: Prisma.$SalePayload<ExtArgs>
     items: Prisma.$ReturnItemPayload<ExtArgs>[]
+    sale: Prisma.$SalePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1047,8 +1047,8 @@ readonly fields: ReturnEntryFieldRefs;
  */
 export interface Prisma__ReturnEntryClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  sale<T extends Prisma.SaleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SaleDefaultArgs<ExtArgs>>): Prisma.Prisma__SaleClient<runtime.Types.Result.GetResult<Prisma.$SalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   items<T extends Prisma.ReturnEntry$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ReturnEntry$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReturnItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  sale<T extends Prisma.SaleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SaleDefaultArgs<ExtArgs>>): Prisma.Prisma__SaleClient<runtime.Types.Result.GetResult<Prisma.$SalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

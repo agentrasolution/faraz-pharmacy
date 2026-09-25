@@ -22,6 +22,8 @@ import Distributors from "@/pages/Distributors";
 import Returns from "@/pages/Returns";
 import Categories from "@/pages/Categories";
 import Barcodes from "@/pages/Barcodes";
+import Companies from "@/pages/Companies";
+import CompanyDetail from "@/pages/CompanyDetail";
 import Expenses from "@/pages/Expenses";
 import Reports from "@/pages/Reports";
 import Invoices from "@/pages/Invoices";
@@ -223,6 +225,22 @@ function AppShell() {
           element={
             <AnimatedPage>
               <Barcodes />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/companies"
+          element={
+            <AnimatedPage>
+              <Companies />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/companies/:id"
+          element={
+            <AnimatedPage>
+              <CompanyDetail />
             </AnimatedPage>
           }
         />

@@ -14,6 +14,7 @@ import type {
   DistributorInput,
   Company,
   CompanyInput,
+  CompanyDetail,
   ReturnEntry,
   ReturnInput,
   Expense,
@@ -275,6 +276,7 @@ const api = {
       fetchJson("PUT", `/api/companies/${id}`, c),
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/companies/${id}`),
+    getById: (id: string): Promise<CompanyDetail> => fetchJson("GET", `/api/companies/${id}`),
   },
   returns: {
     list: (): Promise<ReturnEntry[]> => fetchJson("GET", "/api/returns"),

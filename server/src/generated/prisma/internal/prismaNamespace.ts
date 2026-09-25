@@ -1886,11 +1886,11 @@ export type ProductPriceScalarFieldEnum = (typeof ProductPriceScalarFieldEnum)[k
 export const DistributorScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  salesmanName: 'salesmanName',
-  salesmanContact: 'salesmanContact',
-  deliveryManName: 'deliveryManName',
+  createdAt: 'createdAt',
   deliveryManContact: 'deliveryManContact',
-  createdAt: 'createdAt'
+  deliveryManName: 'deliveryManName',
+  salesmanContact: 'salesmanContact',
+  salesmanName: 'salesmanName'
 } as const
 
 export type DistributorScalarFieldEnum = (typeof DistributorScalarFieldEnum)[keyof typeof DistributorScalarFieldEnum]
@@ -1901,9 +1901,9 @@ export const CustomerScalarFieldEnum = {
   name: 'name',
   phone: 'phone',
   address: 'address',
+  createdAt: 'createdAt',
   fatherName: 'fatherName',
-  fatherPhone: 'fatherPhone',
-  createdAt: 'createdAt'
+  fatherPhone: 'fatherPhone'
 } as const
 
 export type CustomerScalarFieldEnum = (typeof CustomerScalarFieldEnum)[keyof typeof CustomerScalarFieldEnum]

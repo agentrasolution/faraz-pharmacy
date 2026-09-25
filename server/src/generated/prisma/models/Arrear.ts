@@ -248,9 +248,9 @@ export type ArrearWhereInput = {
   balanceDue?: Prisma.FloatFilter<"Arrear"> | number
   status?: Prisma.StringFilter<"Arrear"> | string
   createdAt?: Prisma.DateTimeFilter<"Arrear"> | Date | string
-  sale?: Prisma.XOR<Prisma.SaleNullableScalarRelationFilter, Prisma.SaleWhereInput> | null
-  customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
   payments?: Prisma.ArrearPaymentListRelationFilter
+  customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
+  sale?: Prisma.XOR<Prisma.SaleNullableScalarRelationFilter, Prisma.SaleWhereInput> | null
 }
 
 export type ArrearOrderByWithRelationInput = {
@@ -262,9 +262,9 @@ export type ArrearOrderByWithRelationInput = {
   balanceDue?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  sale?: Prisma.SaleOrderByWithRelationInput
-  customer?: Prisma.CustomerOrderByWithRelationInput
   payments?: Prisma.ArrearPaymentOrderByRelationAggregateInput
+  customer?: Prisma.CustomerOrderByWithRelationInput
+  sale?: Prisma.SaleOrderByWithRelationInput
 }
 
 export type ArrearWhereUniqueInput = Prisma.AtLeast<{
@@ -279,9 +279,9 @@ export type ArrearWhereUniqueInput = Prisma.AtLeast<{
   balanceDue?: Prisma.FloatFilter<"Arrear"> | number
   status?: Prisma.StringFilter<"Arrear"> | string
   createdAt?: Prisma.DateTimeFilter<"Arrear"> | Date | string
-  sale?: Prisma.XOR<Prisma.SaleNullableScalarRelationFilter, Prisma.SaleWhereInput> | null
-  customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
   payments?: Prisma.ArrearPaymentListRelationFilter
+  customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
+  sale?: Prisma.XOR<Prisma.SaleNullableScalarRelationFilter, Prisma.SaleWhereInput> | null
 }, "id">
 
 export type ArrearOrderByWithAggregationInput = {
@@ -321,9 +321,9 @@ export type ArrearCreateInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
-  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
-  customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
   payments?: Prisma.ArrearPaymentCreateNestedManyWithoutArrearInput
+  customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
+  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
 }
 
 export type ArrearUncheckedCreateInput = {
@@ -345,9 +345,9 @@ export type ArrearUpdateInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
-  customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
   payments?: Prisma.ArrearPaymentUpdateManyWithoutArrearNestedInput
+  customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
+  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
 }
 
 export type ArrearUncheckedUpdateInput = {
@@ -558,8 +558,8 @@ export type ArrearCreateWithoutCustomerInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
-  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
   payments?: Prisma.ArrearPaymentCreateNestedManyWithoutArrearInput
+  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
 }
 
 export type ArrearUncheckedCreateWithoutCustomerInput = {
@@ -620,8 +620,8 @@ export type ArrearCreateWithoutSaleInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
-  customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
   payments?: Prisma.ArrearPaymentCreateNestedManyWithoutArrearInput
+  customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
 }
 
 export type ArrearUncheckedCreateWithoutSaleInput = {
@@ -668,8 +668,8 @@ export type ArrearCreateWithoutPaymentsInput = {
   balanceDue?: number
   status?: string
   createdAt?: Date | string
-  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
   customer: Prisma.CustomerCreateNestedOneWithoutArrearsInput
+  sale?: Prisma.SaleCreateNestedOneWithoutArrearsInput
 }
 
 export type ArrearUncheckedCreateWithoutPaymentsInput = {
@@ -706,8 +706,8 @@ export type ArrearUpdateWithoutPaymentsInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
   customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
+  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
 }
 
 export type ArrearUncheckedUpdateWithoutPaymentsInput = {
@@ -738,8 +738,8 @@ export type ArrearUpdateWithoutCustomerInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
   payments?: Prisma.ArrearPaymentUpdateManyWithoutArrearNestedInput
+  sale?: Prisma.SaleUpdateOneWithoutArrearsNestedInput
 }
 
 export type ArrearUncheckedUpdateWithoutCustomerInput = {
@@ -780,8 +780,8 @@ export type ArrearUpdateWithoutSaleInput = {
   balanceDue?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
   payments?: Prisma.ArrearPaymentUpdateManyWithoutArrearNestedInput
+  customer?: Prisma.CustomerUpdateOneRequiredWithoutArrearsNestedInput
 }
 
 export type ArrearUncheckedUpdateWithoutSaleInput = {
@@ -845,9 +845,9 @@ export type ArrearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   balanceDue?: boolean
   status?: boolean
   createdAt?: boolean
-  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
   payments?: boolean | Prisma.Arrear$paymentsArgs<ExtArgs>
+  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   _count?: boolean | Prisma.ArrearCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["arrear"]>
 
@@ -860,8 +860,8 @@ export type ArrearSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   balanceDue?: boolean
   status?: boolean
   createdAt?: boolean
-  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
 }, ExtArgs["result"]["arrear"]>
 
 export type ArrearSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -873,8 +873,8 @@ export type ArrearSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   balanceDue?: boolean
   status?: boolean
   createdAt?: boolean
-  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
 }, ExtArgs["result"]["arrear"]>
 
 export type ArrearSelectScalar = {
@@ -890,26 +890,26 @@ export type ArrearSelectScalar = {
 
 export type ArrearOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "saleId" | "customerId" | "totalBill" | "amountPaid" | "balanceDue" | "status" | "createdAt", ExtArgs["result"]["arrear"]>
 export type ArrearInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
   payments?: boolean | Prisma.Arrear$paymentsArgs<ExtArgs>
+  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   _count?: boolean | Prisma.ArrearCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ArrearIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
 }
 export type ArrearIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  sale?: boolean | Prisma.Arrear$saleArgs<ExtArgs>
 }
 
 export type $ArrearPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Arrear"
   objects: {
-    sale: Prisma.$SalePayload<ExtArgs> | null
-    customer: Prisma.$CustomerPayload<ExtArgs>
     payments: Prisma.$ArrearPaymentPayload<ExtArgs>[]
+    customer: Prisma.$CustomerPayload<ExtArgs>
+    sale: Prisma.$SalePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1314,9 +1314,9 @@ readonly fields: ArrearFieldRefs;
  */
 export interface Prisma__ArrearClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  sale<T extends Prisma.Arrear$saleArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Arrear$saleArgs<ExtArgs>>): Prisma.Prisma__SaleClient<runtime.Types.Result.GetResult<Prisma.$SalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  customer<T extends Prisma.CustomerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CustomerDefaultArgs<ExtArgs>>): Prisma.Prisma__CustomerClient<runtime.Types.Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   payments<T extends Prisma.Arrear$paymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Arrear$paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ArrearPaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  customer<T extends Prisma.CustomerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CustomerDefaultArgs<ExtArgs>>): Prisma.Prisma__CustomerClient<runtime.Types.Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  sale<T extends Prisma.Arrear$saleArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Arrear$saleArgs<ExtArgs>>): Prisma.Prisma__SaleClient<runtime.Types.Result.GetResult<Prisma.$SalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1755,25 +1755,6 @@ export type ArrearDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
 }
 
 /**
- * Arrear.sale
- */
-export type Arrear$saleArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Sale
-   */
-  select?: Prisma.SaleSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Sale
-   */
-  omit?: Prisma.SaleOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SaleInclude<ExtArgs> | null
-  where?: Prisma.SaleWhereInput
-}
-
-/**
  * Arrear.payments
  */
 export type Arrear$paymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1795,6 +1776,25 @@ export type Arrear$paymentsArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.ArrearPaymentScalarFieldEnum | Prisma.ArrearPaymentScalarFieldEnum[]
+}
+
+/**
+ * Arrear.sale
+ */
+export type Arrear$saleArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Sale
+   */
+  select?: Prisma.SaleSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Sale
+   */
+  omit?: Prisma.SaleOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SaleInclude<ExtArgs> | null
+  where?: Prisma.SaleWhereInput
 }
 
 /**

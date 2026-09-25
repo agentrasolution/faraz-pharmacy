@@ -16,6 +16,15 @@ export const companiesController = {
     }
   },
 
+  async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const company = await companiesService.getById(req.params.id);
+      res.json(company);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const data = createCompanySchema.parse(req.body);

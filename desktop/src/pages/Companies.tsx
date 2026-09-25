@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Building2, Search, Plus, Pencil, Trash2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Companies() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -147,7 +149,11 @@ export default function Companies() {
             <Card key={company.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <button
+                    className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                    onClick={() => navigate(`/companies/${company.id}`)}
+                    title={`View ${company.name}`}
+                  >
                     <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                       <Building2 className="h-4 w-4 text-accent" />
                     </div>
@@ -155,7 +161,7 @@ export default function Companies() {
                       <h3 className="font-medium text-sm text-text-primary truncate">{company.name}</h3>
                       <p className="text-[10px] text-text-secondary mt-0.5">Added: {formatDate(company.created_at)}</p>
                     </div>
-                  </div>
+                  </button>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => openEdit(company)}

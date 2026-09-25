@@ -8,11 +8,11 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(uuid())
-  username     String       @unique
-  passwordHash String       @map("password_hash")
-  role         String       @default("admin")
-  createdAt    DateTime     @default(now()) @map("created_at")
+  id           String      @id @default(uuid())
+  username     String      @unique
+  passwordHash String      @map("password_hash")
+  role         String      @default("admin")
+  createdAt    DateTime    @default(now()) @map("created_at")
   authTokens   AuthToken[]
 
   @@map("users")
@@ -42,37 +42,37 @@ model RecoveryKey {
 }
 
 model Product {
-  id             String           @id @default(uuid())
-  barcode        String           @unique
-  name           String           @unique
-  category       String           @default("")
-  location       String           @default("")
-  distributorId  String?          @map("distributor_id")
-  salePrice      Float            @default(0) @map("sale_price")
-  purchasePrice  Float            @default(0) @map("purchase_price")
-  markupPercent  Float            @default(20) @map("markup_percent")
-  stockQty       Int              @default(0) @map("stock_qty")
+  id             String          @id @default(uuid())
+  barcode        String          @unique
+  name           String
+  category       String          @default("")
+  location       String          @default("")
+  distributorId  String?         @map("distributor_id")
+  salePrice      Float           @default(0) @map("sale_price")
+  purchasePrice  Float           @default(0) @map("purchase_price")
+  markupPercent  Float           @default(20) @map("markup_percent")
+  stockQty       Int             @default(0) @map("stock_qty")
   expiry         String?
-  active         Int              @default(1)
-  createdAt      DateTime         @default(now()) @map("created_at")
-  companyId      String?          @map("company_id")
+  active         Int             @default(1)
+  createdAt      DateTime        @default(now()) @map("created_at")
+  companyId      String?         @map("company_id")
   company        Company?         @relation(fields: [companyId], references: [id])
-  distributor    Distributor?     @relation(fields: [distributorId], references: [id])
+  barcodeLink    Barcode?
+  prices         ProductPrice[]
+  distributor    Distributor?    @relation(fields: [distributorId], references: [id])
+  returnItems    ReturnItem[]
   saleItems      SaleItem[]
   stockPurchases StockPurchase[]
-  returnItems    ReturnItem[]
-  prices         ProductPrice[]
-  barcodeLink    Barcode?
 
   @@map("products")
 }
 
 model Barcode {
-  id        String    @id @default(uuid())
-  code      String    @unique
-  productId String?   @unique @map("product_id")
-  product   Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  code      String   @unique
+  productId String?  @unique @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  product   Product? @relation(fields: [productId], references: [id])
 
   @@map("barcodes")
 }
@@ -91,47 +91,47 @@ model ProductPrice {
 }
 
 model Distributor {
-  id               String    @id @default(uuid())
-  name             String    @unique @default("")
-  salesmanName     String    @default("") @map("salesman_name")
-  salesmanContact  String    @default("") @map("salesman_contact")
-  deliveryManName  String    @default("") @map("delivery_man_name")
-  deliveryManContact String @default("") @map("delivery_man_contact")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  products         Product[]
-  stockPurchases   StockPurchase[]
+  id                 String          @id @default(uuid())
+  name               String          @default("")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  deliveryManContact String          @default("") @map("delivery_man_contact")
+  deliveryManName    String          @default("") @map("delivery_man_name")
+  salesmanContact    String          @default("") @map("salesman_contact")
+  salesmanName       String          @default("") @map("salesman_name")
+  products           Product[]
+  stockPurchases     StockPurchase[]
 
   @@map("distributors")
 }
 
 model Customer {
-  id         String    @id @default(uuid())
-  name       String    @unique
-  phone      String    @default("")
-  address    String    @default("")
-  fatherName String    @default("") @map("father_name")
+  id          String   @id @default(uuid())
+  name        String
+  phone       String   @default("")
+  address     String   @default("")
+  createdAt   DateTime @default(now()) @map("created_at")
+  fatherName  String   @default("") @map("father_name")
   fatherPhone String   @default("") @map("father_phone")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  sales      Sale[]
-  arrears    Arrear[]
+  arrears     Arrear[]
+  sales       Sale[]
 
   @@map("customers")
 }
 
 model Sale {
-  id         String     @id
-  customerId String?    @map("customer_id")
-  subtotal   Float      @default(0)
-  discount   Float      @default(0)
-  total      Float      @default(0)
-  amountPaid Float      @default(0) @map("amount_paid")
-  change     Float      @default(0)
-  status     String     @default("paid")
-  createdAt  DateTime   @default(now()) @map("created_at")
-  customer   Customer?  @relation(fields: [customerId], references: [id])
-  items      SaleItem[]
-  returns    ReturnEntry[]
+  id         String        @id
+  customerId String?       @map("customer_id")
+  subtotal   Float         @default(0)
+  discount   Float         @default(0)
+  total      Float         @default(0)
+  amountPaid Float         @default(0) @map("amount_paid")
+  change     Float         @default(0)
+  status     String        @default("paid")
+  createdAt  DateTime      @default(now()) @map("created_at")
   arrears    Arrear[]
+  returns    ReturnEntry[]
+  items      SaleItem[]
+  customer   Customer?     @relation(fields: [customerId], references: [id])
 
   @@map("sales")
 }
@@ -145,8 +145,8 @@ model SaleItem {
   quantity    Int     @default(1)
   unitPrice   Float   @default(0) @map("unit_price")
   subtotal    Float   @default(0)
-  sale        Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
   product     Product @relation(fields: [productId], references: [id])
+  sale        Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@map("sale_items")
 }
@@ -160,9 +160,9 @@ model Arrear {
   balanceDue Float           @default(0) @map("balance_due")
   status     String          @default("pending")
   createdAt  DateTime        @default(now()) @map("created_at")
-  sale       Sale?           @relation(fields: [saleId], references: [id])
-  customer   Customer        @relation(fields: [customerId], references: [id])
   payments   ArrearPayment[]
+  customer   Customer        @relation(fields: [customerId], references: [id])
+  sale       Sale?           @relation(fields: [saleId], references: [id])
 
   @@map("arrears")
 }
@@ -179,19 +179,19 @@ model ArrearPayment {
 }
 
 model StockPurchase {
-  id             String       @id @default(uuid())
-  productId      String       @map("product_id")
-  distributorId  String?      @map("distributor_id")
-  invoiceNumber  String       @default("") @map("invoice_number")
-  quantity       Int          @default(0)
-  purchasePrice  Float        @default(0) @map("purchase_price")
-  salePrice      Float        @default(0) @map("sale_price")
-  expiry         String?
-  totalValue     Float        @default(0) @map("total_value")
-  active         Int          @default(1)
-  createdAt      DateTime     @default(now()) @map("created_at")
-  product        Product      @relation(fields: [productId], references: [id])
-  distributor    Distributor? @relation(fields: [distributorId], references: [id])
+  id            String       @id @default(uuid())
+  productId     String       @map("product_id")
+  distributorId String?      @map("distributor_id")
+  invoiceNumber String       @default("") @map("invoice_number")
+  quantity      Int          @default(0)
+  purchasePrice Float        @default(0) @map("purchase_price")
+  salePrice     Float        @default(0) @map("sale_price")
+  expiry        String?
+  totalValue    Float        @default(0) @map("total_value")
+  active        Int          @default(1)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  distributor   Distributor? @relation(fields: [distributorId], references: [id])
+  product       Product      @relation(fields: [productId], references: [id])
 
   @@map("stock_purchases")
 }
@@ -202,30 +202,30 @@ model ReturnEntry {
   refundAmount Float        @default(0) @map("refund_amount")
   reason       String       @default("")
   createdAt    DateTime     @default(now()) @map("created_at")
-  sale         Sale         @relation(fields: [saleId], references: [id])
   items        ReturnItem[]
+  sale         Sale         @relation(fields: [saleId], references: [id])
 
   @@map("returns")
 }
 
 model ReturnItem {
-  id           String       @id @default(uuid())
-  returnId     String       @map("return_id")
-  productId    String       @map("product_id")
-  productName  String       @map("product_name")
-  quantity     Int          @default(0)
-  refundAmount Float        @default(0) @map("refund_amount")
-  returnEntry  ReturnEntry  @relation(fields: [returnId], references: [id], onDelete: Cascade)
-  product      Product      @relation(fields: [productId], references: [id])
+  id           String      @id @default(uuid())
+  returnId     String      @map("return_id")
+  productId    String      @map("product_id")
+  productName  String      @map("product_name")
+  quantity     Int         @default(0)
+  refundAmount Float       @default(0) @map("refund_amount")
+  product      Product     @relation(fields: [productId], references: [id])
+  returnEntry  ReturnEntry @relation(fields: [returnId], references: [id], onDelete: Cascade)
 
   @@map("return_items")
 }
 
 model Category {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("categories")
 }

@@ -228,8 +228,8 @@ export type ReturnItemWhereInput = {
   productName?: Prisma.StringFilter<"ReturnItem"> | string
   quantity?: Prisma.IntFilter<"ReturnItem"> | number
   refundAmount?: Prisma.FloatFilter<"ReturnItem"> | number
-  returnEntry?: Prisma.XOR<Prisma.ReturnEntryScalarRelationFilter, Prisma.ReturnEntryWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
+  returnEntry?: Prisma.XOR<Prisma.ReturnEntryScalarRelationFilter, Prisma.ReturnEntryWhereInput>
 }
 
 export type ReturnItemOrderByWithRelationInput = {
@@ -239,8 +239,8 @@ export type ReturnItemOrderByWithRelationInput = {
   productName?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   refundAmount?: Prisma.SortOrder
-  returnEntry?: Prisma.ReturnEntryOrderByWithRelationInput
   product?: Prisma.ProductOrderByWithRelationInput
+  returnEntry?: Prisma.ReturnEntryOrderByWithRelationInput
 }
 
 export type ReturnItemWhereUniqueInput = Prisma.AtLeast<{
@@ -253,8 +253,8 @@ export type ReturnItemWhereUniqueInput = Prisma.AtLeast<{
   productName?: Prisma.StringFilter<"ReturnItem"> | string
   quantity?: Prisma.IntFilter<"ReturnItem"> | number
   refundAmount?: Prisma.FloatFilter<"ReturnItem"> | number
-  returnEntry?: Prisma.XOR<Prisma.ReturnEntryScalarRelationFilter, Prisma.ReturnEntryWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
+  returnEntry?: Prisma.XOR<Prisma.ReturnEntryScalarRelationFilter, Prisma.ReturnEntryWhereInput>
 }, "id">
 
 export type ReturnItemOrderByWithAggregationInput = {
@@ -288,8 +288,8 @@ export type ReturnItemCreateInput = {
   productName: string
   quantity?: number
   refundAmount?: number
-  returnEntry: Prisma.ReturnEntryCreateNestedOneWithoutItemsInput
   product: Prisma.ProductCreateNestedOneWithoutReturnItemsInput
+  returnEntry: Prisma.ReturnEntryCreateNestedOneWithoutItemsInput
 }
 
 export type ReturnItemUncheckedCreateInput = {
@@ -306,8 +306,8 @@ export type ReturnItemUpdateInput = {
   productName?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   refundAmount?: Prisma.FloatFieldUpdateOperationsInput | number
-  returnEntry?: Prisma.ReturnEntryUpdateOneRequiredWithoutItemsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutReturnItemsNestedInput
+  returnEntry?: Prisma.ReturnEntryUpdateOneRequiredWithoutItemsNestedInput
 }
 
 export type ReturnItemUncheckedUpdateInput = {
@@ -644,8 +644,8 @@ export type ReturnItemSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   productName?: boolean
   quantity?: boolean
   refundAmount?: boolean
-  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["returnItem"]>
 
 export type ReturnItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -655,8 +655,8 @@ export type ReturnItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   productName?: boolean
   quantity?: boolean
   refundAmount?: boolean
-  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["returnItem"]>
 
 export type ReturnItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -666,8 +666,8 @@ export type ReturnItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   productName?: boolean
   quantity?: boolean
   refundAmount?: boolean
-  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["returnItem"]>
 
 export type ReturnItemSelectScalar = {
@@ -681,23 +681,23 @@ export type ReturnItemSelectScalar = {
 
 export type ReturnItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "returnId" | "productId" | "productName" | "quantity" | "refundAmount", ExtArgs["result"]["returnItem"]>
 export type ReturnItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
 }
 export type ReturnItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
 }
 export type ReturnItemIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  returnEntry?: boolean | Prisma.ReturnEntryDefaultArgs<ExtArgs>
 }
 
 export type $ReturnItemPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ReturnItem"
   objects: {
-    returnEntry: Prisma.$ReturnEntryPayload<ExtArgs>
     product: Prisma.$ProductPayload<ExtArgs>
+    returnEntry: Prisma.$ReturnEntryPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1100,8 +1100,8 @@ readonly fields: ReturnItemFieldRefs;
  */
 export interface Prisma__ReturnItemClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  returnEntry<T extends Prisma.ReturnEntryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ReturnEntryDefaultArgs<ExtArgs>>): Prisma.Prisma__ReturnEntryClient<runtime.Types.Result.GetResult<Prisma.$ReturnEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  returnEntry<T extends Prisma.ReturnEntryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ReturnEntryDefaultArgs<ExtArgs>>): Prisma.Prisma__ReturnEntryClient<runtime.Types.Result.GetResult<Prisma.$ReturnEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

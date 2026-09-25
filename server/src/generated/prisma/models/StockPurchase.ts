@@ -280,8 +280,8 @@ export type StockPurchaseWhereInput = {
   totalValue?: Prisma.FloatFilter<"StockPurchase"> | number
   active?: Prisma.IntFilter<"StockPurchase"> | number
   createdAt?: Prisma.DateTimeFilter<"StockPurchase"> | Date | string
-  product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   distributor?: Prisma.XOR<Prisma.DistributorNullableScalarRelationFilter, Prisma.DistributorWhereInput> | null
+  product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
 }
 
 export type StockPurchaseOrderByWithRelationInput = {
@@ -296,8 +296,8 @@ export type StockPurchaseOrderByWithRelationInput = {
   totalValue?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  product?: Prisma.ProductOrderByWithRelationInput
   distributor?: Prisma.DistributorOrderByWithRelationInput
+  product?: Prisma.ProductOrderByWithRelationInput
 }
 
 export type StockPurchaseWhereUniqueInput = Prisma.AtLeast<{
@@ -315,8 +315,8 @@ export type StockPurchaseWhereUniqueInput = Prisma.AtLeast<{
   totalValue?: Prisma.FloatFilter<"StockPurchase"> | number
   active?: Prisma.IntFilter<"StockPurchase"> | number
   createdAt?: Prisma.DateTimeFilter<"StockPurchase"> | Date | string
-  product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   distributor?: Prisma.XOR<Prisma.DistributorNullableScalarRelationFilter, Prisma.DistributorWhereInput> | null
+  product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
 }, "id">
 
 export type StockPurchaseOrderByWithAggregationInput = {
@@ -365,8 +365,8 @@ export type StockPurchaseCreateInput = {
   totalValue?: number
   active?: number
   createdAt?: Date | string
-  product: Prisma.ProductCreateNestedOneWithoutStockPurchasesInput
   distributor?: Prisma.DistributorCreateNestedOneWithoutStockPurchasesInput
+  product: Prisma.ProductCreateNestedOneWithoutStockPurchasesInput
 }
 
 export type StockPurchaseUncheckedCreateInput = {
@@ -393,8 +393,8 @@ export type StockPurchaseUpdateInput = {
   totalValue?: Prisma.FloatFieldUpdateOperationsInput | number
   active?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  product?: Prisma.ProductUpdateOneRequiredWithoutStockPurchasesNestedInput
   distributor?: Prisma.DistributorUpdateOneWithoutStockPurchasesNestedInput
+  product?: Prisma.ProductUpdateOneRequiredWithoutStockPurchasesNestedInput
 }
 
 export type StockPurchaseUncheckedUpdateInput = {
@@ -842,8 +842,8 @@ export type StockPurchaseSelect<ExtArgs extends runtime.Types.Extensions.Interna
   totalValue?: boolean
   active?: boolean
   createdAt?: boolean
-  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   distributor?: boolean | Prisma.StockPurchase$distributorArgs<ExtArgs>
+  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["stockPurchase"]>
 
 export type StockPurchaseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -858,8 +858,8 @@ export type StockPurchaseSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   totalValue?: boolean
   active?: boolean
   createdAt?: boolean
-  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   distributor?: boolean | Prisma.StockPurchase$distributorArgs<ExtArgs>
+  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["stockPurchase"]>
 
 export type StockPurchaseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -874,8 +874,8 @@ export type StockPurchaseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   totalValue?: boolean
   active?: boolean
   createdAt?: boolean
-  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   distributor?: boolean | Prisma.StockPurchase$distributorArgs<ExtArgs>
+  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["stockPurchase"]>
 
 export type StockPurchaseSelectScalar = {
@@ -894,23 +894,23 @@ export type StockPurchaseSelectScalar = {
 
 export type StockPurchaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "productId" | "distributorId" | "invoiceNumber" | "quantity" | "purchasePrice" | "salePrice" | "expiry" | "totalValue" | "active" | "createdAt", ExtArgs["result"]["stockPurchase"]>
 export type StockPurchaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   distributor?: boolean | Prisma.StockPurchase$distributorArgs<ExtArgs>
+  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }
 export type StockPurchaseIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   distributor?: boolean | Prisma.StockPurchase$distributorArgs<ExtArgs>
+  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }
 export type StockPurchaseIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   distributor?: boolean | Prisma.StockPurchase$distributorArgs<ExtArgs>
+  product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
 }
 
 export type $StockPurchasePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "StockPurchase"
   objects: {
-    product: Prisma.$ProductPayload<ExtArgs>
     distributor: Prisma.$DistributorPayload<ExtArgs> | null
+    product: Prisma.$ProductPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1318,8 +1318,8 @@ readonly fields: StockPurchaseFieldRefs;
  */
 export interface Prisma__StockPurchaseClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   distributor<T extends Prisma.StockPurchase$distributorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StockPurchase$distributorArgs<ExtArgs>>): Prisma.Prisma__DistributorClient<runtime.Types.Result.GetResult<Prisma.$DistributorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
