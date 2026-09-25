@@ -367,6 +367,20 @@ const api = {
   barcodes: {
     list: (): Promise<BarcodeEntry[]> => fetchJson("GET", "/api/barcodes"),
     listAll: (): Promise<BarcodeEntry[]> => fetchJson("GET", "/api/barcodes?includeArchived=true"),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; includeArchived?: boolean }): Promise<PaginatedResponse<BarcodeEntry>> => {
+      const params = new URLSearchParams();
+      params.set("paginated", "true");
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.includeArchived) params.set("includeArchived", "true");
+      
+      const res = await fetchJson<any>("GET", `/api/barcodes?${params.toString()}`);
+      if (Array.isArray(res)) {
+        return { data: res, meta: { total: res.length, page: opts.page || 1, limit: opts.limit || 50, totalPages: 1 } };
+      }
+      return res;
+    },
     create: (code: string): Promise<BarcodeEntry> => fetchJson("POST", "/api/barcodes", { code }),
     archive: (id: string): Promise<{ success: boolean }> =>
       fetchJson("POST", `/api/barcodes/${id}/archive`),

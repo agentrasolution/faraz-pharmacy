@@ -4,15 +4,11 @@ import type { CreateCompanyInput } from "./companies.schema";
 
 export const companiesService = {
   async list({ page = 1, limit = 50, search }: { page?: number; limit?: number; search?: string } = {}) {
-    const where: Prisma.CompanyWhereInput = {
-      products: { some: {} },
-    };
+    const where: Prisma.CompanyWhereInput = {};
 
-    if (search) {
+    if (search && search.trim()) {
       const q = search.trim();
-      where.AND = [
-        { name: { contains: q, mode: "insensitive" } },
-      ];
+      where.name = { contains: q, mode: "insensitive" };
     }
 
     const skip = (page - 1) * limit;
@@ -33,7 +29,7 @@ export const companiesService = {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   },

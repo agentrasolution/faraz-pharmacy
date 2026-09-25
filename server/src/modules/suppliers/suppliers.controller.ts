@@ -5,15 +5,22 @@ import { normalizeDistributor, normalizeDistributorList } from "../../utils/norm
 export const suppliersController = {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
+      const isPaginated = req.query.paginated === "true";
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.max(1, parseInt(req.query.limit as string) || 50);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
       const search = req.query.search as string | undefined;
 
       const result = await suppliersService.list({ page, limit, search });
-      res.json({
-        data: normalizeDistributorList(result.data),
-        meta: result.meta,
-      });
+      const normalized = normalizeDistributorList(result.data);
+
+      if (isPaginated) {
+        res.json({
+          data: normalized,
+          meta: result.meta,
+        });
+      } else {
+        res.json(normalized);
+      }
     } catch (err) {
       next(err);
     }

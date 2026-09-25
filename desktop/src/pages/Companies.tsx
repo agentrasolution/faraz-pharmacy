@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +29,10 @@ export default function Companies() {
   const [name, setName] = useState("");
 
   const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, limit]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["companies", page, limit, debouncedSearch],
@@ -108,6 +112,15 @@ export default function Companies() {
       <PageHeader
         title="Companies"
         description="Manage product companies"
+        action={{
+          label: (
+            <>
+              <Plus className="h-4 w-4 mr-1" />
+              <span>Add Company</span>
+            </>
+          ),
+          onClick: openAdd,
+        }}
       />
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1 max-w-sm">
@@ -185,34 +198,52 @@ export default function Companies() {
         )}
       </div>
 
-      {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 px-1">
-          <p className="text-sm text-text-secondary">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
-          </p>
+      <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-1">
+        <div className="flex items-center gap-4 text-sm text-text-secondary">
+          <span>
+            Showing {meta ? (meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1) : 0} to {meta ? Math.min(meta.page * meta.limit, meta.total) : 0} of {meta?.total ?? 0} entries
+          </span>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
+            <label htmlFor="company-limit-select">Rows per page:</label>
+            <select
+              id="company-limit-select"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="bg-surface text-text-primary border border-border rounded px-2 py-1 text-sm outline-none"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-text-secondary px-2">
-              Page {page} of {meta.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= meta.totalPages}
-              onClick={() => setPage(page + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              {[12, 24, 48, 60, 100].map((val) => (
+                <option key={val} value={val}>
+                  {val}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!meta || meta.page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+          </Button>
+          <span className="text-sm text-text-secondary px-2">
+            Page {meta?.page ?? 1} of {meta?.totalPages || 1}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!meta || meta.page >= (meta.totalPages || 1)}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      </div>
 
       <Dialog
         open={open}

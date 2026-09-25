@@ -1,18 +1,70 @@
-import { prisma } from "../../services/prisma";
+import { prisma, Prisma } from "../../services/prisma";
 import { BadRequestError, NotFoundError } from "../../utils/errors";
 
 export const barcodesService = {
-  async list(includeArchived = false) {
-    const where = includeArchived ? {} : { product: { active: 1 } };
-    return prisma.barcode.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        product: {
-          select: { name: true, active: true },
+  async list({
+    page = 1,
+    limit = 50,
+    search,
+    includeArchived = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeArchived?: boolean;
+  } = {}) {
+    const where: Prisma.BarcodeWhereInput = {};
+    const conditions: Prisma.BarcodeWhereInput[] = [];
+
+    if (!includeArchived) {
+      conditions.push({
+        OR: [
+          { productId: null },
+          { product: { active: 1 } },
+        ],
+      });
+    }
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      conditions.push({
+        OR: [
+          { code: { contains: q, mode: "insensitive" } },
+          { product: { name: { contains: q, mode: "insensitive" } } },
+        ],
+      });
+    }
+
+    if (conditions.length > 0) {
+      where.AND = conditions;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await prisma.$transaction([
+      prisma.barcode.count({ where }),
+      prisma.barcode.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          product: {
+            select: { name: true, active: true },
+          },
         },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
-    });
+    };
   },
 
   async create(code: string) {

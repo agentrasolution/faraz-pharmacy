@@ -11,6 +11,8 @@ import {
   Trash2,
   Archive,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -20,6 +22,7 @@ import { api } from "@/lib/api";
 import { cn, renderBarcode } from "@/lib/utils";
 import { downloadPDF, downloadCSV } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import { useDebounce } from "@/hooks/useDebounce";
 import { ShortcutHint } from "@/components/shared/Kbd";
 import ExportButton from "@/components/shared/ExportButton";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
@@ -37,6 +40,8 @@ const cardAnim: Variants = {
 
 export default function Barcodes() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [showArchived, setShowArchived] = useState(false);
   const [printTarget, setPrintTarget] = useState<
@@ -55,10 +60,25 @@ export default function Barcodes() {
     onExportCSV: handleExportCSV,
   });
 
-  const { data: barcodes, isLoading } = useQuery({
-    queryKey: ["barcodes", showArchived],
-    queryFn: () => (showArchived ? api.barcodes.listAll() : api.barcodes.list()),
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, showArchived, limit]);
+
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ["barcodes", page, limit, debouncedSearch, showArchived],
+    queryFn: () =>
+      api.barcodes.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch,
+        includeArchived: showArchived,
+      }),
   });
+
+  const barcodes = paginatedData?.data ?? [];
+  const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.barcodes.delete(id),
@@ -98,24 +118,14 @@ export default function Barcodes() {
     },
   });
 
-  const filtered = useMemo(() => {
-    if (!barcodes) return [];
-    const q = search.toLowerCase().trim();
-    if (!q) return barcodes;
-    return barcodes.filter(
-      (b) =>
-        b.code.toLowerCase().includes(q) || (b.product && b.product.name.toLowerCase().includes(q))
-    );
-  }, [barcodes, search]);
-
   const exportRows = useMemo(() => {
-    if (!filtered) return [];
-    return filtered.map((b) => [
+    if (!barcodes) return [];
+    return barcodes.map((b) => [
       b.code,
       b.product?.name || "Unassigned",
       b.product?.active != null && b.product.active > 0 ? "Active" : "Inactive",
     ]);
-  }, [filtered]);
+  }, [barcodes]);
 
   const exportHeaders = ["Code", "Product", "Status"];
 
@@ -136,9 +146,9 @@ export default function Barcodes() {
   }, []);
 
   useEffect(() => {
-    if (view !== "grid" || !filtered.length) return;
+    if (view !== "grid" || !barcodes.length) return;
     const timer = requestAnimationFrame(() => {
-      filtered.forEach((b) => {
+      barcodes.forEach((b) => {
         const el = document.getElementById(`bc-${b.id}`) as unknown as SVGElement | null;
         if (!el) return;
         renderBarcode(el, b.code, {
@@ -151,7 +161,7 @@ export default function Barcodes() {
       });
     });
     return () => cancelAnimationFrame(timer);
-  }, [filtered, view]);
+  }, [barcodes, view]);
 
   function openPrint(barcode: string, productName?: string) {
     setPrintTarget({ barcode, productName });
@@ -265,11 +275,11 @@ export default function Barcodes() {
         <div className="flex items-center justify-center flex-1 text-xs text-text-secondary">
           Loading...
         </div>
-      ) : filtered.length === 0 ? (
+      ) : barcodes.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-2 text-text-secondary">
           <Barcode className="h-8 w-8 opacity-30" />
-          <p className="text-xs">{search ? "No barcodes match your search" : "No barcodes yet"}</p>
-          {!search && (
+          <p className="text-xs">{debouncedSearch ? "No barcodes match your search" : "No barcodes yet"}</p>
+          {!debouncedSearch && (
             <Button variant="outline" size="sm" onClick={openGenerate} className="text-xs gap-1">
               <Plus className="h-3 w-3" />
               Generate your first barcode
@@ -284,7 +294,7 @@ export default function Barcodes() {
             animate="show"
             className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2"
           >
-            {filtered.map((b) => (
+            {barcodes.map((b) => (
               <motion.div
                 key={b.id}
                 variants={cardAnim}
@@ -364,7 +374,7 @@ export default function Barcodes() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((b, idx) => (
+                {barcodes.map((b, idx) => (
                   <tr
                     key={b.id}
                     className={`border-b border-border last:border-0 hover:bg-surface-2/50 transition-colors ${idx % 2 === 0 ? "bg-surface" : "bg-surface-2/50"}`}
@@ -434,6 +444,56 @@ export default function Barcodes() {
           </div>
         </div>
       )}
+
+      {/* Pagination Bar */}
+      <div className="flex items-center justify-between mt-3 border-t border-border pt-3 px-2">
+        <div className="flex items-center gap-4 text-xs text-text-secondary">
+          <span>
+            Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+          </span>
+          <div className="flex items-center gap-1.5">
+            <label htmlFor="barcode-limit-select">Rows per page:</label>
+            <select
+              id="barcode-limit-select"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="bg-surface text-text-primary border border-border rounded px-1.5 py-0.5 text-xs outline-none"
+            >
+              {[12, 24, 48, 60, 100].map((val) => (
+                <option key={val} value={val}>
+                  {val}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            disabled={meta.page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Previous
+          </Button>
+          <div className="text-xs font-medium">
+            Page {meta.page} of {meta.totalPages || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            disabled={meta.page >= (meta.totalPages || 1)}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+          </Button>
+        </div>
+      </div>
 
       <PrintBarcodeDialog
         open={printOpen}

@@ -4,9 +4,19 @@ import { barcodesService } from "./barcodes.service";
 export const barcodesController = {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
+      const isPaginated = req.query.paginated === "true";
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
+      const search = req.query.search as string | undefined;
       const includeArchived = req.query.includeArchived === "true";
-      const barcodes = await barcodesService.list(includeArchived);
-      res.json(barcodes);
+
+      const result = await barcodesService.list({ page, limit, search, includeArchived });
+
+      if (isPaginated) {
+        res.json(result);
+      } else {
+        res.json(result.data);
+      }
     } catch (err) {
       next(err);
     }
