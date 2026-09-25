@@ -52,22 +52,22 @@ export function generatePDF(options: PDFExportOptions): void {
     .no-print { display: none !important; }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1a1a1a; padding: 40px; line-height: 1.5; }
-  .header { text-align: center; margin-bottom: 32px; border-bottom: 2px solid #0d9488; padding-bottom: 20px; }
-  .header h1 { font-size: 24px; font-weight: 700; color: #0d9488; margin-bottom: 4px; letter-spacing: -0.5px; }
-  .header p { font-size: 13px; color: #6b7280; }
+  body { font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif; color: #1a1a1a; padding: 40px; line-height: 1.5; }
+  .header { text-align: center; margin-bottom: 32px; border-bottom: 2px solid #4A25E1; padding-bottom: 20px; }
+  .header h1 { font-size: 24px; font-weight: 800; color: #4A25E1; margin-bottom: 4px; letter-spacing: -0.5px; }
+  .header p { font-size: 13px; color: #6b7280; font-weight: 500; }
   .period { font-size: 12px; color: #6b7280; margin-top: 8px; }
   .period span { font-weight: 600; color: #374151; }
   .generated { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-  .summary { display: flex; gap: 24px; margin: 24px 0; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .summary { display: flex; gap: 24px; margin: 24px 0; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
   .summary-item { flex: 1; text-align: center; }
-  .summary-label { display: block; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-  .summary-value { display: block; font-size: 20px; font-weight: 700; color: #0d9488; font-family: 'SF Mono', 'Cascadia Code', monospace; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-  th { background: #0d9488; color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-  td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; }
+  .summary-label { display: block; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600; }
+  .summary-value { display: block; font-size: 20px; font-weight: 700; color: #4A25E1; font-family: 'SF Mono', 'Cascadia Code', monospace; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; font-size: 12px; border-radius: 8px; overflow: hidden; }
+  th { background: #4A25E1; color: white; padding: 11px 14px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e5e7eb; }
   tr.even { background: #f9fafb; }
-  tr:hover { background: #f0fdfa; }
+  tr:hover { background: #f4f2ff; }
   .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; }
   .footer .page { font-weight: 600; }
   .no-data { text-align: center; padding: 40px; color: #6b7280; font-style: italic; }

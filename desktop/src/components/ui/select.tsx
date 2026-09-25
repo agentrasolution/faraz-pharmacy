@@ -14,14 +14,14 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-8 w-full items-center justify-between rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs text-text-primary ring-offset-background placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-150",
+      "flex h-9 w-full items-center justify-between rounded-xl border border-border/80 bg-surface px-3 py-1.5 text-xs text-text-primary ring-offset-background placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-150 shadow-xs",
       className
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+      <ChevronDown className="h-4 w-4 opacity-50" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -35,7 +35,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-surface shadow-lg animate-in animate-fade-in animate-zoom-in-95",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-xl animate-in animate-fade-in animate-zoom-in-95 p-1",
         position === "popper" && "translate-y-1",
         className
       )}
@@ -63,14 +63,14 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pl-7 pr-2.5 text-xs outline-none focus:bg-surface-2 focus:text-text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
+      "relative flex w-full cursor-default select-none items-center rounded-xl py-2 pl-7 pr-3 text-xs outline-none focus:bg-surface-2 focus:text-text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors font-medium",
       className
     )}
     {...props}
   >
-    <span className="absolute left-1.5 flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-3.5 w-3.5" />
+        <Check className="h-3.5 w-3.5 text-brand" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

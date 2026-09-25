@@ -351,9 +351,9 @@ export default function POS() {
           </div>
         </div>
 
-        <div className="w-full lg:w-[380px] xl:w-[400px] shrink-0">
+        <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0">
           <div
-            className={`lg:sticky bg-surface border border-border rounded-lg p-4 h-full flex flex-col ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-0 max-h-[calc(100vh-7rem)]"}`}
+            className={`lg:sticky bg-surface border border-border/80 rounded-3xl p-5 h-full flex flex-col shadow-xs ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-0 max-h-[calc(100vh-7rem)]"}`}
           >
             <CheckoutPanel
               items={cart.items}

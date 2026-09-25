@@ -12,22 +12,22 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, action, back }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-5">
-      <div className="space-y-0.5">
-        <div className="flex items-center gap-2.5">
+    <div className="flex items-center justify-between mb-6">
+      <div className="space-y-1">
+        <div className="flex items-center gap-3">
           {back && (
-            <Button variant="ghost" size="icon" onClick={back.onClick}>
+            <Button variant="ghost" size="icon" onClick={back.onClick} className="rounded-xl">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <h1 className="text-base font-semibold text-text-primary tracking-tight">{title}</h1>
+          <h1 className="text-lg font-display font-bold text-text-primary tracking-tight">{title}</h1>
         </div>
         {description && <p className="text-xs text-text-secondary">{description}</p>}
       </div>
       {action && (
-        <Button onClick={action.onClick} className="gap-1.5" size="sm">
-          <Plus className="h-3.5 w-3.5" />
-          {action.label}
+        <Button onClick={action.onClick} className="gap-2 rounded-xl" size="default" variant="brand">
+          <Plus className="h-4 w-4" />
+          <span>{action.label}</span>
           {action.shortcut && <ShortcutHint shortcut={action.shortcut} />}
         </Button>
       )}

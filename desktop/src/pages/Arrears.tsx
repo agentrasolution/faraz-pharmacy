@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 import { downloadPDF, downloadCSV } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { api } from "@/lib/api";
@@ -247,10 +247,10 @@ export default function Arrears() {
         <div className="flex items-center gap-1.5 justify-center">
           <button
             onClick={() => setExpanded(expanded === a.id ? null : a.id)}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-secondary/60 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
             title={expanded === a.id ? "Hide history" : "Payment history"}
           >
-            <History className="h-3.5 w-3.5" />
+            <History className="h-4 w-4" />
           </button>
           {a.status === "pending" && (
             <>
@@ -310,10 +310,10 @@ export default function Arrears() {
                       setPasswordDialog({ open: true, action: "settle", targetId: a.id });
                       setAdminPassword("");
                     }}
-                    className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors"
+                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
                     title="Mark Settled"
                   >
-                    <CheckCircle className="h-3.5 w-3.5" />
+                    <CheckCircle className="h-4 w-4" />
                   </button>
                 </>
               )}
@@ -324,10 +324,10 @@ export default function Arrears() {
               setPasswordDialog({ open: true, action: "delete", targetId: a.id });
               setAdminPassword("");
             }}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
             title="Delete"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -351,45 +351,57 @@ export default function Arrears() {
       />
       <div className="mb-4">
         <StatCard
-          title="Total Outstanding"
+          title="Total Outstanding Debt"
           value={formatCurrency(totalOutstanding)}
           icon={<CreditCard className="h-5 w-5" />}
+          subtitle="Pending customer balances"
         />
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             ref={searchRef}
-            placeholder="Search arrears..."
+            placeholder="Search arrears by customer or invoice..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
           />
         </div>
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2">
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
         </div>
       </div>
 
-      <Tabs
-        defaultValue="all"
-        onValueChange={(v) => {
-          setFilter(v);
-          setPayingId(null);
-          setPage(1);
-        }}
-      >
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="settled">Settled</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* Pill Filter Tabs */}
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs w-fit mb-5">
+        {[
+          { id: "all", label: "All Ledgers" },
+          { id: "pending", label: "Pending Dues" },
+          { id: "settled", label: "Fully Settled" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setFilter(tab.id);
+              setPayingId(null);
+              setPage(1);
+            }}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer",
+              filter === tab.id
+                ? "bg-[#4A25E1] text-white shadow-xs"
+                : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      <div className="rounded-xl border border-border overflow-hidden">
+      <div className="space-y-4">
         <DataTable
           columns={columns}
           data={filtered}
@@ -397,45 +409,50 @@ export default function Arrears() {
           keyExtractor={(a: Arrear) => a.id}
         />
         
-        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+        {/* Pagination Bar */}
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>
-              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
             </span>
             <div className="flex items-center gap-2">
-              <label htmlFor="limit-select">Rows per page:</label>
+              <span>Per page:</span>
               <select
-                id="limit-select"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+                className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
               >
-                {[10, 20, 30, 50, 100].map(val => (
-                  <option key={val} value={val}>{val}</option>
+                {[10, 20, 30, 50, 100].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded-xl shadow-xs"
             >
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-xs font-semibold text-text-primary px-2">
               Page {meta.page} of {meta.totalPages || 1}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page >= (meta.totalPages || 1)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-xl shadow-xs"
             >
               Next
             </Button>

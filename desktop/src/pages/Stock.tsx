@@ -305,17 +305,17 @@ export default function Stock() {
             <>
               <button
                 onClick={() => openEdit(s)}
-                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
                 title="Edit"
               >
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setDeleteId(s.id)}
-                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
                 title="Delete"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </>
           ) : null}
@@ -325,10 +325,10 @@ export default function Stock() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Stock / Purchases"
-        description="Track inventory purchases and stock levels"
+        title="Stock Purchases & Inward"
+        description="Receive stock consignments, distributor delivery invoices, and batch lots"
         action={{
           label: (
             <>
@@ -340,54 +340,61 @@ export default function Stock() {
         }}
       />
 
-      <div className="mb-5">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <p className="text-[11px] font-medium text-text-secondary uppercase tracking-wide">
-                  Total Stock Value
-                </p>
-                <p className="text-xl font-bold text-text-primary tabular-nums">
-                  {showValue ? formatCurrency(totalValue) : "••••••••"}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowValue(!showValue)}
-                className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent hover:bg-accent/20 transition-colors"
-                title={showValue ? "Hide value" : "Show value"}
-              >
-                {showValue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stock Overview Banner */}
+      <div className="rounded-3xl border border-border/80 bg-surface p-6 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+            Total Inward Stock Valuation
+          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-2xl sm:text-3xl font-display font-bold text-text-primary tabular-nums tracking-tight">
+              {showValue ? formatCurrency(totalValue) : "••••••••"}
+            </p>
+            <button
+              onClick={() => setShowValue(!showValue)}
+              className="h-8 w-8 rounded-xl bg-[#4A25E1]/10 dark:bg-white/10 flex items-center justify-center text-[#4A25E1] dark:text-[#754BFB] hover:scale-105 transition-all cursor-pointer"
+              title={showValue ? "Hide value" : "Show value"}
+            >
+              {showValue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <p className="text-xs text-text-secondary">
+            Cumulative value of active received shipments
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             ref={searchRef}
             autoFocus
             placeholder="Search by product, company, distributor, invoice..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
           />
         </div>
-        <div className="flex-1" />
-        <ExportButton type="pdf" onClick={handleExportPDF} />
-        <ExportButton type="csv" onClick={handleExportCSV} />
-        <button
-          onClick={() => setShowArchived(!showArchived)}
-          className={`text-xs flex items-center gap-1 px-2.5 h-7 rounded-md transition-colors ${showArchived ? "bg-accent/10 text-accent" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"}`}
-        >
-          <RotateCcw className="h-3 w-3" />
-          Show archived
-        </button>
+        <div className="flex items-center gap-2">
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+          <ExportButton type="csv" onClick={handleExportCSV} />
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`text-xs font-semibold flex items-center gap-1.5 px-3 h-9 rounded-xl border border-border/80 transition-all cursor-pointer ${
+              showArchived
+                ? "bg-[#4A25E1] text-white shadow-xs"
+                : "bg-surface text-text-secondary hover:text-text-primary hover:bg-surface-2"
+            }`}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>Show archived</span>
+          </button>
+        </div>
       </div>
-      <div className="rounded-xl border border-border">
+
+      <div className="space-y-4">
         <DataTable
           columns={columns}
           data={stockEntries}
@@ -395,45 +402,50 @@ export default function Stock() {
           keyExtractor={(s: StockPurchase) => s.id}
         />
 
-        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+        {/* Pagination Bar */}
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>
-              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
             </span>
             <div className="flex items-center gap-2">
-              <label htmlFor="limit-select">Rows per page:</label>
+              <span>Per page:</span>
               <select
-                id="limit-select"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+                className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
               >
-                {[10, 20, 30, 50, 100].map(val => (
-                  <option key={val} value={val}>{val}</option>
+                {[10, 20, 30, 50, 100].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded-xl shadow-xs"
             >
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-xs font-semibold text-text-primary px-2">
               Page {meta.page} of {meta.totalPages || 1}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page >= (meta.totalPages || 1)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-xl shadow-xs"
             >
               Next
             </Button>

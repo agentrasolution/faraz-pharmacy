@@ -1,24 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Server, Monitor, Sun, Moon, RefreshCw, Database, Wifi, Clock } from "lucide-react";
+import { Server, Monitor, Sun, Moon, RefreshCw, Database, Wifi, Clock, Activity } from "lucide-react";
 import { useServerConnection } from "@/contexts/ServerConnectionContext";
 import GlobalSearch from "@/components/shared/GlobalSearch";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
-  "/dashboard": { title: "Dashboard", subtitle: "Business overview" },
-  "/pos": { title: "Point of Sale", subtitle: "Create and manage sales" },
-  "/products": { title: "Products", subtitle: "Inventory management" },
-  "/barcodes": { title: "Barcodes", subtitle: "Custom barcode labels" },
-  "/stock": { title: "Stock", subtitle: "Purchase management" },
-  "/customers": { title: "Customers", subtitle: "Customer records" },
-  "/invoices": { title: "Invoices", subtitle: "Sales invoices" },
-  "/arrears": { title: "Arrears", subtitle: "Outstanding payments" },
-  "/distributors": { title: "Distributors", subtitle: "Supplier management" },
-  "/returns": { title: "Returns", subtitle: "Return management" },
-  "/expenses": { title: "Expenses", subtitle: "Expense tracking" },
-  "/reports": { title: "Reports", subtitle: "Business insights" },
-  "/settings": { title: "Settings", subtitle: "System configuration" },
+  "/dashboard": { title: "Dashboard", subtitle: "Overview & Real-time Analytics" },
+  "/pos": { title: "Point of Sale", subtitle: "Fast checkout & barcode billing" },
+  "/products": { title: "Products Catalog", subtitle: "Manage medicine inventory & pricing" },
+  "/barcodes": { title: "Barcode Labels", subtitle: "Thermal barcode printing & generator" },
+  "/stock": { title: "Stock Purchases", subtitle: "Purchase invoices & distributor receiving" },
+  "/customers": { title: "Customers", subtitle: "Customer records, ledgers & history" },
+  "/invoices": { title: "Sales Invoices", subtitle: "Receipt history & invoice reprints" },
+  "/arrears": { title: "Arrears & Credit", subtitle: "Outstanding customer debts & recoveries" },
+  "/distributors": { title: "Distributors", subtitle: "Suppliers, companies & order history" },
+  "/companies": { title: "Pharmaceutical Companies", subtitle: "Brand manufacturers & product lines" },
+  "/categories": { title: "Product Categories", subtitle: "Manage & organize medicine categories" },
+  "/returns": { title: "Sales Returns", subtitle: "Customer refund & product return entries" },
+  "/expenses": { title: "Expenses", subtitle: "Daily shop expenses & ledger tracking" },
+  "/reports": { title: "Analytics & Reports", subtitle: "Financial analytics, profit & tax reports" },
+  "/settings": { title: "System Settings", subtitle: "Hardware, thermal printers & backups" },
 };
 
 export default function Topbar() {
@@ -68,8 +70,8 @@ export default function Topbar() {
 
   const { isOnline, isInitialCheck, connectionInfo, reconnect } = useServerConnection();
   const page = pageLabels[location.pathname] || {
-    title: "Dashboard",
-    subtitle: "Business overview",
+    title: "Faraz Pharmacy",
+    subtitle: "Management System",
   };
   const isServer = window.appConfig?.mode === "server";
 
@@ -83,169 +85,167 @@ export default function Topbar() {
   };
 
   return (
-    <header className="h-14 border-b border-border bg-surface/70 backdrop-blur-lg sticky top-0 z-30">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="flex items-center gap-4">
+    <header className="h-16 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-30 select-none">
+      <div className="flex items-center justify-between h-full px-6 gap-4">
+        {/* Page Title & Breadcrumb */}
+        <div className="flex items-center gap-6 min-w-0">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, x: -4 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.15 }}
+            className="min-w-0"
           >
-            <h1 className="text-sm font-display font-semibold text-text-primary tracking-tight">
+            <h1 className="text-base font-display font-bold text-text-primary tracking-tight truncate">
               {page.title}
             </h1>
-            <p className="text-[11px] text-text-secondary leading-none mt-0.5">{page.subtitle}</p>
+            <p className="text-[11px] text-text-secondary leading-none mt-0.5 truncate hidden sm:block">
+              {page.subtitle}
+            </p>
           </motion.div>
 
-          <GlobalSearch />
+          {/* Global Search Pill */}
+          <div className="hidden md:block">
+            <GlobalSearch />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Connection Status Badge */}
+        {/* Right Action Widgets */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Connection Status Pill */}
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setShowConnectionDropdown(!showConnectionDropdown)}
-              className="flex items-center gap-1.5 px-2.5 h-7 rounded-lg bg-muted text-[11px] text-text-secondary font-medium hover:bg-muted/80 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-3 h-9 rounded-full border border-border bg-surface text-xs text-text-secondary font-medium hover:border-brand/40 hover:bg-surface-2 transition-all shadow-xs cursor-pointer"
             >
-              <span
-                className={`h-2 w-2 rounded-full shrink-0 ${
-                  isInitialCheck ? "bg-muted-foreground/40" : isOnline ? "bg-success" : "bg-danger"
-                }`}
-              />
+              <span className="relative flex h-2 w-2">
+                {isOnline && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${
+                    isInitialCheck ? "bg-muted-foreground/40" : isOnline ? "bg-success" : "bg-danger"
+                  }`}
+                />
+              </span>
               {isServer ? (
-                <Server className="h-3.5 w-3.5 text-accent" />
+                <Server className="h-3.5 w-3.5 text-[#4A25E1] dark:text-[#754BFB]" />
               ) : (
-                <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
+                <Monitor className="h-3.5 w-3.5 text-text-secondary" />
               )}
-              <span>{isServer ? "Server" : "Client"}</span>
+              <span className="hidden sm:inline font-medium text-text-primary">
+                {isServer ? "Server" : "Client"}
+              </span>
             </button>
 
             <AnimatePresence>
               {showConnectionDropdown && (
                 <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                  initial={{ opacity: 0, y: 6, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.96 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-1.5 w-72 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
+                  className="absolute right-0 top-full mt-2 w-80 bg-surface border border-border rounded-2xl shadow-xl overflow-hidden z-50 p-4 space-y-3"
                 >
-                  <div className="p-3 border-b border-border">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-text-primary">Connection Status</p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          reconnect();
-                        }}
-                        className="h-6 w-6 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-muted transition-all"
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                      </button>
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-[#4A25E1] dark:text-[#754BFB]" />
+                      <p className="text-xs font-bold text-text-primary">System & Connection</p>
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        reconnect();
+                      }}
+                      title="Test Connection"
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-brand hover:bg-surface-2 transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </button>
                   </div>
 
-                  <div className="p-3 space-y-3">
-                    {/* Server */}
-                    <div className="flex items-start gap-3">
-                      <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                        <Server className="h-3.5 w-3.5 text-accent" />
+                  <div className="space-y-2.5 text-xs">
+                    {/* Server URL */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-surface-2">
+                      <div className="flex items-center gap-2">
+                        <Server className="h-3.5 w-3.5 text-text-secondary" />
+                        <span className="text-text-secondary text-[11px]">Server URL</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
-                          Server
-                        </p>
-                        <p className="text-xs font-mono font-medium text-text-primary truncate">
-                          {connectionInfo.serverUrl.replace(/^https?:\/\//, "")}
-                        </p>
-                      </div>
+                      <span className="font-mono font-semibold text-text-primary truncate max-w-[140px]">
+                        {connectionInfo.serverUrl.replace(/^https?:\/\//, "")}
+                      </span>
                     </div>
 
                     {/* Status */}
-                    <div className="flex items-start gap-3">
-                      <div className="h-7 w-7 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-                        <Wifi className="h-3.5 w-3.5 text-success" />
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-surface-2">
+                      <div className="flex items-center gap-2">
+                        <Wifi className="h-3.5 w-3.5 text-text-secondary" />
+                        <span className="text-text-secondary text-[11px]">Network</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
-                          Status
-                        </p>
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${connectionInfo.isOnline ? "bg-success" : "bg-danger"}`}
-                          />
-                          <p
-                            className={`text-xs font-medium ${connectionInfo.isOnline ? "text-success" : "text-danger"}`}
-                          >
-                            {connectionInfo.isOnline ? "Connected" : "Disconnected"}
-                          </p>
-                        </div>
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <span
+                          className={`h-2 w-2 rounded-full ${connectionInfo.isOnline ? "bg-success" : "bg-danger"}`}
+                        />
+                        <span className={connectionInfo.isOnline ? "text-success" : "text-danger"}>
+                          {connectionInfo.isOnline ? "Online" : "Disconnected"}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Response */}
-                    <div className="flex items-start gap-3">
-                      <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    {/* Latency */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-surface-2">
+                      <div className="flex items-center gap-2">
                         <Clock className="h-3.5 w-3.5 text-text-secondary" />
+                        <span className="text-text-secondary text-[11px]">Latency</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
-                          Response
-                        </p>
-                        <p className="text-xs font-mono font-medium text-text-primary">
-                          {connectionInfo.responseTime !== null
-                            ? `${connectionInfo.responseTime} ms`
-                            : "—"}
-                        </p>
-                      </div>
+                      <span className="font-mono font-medium text-text-primary">
+                        {connectionInfo.responseTime !== null
+                          ? `${connectionInfo.responseTime} ms`
+                          : "—"}
+                      </span>
                     </div>
 
                     {/* Database */}
-                    <div className="flex items-start gap-3">
-                      <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-surface-2">
+                      <div className="flex items-center gap-2">
                         <Database className="h-3.5 w-3.5 text-text-secondary" />
+                        <span className="text-text-secondary text-[11px]">Database</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-text-secondary uppercase tracking-wider">
-                          Database
-                        </p>
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${connectionInfo.databaseOnline ? "bg-success" : "bg-danger"}`}
-                          />
-                          <p
-                            className={`text-xs font-medium ${connectionInfo.databaseOnline ? "text-success" : "text-danger"}`}
-                          >
-                            {connectionInfo.databaseOnline ? "Online" : "Offline"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Last Checked */}
-                    <div className="pt-2 border-t border-border">
-                      <p className="text-[10px] text-text-secondary">
-                        Last checked:{" "}
-                        <span className="font-medium text-text-primary">
-                          {formatLastChecked(connectionInfo.lastChecked)}
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <span
+                          className={`h-2 w-2 rounded-full ${connectionInfo.databaseOnline ? "bg-success" : "bg-danger"}`}
+                        />
+                        <span className={connectionInfo.databaseOnline ? "text-success" : "text-danger"}>
+                          {connectionInfo.databaseOnline ? "Active" : "Down"}
                         </span>
-                      </p>
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-border flex items-center justify-between text-[10px] text-text-secondary">
+                    <span>Last checked</span>
+                    <span className="font-medium text-text-primary">
+                      {formatLastChecked(connectionInfo.lastChecked)}
+                    </span>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          <span className="text-xs text-text-secondary tabular-nums font-mono font-medium">
-            {time}
-          </span>
+          {/* Digital Clock Pill */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 h-9 rounded-full border border-border bg-surface shadow-xs text-xs text-text-secondary font-mono font-medium">
+            <Clock className="h-3.5 w-3.5 text-text-secondary/70" />
+            <span>{time}</span>
+          </div>
 
+          {/* Dark / Light Toggle */}
           <button
             onClick={toggleDark}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-muted transition-all"
+            title={dark ? "Switch to light mode" : "Switch to dark mode"}
+            className="h-9 w-9 rounded-full border border-border bg-surface shadow-xs flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-all cursor-pointer"
           >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {dark ? <Sun className="h-4 w-4 text-warning" /> : <Moon className="h-4 w-4 text-[#4A25E1]" />}
           </button>
         </div>
       </div>

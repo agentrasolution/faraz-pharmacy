@@ -237,6 +237,14 @@ function AppShell() {
           }
         />
         <Route
+          path="/categories"
+          element={
+            <AnimatedPage>
+              <Categories />
+            </AnimatedPage>
+          }
+        />
+        <Route
           path="/companies/:id"
           element={
             <AnimatedPage>

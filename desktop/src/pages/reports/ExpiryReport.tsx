@@ -24,7 +24,7 @@ function getExpiryStatus(days: number): { label: string; className: string; dot:
   if (days <= 30)
     return { label: "Warning", className: "bg-warning/10 text-warning", dot: "bg-warning" };
   if (days <= 90)
-    return { label: "Caution", className: "bg-accent/10 text-accent", dot: "bg-accent" };
+    return { label: "Caution", className: "bg-info/10 text-info", dot: "bg-info" };
   return { label: "Safe", className: "bg-success/10 text-success", dot: "bg-success" };
 }
 

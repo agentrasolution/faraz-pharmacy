@@ -59,45 +59,47 @@ export default function DataTable<T>({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {columns.map((col) => (
-            <TableHead key={col.key} className={col.className}>
-              {col.header}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.length === 0 ? (
-          <TableRow>
-            <TableCell
-              colSpan={columns.length}
-              className="text-center text-text-secondary py-10 text-xs"
-            >
-              {emptyMessage || "No data found"}
-            </TableCell>
+    <div className="rounded-2xl border border-border/80 bg-surface shadow-xs overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-surface-2/40 hover:bg-surface-2/40">
+            {columns.map((col) => (
+              <TableHead key={col.key} className={col.className}>
+                {col.header}
+              </TableHead>
+            ))}
           </TableRow>
-        ) : (
-          data.map((item, idx) => (
-            <TableRow
-              key={keyExtractor(item)}
-              className={cn(
-                onRowClick && "cursor-pointer",
-                idx % 2 === 0 ? "bg-surface" : "bg-surface-2/50"
-              )}
-              onClick={() => onRowClick?.(item)}
-            >
-              {columns.map((col) => (
-                <TableCell key={col.key} className={col.className}>
-                  {col.cell(item)}
-                </TableCell>
-              ))}
+        </TableHeader>
+        <TableBody>
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="text-center text-text-secondary py-12 text-xs"
+              >
+                {emptyMessage || "No data found"}
+              </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : (
+            data.map((item, idx) => (
+              <TableRow
+                key={keyExtractor(item)}
+                className={cn(
+                  onRowClick && "cursor-pointer",
+                  idx % 2 === 0 ? "bg-surface" : "bg-surface-2/25"
+                )}
+                onClick={() => onRowClick?.(item)}
+              >
+                {columns.map((col) => (
+                  <TableCell key={col.key} className={col.className}>
+                    {col.cell(item)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

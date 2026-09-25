@@ -170,231 +170,254 @@ export default function CustomerDetail() {
 
   return (
     <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate("/customers")}
-        className="gap-1.5 text-text-secondary"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Customers
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/customers")}
+          className="rounded-xl h-9 px-3 gap-1.5 text-xs text-text-secondary hover:text-text-primary shadow-xs"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Customers
+        </Button>
+      </div>
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-text-primary">{customer.name}</h1>
-          <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
-            <ShoppingBag className="h-3.5 w-3.5" />
-            {customer.phone}
+      {/* Customer Header Profile Card */}
+      <div className="rounded-2xl border border-border/80 bg-surface p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#4A25E1] to-[#3612B8] flex items-center justify-center text-white font-bold text-xl shadow-md shadow-brand/20">
+              {customer.name?.slice(0, 2).toUpperCase() || "CU"}
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-xl font-display font-bold text-text-primary tracking-tight">
+                  {customer.name}
+                </h1>
+                {(customer.outstanding_arrear ?? 0) > 0 ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-danger/10 text-danger border border-danger/20">
+                    Debt Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-success/10 text-success border border-success/20">
+                    Clean Account
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-4 mt-1.5 text-xs text-text-secondary">
+                <span className="flex items-center gap-1.5 font-mono">
+                  📞 {customer.phone || "No phone"}
+                </span>
+                {(customer.father_name || customer.father_phone) && (
+                  <span>
+                    Father: <span className="font-medium text-text-primary">{customer.father_name || "—"}</span>
+                    {customer.father_phone ? ` (${customer.father_phone})` : ""}
+                  </span>
+                )}
+                {customer.address && (
+                  <span>
+                    📍 {customer.address}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-          {(customer.father_name || customer.father_phone) && (
-            <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
-              <ShoppingBag className="h-3.5 w-3.5" />
-              Father: {customer.father_name || "\u2014"}
-              {customer.father_phone ? ` \u00b7 ${customer.father_phone}` : ""}
-            </div>
-          )}
-          {customer.address && (
-            <div className="flex items-center gap-2 mt-1 text-sm text-text-secondary">
-              <ShoppingBag className="h-3.5 w-3.5" />
-              {customer.address}
-            </div>
-          )}
         </div>
       </div>
 
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           title="Total Purchases"
           value={customer.total_purchases ?? customer.purchases?.length ?? 0}
-          icon={<ShoppingBag className="h-5 w-5" />}
+          icon={<ShoppingBag className="h-5 w-5 text-brand" />}
         />
         <StatCard
           title="Total Spent"
           value={formatCurrency(
             customer.purchases?.reduce((s: number, p: Sale) => s + p.total, 0) ?? 0
           )}
-          icon={<ShoppingBag className="h-5 w-5" />}
+          icon={<CreditCard className="h-5 w-5 text-[#4A25E1] dark:text-[#754BFB]" />}
         />
         <StatCard
           title="Outstanding Arrear"
           value={formatCurrency(customer.outstanding_arrear ?? 0)}
-          icon={<ShoppingBag className="h-5 w-5" />}
+          icon={<CreditCard className="h-5 w-5 text-warning" />}
         />
       </div>
 
-      <Tabs defaultValue="purchases">
-        <TabsList>
-          <TabsTrigger value="purchases">Purchase History</TabsTrigger>
-          <TabsTrigger value="arrears">Arrear History</TabsTrigger>
+      <Tabs defaultValue="purchases" className="space-y-4">
+        <TabsList className="bg-surface-2/80 p-1 rounded-2xl h-11 border border-border/60">
+          <TabsTrigger value="purchases" className="rounded-xl px-5 text-xs font-semibold data-[state=active]:bg-surface data-[state=active]:text-brand data-[state=active]:shadow-xs">
+            Purchase History
+          </TabsTrigger>
+          <TabsTrigger value="arrears" className="rounded-xl px-5 text-xs font-semibold data-[state=active]:bg-surface data-[state=active]:text-brand data-[state=active]:shadow-xs">
+            Arrear History
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="purchases">
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                columns={purchaseColumns}
-                data={(customer.purchases ?? []) as Sale[]}
-                keyExtractor={(s: Sale) => s.id}
-              />
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-border/80 bg-surface shadow-xs overflow-hidden">
+            <DataTable
+              columns={purchaseColumns}
+              data={(customer.purchases ?? []) as Sale[]}
+              keyExtractor={(s: Sale) => s.id}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="arrears">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      {[
-                        "Date",
-                        "Total Bill",
-                        "Paid",
-                        "Balance",
-                        "Status",
-                        "Payments",
-                        "Action",
-                      ].map((h) => (
-                        <th
-                          key={h}
-                          className="text-left px-4 py-3 text-xs font-medium text-text-secondary whitespace-nowrap"
-                        >
-                          {h}
-                        </th>
-                      ))}
+          <div className="rounded-2xl border border-border/80 bg-surface shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/80 bg-surface-2/40">
+                    {[
+                      "Date",
+                      "Total Bill",
+                      "Paid",
+                      "Balance",
+                      "Status",
+                      "Payments",
+                      "Action",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-4 py-3 text-xs font-semibold text-text-secondary whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {(customer.arrears ?? []).length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center text-text-secondary py-12 text-xs">
+                        No arrears recorded for this customer
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {(customer.arrears ?? []).length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="text-center text-text-secondary py-10 text-xs">
-                          No arrears found
-                        </td>
-                      </tr>
-                    ) : (
-                      (customer.arrears ?? []).map((a: Arrear) => (
-                        <Fragment key={a.id}>
-                          <tr className="border-b border-border/60 hover:bg-bg-secondary/40">
-                            <td className="px-4 py-3 font-mono text-xs text-text-secondary whitespace-nowrap">
-                              {formatDate(a.created_at)}
-                            </td>
-                            <td className="px-4 py-3 font-mono whitespace-nowrap">
-                              {formatCurrency(a.total_bill)}
-                            </td>
-                            <td className="px-4 py-3 font-mono whitespace-nowrap">
-                              {formatCurrency(a.amount_paid)}
-                            </td>
-                            <td className="px-4 py-3 font-mono font-medium text-warning whitespace-nowrap">
-                              {formatCurrency(a.balance_due)}
-                            </td>
-                            <td className="px-4 py-3">
-                              <StatusBadge status={a.status} />
-                            </td>
-                            <td className="px-4 py-3">
-                              {(a.payments?.length ?? 0) > 0 && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 gap-1 text-xs"
-                                  onClick={() =>
-                                    setExpandedArrear(expandedArrear === a.id ? null : a.id)
-                                  }
-                                >
-                                  {expandedArrear === a.id ? (
-                                    <ChevronUp className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <ChevronDown className="h-3.5 w-3.5" />
-                                  )}
-                                  {a.payments?.length} payment
-                                  {(a.payments?.length ?? 0) > 1 ? "s" : ""}
-                                </Button>
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              {a.status === "pending" &&
-                                (payingId === a.id ? (
-                                  <div className="flex items-center gap-1.5">
-                                    <Input
-                                      type="number"
-                                      placeholder="Amount"
-                                      value={paymentAmount}
-                                      onChange={(e) => setPaymentAmount(e.target.value)}
-                                      className="h-8 w-24 text-sm font-mono"
-                                      autoFocus
-                                    />
-                                    <Button
-                                      size="sm"
-                                      className="h-8"
-                                      disabled={!paymentAmount || recordPayment.isPending}
-                                      onClick={() => {
-                                        setPasswordDialog({
-                                          open: true,
-                                          targetId: a.id,
-                                          amount: Number(paymentAmount),
-                                        });
-                                        setAdminPassword("");
-                                      }}
-                                    >
-                                      Pay
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-8"
-                                      onClick={() => setPayingId(null)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
+                  ) : (
+                    (customer.arrears ?? []).map((a: Arrear) => (
+                      <Fragment key={a.id}>
+                        <tr className="hover:bg-brand/[0.02] transition-colors">
+                          <td className="px-4 py-3 font-mono text-xs text-text-secondary whitespace-nowrap">
+                            {formatDate(a.created_at)}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
+                            {formatCurrency(a.total_bill)}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
+                            {formatCurrency(a.amount_paid)}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs font-semibold text-warning whitespace-nowrap">
+                            {formatCurrency(a.balance_due)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={a.status} />
+                          </td>
+                          <td className="px-4 py-3">
+                            {(a.payments?.length ?? 0) > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 gap-1 text-xs rounded-lg"
+                                onClick={() =>
+                                  setExpandedArrear(expandedArrear === a.id ? null : a.id)
+                                }
+                              >
+                                {expandedArrear === a.id ? (
+                                  <ChevronUp className="h-3.5 w-3.5" />
                                 ) : (
-                                  <div className="flex items-center gap-1.5">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-8"
-                                      onClick={() => setPayingId(a.id)}
-                                    >
-                                      Record Payment
-                                    </Button>
-                                    <button
-                                      onClick={() => {
-                                        setPasswordDialog({
-                                          open: true,
-                                          targetId: a.id,
-                                          amount: null,
-                                        });
-                                        setAdminPassword("");
-                                      }}
-                                      className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors"
-                                      title="Mark Settled"
-                                    >
-                                      <CreditCard className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-                                ))}
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                )}
+                                {a.payments?.length} payment
+                                {(a.payments?.length ?? 0) > 1 ? "s" : ""}
+                              </Button>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            {a.status === "pending" &&
+                              (payingId === a.id ? (
+                                <div className="flex items-center gap-1.5">
+                                  <Input
+                                    type="number"
+                                    placeholder="Amount"
+                                    value={paymentAmount}
+                                    onChange={(e) => setPaymentAmount(e.target.value)}
+                                    className="h-8 w-24 text-xs font-mono rounded-lg"
+                                    autoFocus
+                                  />
+                                  <Button
+                                    size="sm"
+                                    className="h-8 rounded-lg bg-gradient-to-r from-[#4A25E1] to-[#3612B8] text-white"
+                                    disabled={!paymentAmount || recordPayment.isPending}
+                                    onClick={() => {
+                                      setPasswordDialog({
+                                        open: true,
+                                        targetId: a.id,
+                                        amount: Number(paymentAmount),
+                                      });
+                                      setAdminPassword("");
+                                    }}
+                                  >
+                                    Pay
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 rounded-lg"
+                                    onClick={() => setPayingId(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 rounded-xl text-xs"
+                                    onClick={() => setPayingId(a.id)}
+                                  >
+                                    Record Payment
+                                  </Button>
+                                  <button
+                                    onClick={() => {
+                                      setPasswordDialog({
+                                        open: true,
+                                        targetId: a.id,
+                                        amount: null,
+                                      });
+                                      setAdminPassword("");
+                                    }}
+                                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
+                                    title="Mark Settled"
+                                  >
+                                    <CreditCard className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                          </td>
+                        </tr>
+                        {expandedArrear === a.id && (a.payments?.length ?? 0) > 0 && (
+                          <tr className="bg-surface-2/40">
+                            <td colSpan={7} className="px-5 py-3">
+                              <div className="rounded-xl border border-border/70 overflow-hidden bg-surface">
+                                <DataTable
+                                  columns={paymentHistoryColumns}
+                                  data={a.payments ?? []}
+                                  keyExtractor={(p: ArrearPayment) => p.id}
+                                />
+                              </div>
                             </td>
                           </tr>
-                          {expandedArrear === a.id && (a.payments?.length ?? 0) > 0 && (
-                            <tr className="bg-bg-secondary/30">
-                              <td colSpan={7} className="px-4 py-3">
-                                <div className="rounded-lg border border-border/60 overflow-hidden">
-                                  <DataTable
-                                    columns={paymentHistoryColumns}
-                                    data={a.payments ?? []}
-                                    keyExtractor={(p: ArrearPayment) => p.id}
-                                  />
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                        )}
+                      </Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -402,35 +425,43 @@ export default function CustomerDetail() {
         open={passwordDialog.open}
         onOpenChange={(o) => setPasswordDialog({ ...passwordDialog, open: o })}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="h-4 w-4" />
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold font-display">
+              <Lock className="h-4 w-4 text-brand" />
               Admin Password Required
             </DialogTitle>
-            <DialogDescription>
-              Enter your admin password to confirm this payment.
+            <DialogDescription className="text-xs">
+              Enter your admin password to authorize this financial transaction.
             </DialogDescription>
           </DialogHeader>
-          <div className="px-5 pb-5 space-y-3">
-            <div>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
               <Input
                 type="password"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder="Enter admin password"
+                className="h-10 rounded-xl"
                 autoFocus
               />
             </div>
-            {passwordError && <p className="text-sm text-danger">{passwordError}</p>}
-            <div className="flex gap-2 justify-end">
+            {passwordError && (
+              <p className="text-xs text-danger font-medium bg-danger/10 p-2 rounded-lg">{passwordError}</p>
+            )}
+            <div className="flex gap-2 justify-end pt-2">
               <Button
                 variant="outline"
+                className="rounded-xl"
                 onClick={() => setPasswordDialog({ open: false, targetId: "", amount: null })}
               >
                 Cancel
               </Button>
-              <Button onClick={handleAdminAction} disabled={!adminPassword}>
+              <Button
+                className="rounded-xl bg-gradient-to-r from-[#4A25E1] to-[#3612B8] text-white hover:from-[#3e1ed1] hover:to-[#2e0ea3]"
+                onClick={handleAdminAction}
+                disabled={!adminPassword}
+              >
                 {recordPayment.isPending || settleMutation.isPending ? "Confirming..." : "Confirm"}
               </Button>
             </div>

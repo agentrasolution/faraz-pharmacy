@@ -293,7 +293,7 @@ export default function CheckoutPanel({
               onChange={(e) => onNotesChange?.(e.target.value)}
               rows={2}
               placeholder="Sale notes (optional)"
-              className="w-full h-auto rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 resize-none"
+              className="w-full h-auto rounded-xl border border-border/80 bg-surface px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-brand/20 resize-none"
             />
           </div> */}
 
@@ -301,7 +301,7 @@ export default function CheckoutPanel({
             <div className="flex items-center gap-2">
               <button
                 onClick={onToggleDiscountType}
-                className="h-7 px-2 rounded-md text-[10px] font-medium border border-border bg-surface-2 hover:bg-border transition-colors shrink-0"
+                className="h-8 px-2.5 rounded-xl text-xs font-semibold border border-border/80 bg-surface-2 hover:bg-surface-2/80 text-text-primary transition-colors shrink-0"
               >
                 {discountType === "pkr" ? "PKR" : "%"}
               </button>
@@ -311,11 +311,11 @@ export default function CheckoutPanel({
                 placeholder={`Discount (${discountType === "pkr" ? "PKR" : "%"})`}
                 value={discountValue || ""}
                 onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
-                className="h-7 text-xs font-mono"
+                className="h-8 rounded-xl text-xs font-mono"
               />
             </div>
             {discountValue > 0 && (
-              <p className="text-[10px] text-text-secondary text-right mt-0.5">
+              <p className="text-[10px] text-text-secondary text-right mt-1 font-mono">
                 {discountType === "percent"
                   ? `= ${formatCurrency(discount)}`
                   : `= ${Math.round((discountValue * 100) / subtotal)}%`}
@@ -323,7 +323,7 @@ export default function CheckoutPanel({
             )}
           </div>
 
-          <div className="space-y-1 text-xs">
+          <div className="space-y-1.5 text-xs">
             <div className="flex justify-between text-text-secondary">
               <span>Subtotal</span>
               <span className="font-mono tabular-nums">{formatCurrency(subtotal)}</span>
@@ -337,12 +337,12 @@ export default function CheckoutPanel({
             <Separator />
             <div className="flex justify-between text-sm font-bold text-text-primary pt-0.5">
               <span>Total</span>
-              <span className="font-mono tabular-nums">{formatCurrency(total)}</span>
+              <span className="font-mono tabular-nums text-base text-brand">{formatCurrency(total)}</span>
             </div>
             <button
               type="button"
               onClick={() => setShowProfit((v) => !v)}
-              className="w-full flex items-center justify-between gap-2 rounded-md px-1.5 py-1 -mx-1.5 text-[10px] text-text-secondary/60 hover:text-text-secondary hover:bg-surface-2 transition-colors group/profit"
+              className="w-full flex items-center justify-between gap-2 rounded-xl px-2 py-1 -mx-0 text-[10px] text-text-secondary/70 hover:text-text-primary hover:bg-surface-2/80 transition-colors group/profit"
               title={showProfit ? "Hide profit" : "Click to reveal profit"}
             >
               <span className="flex items-center gap-1 font-medium uppercase tracking-wide">
@@ -357,26 +357,26 @@ export default function CheckoutPanel({
             </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Input
               id="pos-amount-paid"
               type="number"
               placeholder="Amount paid"
               value={amountPaid}
               onChange={(e) => onAmountPaidChange?.(e.target.value)}
-              className="h-10 text-base font-mono font-bold text-center"
+              className="h-12 text-lg font-mono font-bold text-center rounded-2xl border-2 border-border/80 focus-visible:border-[#4A25E1] bg-surface shadow-xs"
             />
             {change > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center text-xs text-success font-semibold"
+                className="text-center text-xs text-success font-bold"
               >
-                Change: {formatCurrency(change)}
+                Change Due: {formatCurrency(change)}
               </motion.div>
             )}
             {isPartial && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-1">
                 <Checkbox
                   id="add-to-arrears"
                   checked={addToArrears}
@@ -384,30 +384,31 @@ export default function CheckoutPanel({
                 />
                 <Label
                   htmlFor="add-to-arrears"
-                  className="text-[11px] cursor-pointer text-text-secondary"
+                  className="text-xs cursor-pointer text-text-secondary font-medium"
                 >
-                  Add remaining to arrears
+                  Record remaining balance to arrears
                 </Label>
               </div>
             )}
             <Button
-              className="w-full h-10 text-sm gap-2"
+              className="w-full h-12 text-sm font-bold gap-2 rounded-2xl shadow-md cursor-pointer"
+              variant="brand"
               disabled={!canPay || processing}
               onClick={handleCheckout}
             >
-              {processing ? "Processing..." : `Pay ${formatCurrency(total)}`}
+              {processing ? "Processing Transaction..." : `Pay ${formatCurrency(total)}`}
             </Button>
             {isPartial && !customerId && (
-              <p className="text-[10px] text-center text-danger">
-                Select a customer for partial payment
+              <p className="text-[11px] text-center text-danger font-medium">
+                Select a customer for partial credit payment
               </p>
             )}
             {isPartial && !!customerId && !addToArrears && (
-              <p className="text-[10px] text-center text-text-secondary">
-                Check the box above to add remaining to arrears
+              <p className="text-[11px] text-center text-text-secondary font-medium">
+                Check the box above to add remaining to customer's arrears
               </p>
             )}
-            {error && <p className="text-[10px] text-center text-danger">{error}</p>}
+            {error && <p className="text-[11px] text-center text-danger font-medium">{error}</p>}
           </div>
         </div>
       )}

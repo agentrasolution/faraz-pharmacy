@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadPDF, downloadCSV } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
@@ -221,17 +221,17 @@ export default function Expenses() {
         <div className="flex items-center gap-1 justify-end">
           <button
             onClick={() => openEdit(e)}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
             title="Edit"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-4 w-4" />
           </button>
           <button
             onClick={() => setDeleteId(e.id)}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
             title="Delete"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -239,49 +239,62 @@ export default function Expenses() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Expenses"
-        description="Track and manage operational expenses"
+        title="Shop Operational Expenses"
+        description="Daily utilities, wages, supplies, and maintenance ledgers"
         action={{ label: "Add Expense", onClick: openAdd, shortcut: "Mod+N" }}
       />
+
       <div className="mb-4">
         <StatCard
-          title="Total This Month"
+          title="Total Expenses This Month"
           value={formatCurrency(totalThisMonth)}
           icon={<Wallet className="h-5 w-5" />}
+          subtitle="Utility, salary & overhead expenditure"
         />
       </div>
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
-        {categories.map((cat) => (
-          <Button
-            key={cat}
-            variant={category === cat ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              setCategory(cat);
-              setPage(1);
-            }}
-          >
-            {cat}
-          </Button>
-        ))}
-        <div className="ml-auto flex items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary pointer-events-none" />
+
+      {/* Toolbar & Category Pill Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        {/* Category Pills */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs overflow-x-auto">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setCategory(cat);
+                setPage(1);
+              }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap",
+                category === cat
+                  ? "bg-[#4A25E1] text-white shadow-xs"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[200px] max-w-sm">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary pointer-events-none" />
             <Input
               ref={searchRef}
-              placeholder="Search expenses..."
+              placeholder="Search expenses by title..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-8 text-xs"
+              className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
             />
           </div>
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
         </div>
       </div>
-      <div className="rounded-xl border border-border">
+
+      <div className="space-y-4">
         <DataTable
           columns={columns}
           data={filtered}
@@ -289,45 +302,50 @@ export default function Expenses() {
           keyExtractor={(e: Expense) => e.id}
         />
         
-        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+        {/* Pagination Bar */}
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>
-              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
             </span>
             <div className="flex items-center gap-2">
-              <label htmlFor="limit-select">Rows per page:</label>
+              <span>Per page:</span>
               <select
-                id="limit-select"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+                className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
               >
-                {[10, 20, 30, 50, 100].map(val => (
-                  <option key={val} value={val}>{val}</option>
+                {[10, 20, 30, 50, 100].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded-xl shadow-xs"
             >
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-xs font-semibold text-text-primary px-2">
               Page {meta.page} of {meta.totalPages || 1}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page >= (meta.totalPages || 1)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-xl shadow-xs"
             >
               Next
             </Button>

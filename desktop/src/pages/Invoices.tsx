@@ -220,17 +220,17 @@ export default function Invoices() {
               e.stopPropagation();
               navigate(`/invoices/${s.id}`);
             }}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
             title="View Details"
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-4 w-4" />
           </button>
           <button
             onClick={(e) => handleQuickPrint(s, e)}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
             title="Print Receipt"
           >
-            <Printer className="h-3.5 w-3.5" />
+            <Printer className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -238,42 +238,51 @@ export default function Invoices() {
   ];
 
   return (
-    <div>
-      <PageHeader title="Invoices & Billing" description="View and export all sales invoices" />
-      <div className="flex flex-wrap items-end gap-3 mb-4">
-        <div className="flex-1 min-w-[200px] max-w-sm">
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        title="Sales Invoices & Billing"
+        description="Prescription sales receipts, customer invoices, and reprint records"
+      />
+
+      {/* Toolbar & Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex-1 min-w-[240px] max-w-md">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
             <Input
               ref={searchRef}
               autoFocus
               placeholder="Search by invoice ID or customer..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
             />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-text-secondary" />
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="w-36"
-          />
-          <span className="text-text-secondary text-sm">to</span>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="w-36"
-          />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs px-3">
+            <Calendar className="h-4 w-4 text-[#4A25E1] dark:text-[#754BFB]" />
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-32 h-8 text-xs border-0 bg-transparent focus-visible:ring-0"
+            />
+            <span className="text-text-secondary text-xs font-semibold">to</span>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-32 h-8 text-xs border-0 bg-transparent focus-visible:ring-0"
+            />
+          </div>
+          <ExportButton type="csv" onClick={handleExportCSV} disabled={sales.length === 0} />
+          <ExportButton type="pdf" onClick={handleExportPDF} disabled={sales.length === 0} />
         </div>
-        <ExportButton type="csv" onClick={handleExportCSV} disabled={sales.length === 0} />
-        <ExportButton type="pdf" onClick={handleExportPDF} disabled={sales.length === 0} />
       </div>
-      <div className="rounded-xl border border-border">
+
+      <div className="space-y-4">
         <DataTable
           columns={columns}
           data={sales}
@@ -282,45 +291,50 @@ export default function Invoices() {
           onRowClick={(s: Sale) => navigate(`/invoices/${s.id}`)}
         />
         
-        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+        {/* Pagination Bar */}
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>
-              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
             </span>
             <div className="flex items-center gap-2">
-              <label htmlFor="limit-select">Rows per page:</label>
+              <span>Per page:</span>
               <select
-                id="limit-select"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+                className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
               >
-                {[10, 20, 30, 50, 100].map(val => (
-                  <option key={val} value={val}>{val}</option>
+                {[10, 20, 30, 50, 100].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded-xl shadow-xs"
             >
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-xs font-semibold text-text-primary px-2">
               Page {meta.page} of {meta.totalPages || 1}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page >= (meta.totalPages || 1)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-xl shadow-xs"
             >
               Next
             </Button>

@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency, generateBarcode } from "@/lib/utils";
+import { cn, formatCurrency, generateBarcode } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
@@ -753,43 +753,43 @@ export default function Products() {
             <>
               <button
                 onClick={() => openEdit(p)}
-                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
                 title="Edit"
               >
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={() => {
                   setArchiveTargetId(p.id);
                   setArchivePasswordOpen(true);
                 }}
-                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/5 transition-colors"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors"
                 title="Archive"
               >
-                <Archive className="h-3.5 w-3.5" />
+                <Archive className="h-4 w-4" />
               </button>
             </>
           ) : (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => {
                   setRestoreTargetId(p.id);
                   setRestorePasswordOpen(true);
                 }}
-                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/5 transition-colors"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
                 title="Restore"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <RotateCcw className="h-4 w-4" />
               </button>
               <button
                 onClick={() => {
                   setHardDeleteTargetId(p.id);
                   setHardDeletePasswordOpen(true);
                 }}
-                className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
                 title="Delete Permanently"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           )}
@@ -925,13 +925,14 @@ export default function Products() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+      {/* Products Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             ref={searchRef}
             autoFocus
-            placeholder="Search or scan barcode..."
+            placeholder="Search products or scan barcode..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={async (e) => {
@@ -943,14 +944,14 @@ export default function Products() {
                 }
               }
             }}
-            className="pl-9"
+            className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
           />
         </div>
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            className={showArchived ? "border-accent text-accent" : ""}
+            className={cn("rounded-xl shadow-xs", showArchived ? "border-[#4A25E1] text-[#4A25E1] dark:border-[#754BFB] dark:text-[#754BFB]" : "")}
             onClick={() => setShowArchived(!showArchived)}
           >
             <Archive className="h-3.5 w-3.5 mr-1" />
@@ -966,8 +967,9 @@ export default function Products() {
             className="hidden"
           />
           <Button
-            variant="primary"
+            variant="brand"
             size="sm"
+            className="rounded-xl shadow-xs"
             onClick={() => {
               setImportOpen(true);
               setImportRows([]);
@@ -975,13 +977,13 @@ export default function Products() {
           >
             <Upload className="h-3.5 w-3.5 mr-1" /> Import CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setPrintBarcode({})}>
-            <Barcode className="h-3.5 w-3.5 mr-1" /> Generate Barcode
+          <Button variant="outline" size="sm" className="rounded-xl shadow-xs" onClick={() => setPrintBarcode({})}>
+            <Barcode className="h-3.5 w-3.5 mr-1" /> Print Barcode
           </Button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-border">
+      <div className="space-y-4">
         <DataTable
           columns={columns}
           data={products}
@@ -989,45 +991,50 @@ export default function Products() {
           keyExtractor={(p: Product) => p.id}
         />
         
-        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+        {/* Pagination Bar */}
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>
-              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
             </span>
             <div className="flex items-center gap-2">
-              <label htmlFor="limit-select">Rows per page:</label>
+              <span>Per page:</span>
               <select
-                id="limit-select"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
-                  setPage(1); // Reset to page 1 when changing limit
+                  setPage(1);
                 }}
-                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+                className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
               >
-                {[10, 20, 30, 50, 100].map(val => (
-                  <option key={val} value={val}>{val}</option>
+                {[10, 20, 30, 50, 100].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded-xl shadow-xs"
             >
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-xs font-semibold text-text-primary px-2">
               Page {meta.page} of {meta.totalPages || 1}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page >= (meta.totalPages || 1)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-xl shadow-xs"
             >
               Next
             </Button>
@@ -1343,10 +1350,10 @@ export default function Products() {
                   </div>
                   <button
                     onClick={() => removePriceTier(i)}
-                    className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors mt-4 shrink-0"
+                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors mt-3 shrink-0"
                     title="Remove tier"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}

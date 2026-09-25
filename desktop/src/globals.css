@@ -8,45 +8,49 @@
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Light Mode Colors */
-  --color-background: #fdfdfd;
-  --color-foreground: #09090b;
+  /* Light Mode Colors (Airnow Aesthetic) */
+  --color-background: #f8f9fd;
+  --color-foreground: #1e202b;
   --color-surface: #ffffff;
-  --color-surface-2: #f4f4f5;
+  --color-surface-2: #f1f4fb;
   --color-elevated: #ffffff;
-  --color-text-primary: #09090b;
-  --color-text-secondary: #52525b;
-  --color-accent: #10b981;
-  --color-accent-hover: #059669;
+  --color-text-primary: #1e202b;
+  --color-text-secondary: #71768e;
+  --color-accent: #4a25e1;
+  --color-accent-hover: #3c19cf;
   --color-accent-foreground: #ffffff;
-  --color-accent-subtle: #d1fae5;
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
+  --color-accent-subtle: rgba(74, 37, 225, 0.12);
+  --color-brand: #4a25e1;
+  --color-brand-hover: #3c19cf;
+  --color-brand-foreground: #ffffff;
+  --color-brand-subtle: rgba(74, 37, 225, 0.1);
+  --color-danger: #ff5252;
+  --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-info: #3b82f6;
-  --color-border: #e4e4e7;
-  --color-border-strong: #d4d4d8;
+  --color-border: #e8ecf4;
+  --color-border-strong: #dbe1ee;
   --color-card: #ffffff;
-  --color-card-foreground: #09090b;
-  --color-muted: #f4f4f5;
-  --color-muted-foreground: #71717a;
+  --color-card-foreground: #1e202b;
+  --color-muted: #f1f4fb;
+  --color-muted-foreground: #71768e;
   --color-popover: #ffffff;
-  --color-popover-foreground: #09090b;
-  --color-primary: #10b981;
+  --color-popover-foreground: #1e202b;
+  --color-primary: #4a25e1;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #f4f4f5;
-  --color-secondary-foreground: #09090b;
-  --color-input: #e4e4e7;
-  --color-input-foreground: #09090b;
-  --color-ring: #10b981;
-  --color-sidebar-background: #fdfdfd;
-  --color-sidebar-foreground: #09090b;
-  --color-sidebar-primary: #10b981;
-  --color-sidebar-primary-foreground: #ffffff;
-  --color-sidebar-accent: #f4f4f5;
-  --color-sidebar-accent-foreground: #09090b;
-  --color-sidebar-border: #e4e4e7;
-  --color-sidebar-ring: #10b981;
+  --color-secondary: #f1f4fb;
+  --color-secondary-foreground: #1e202b;
+  --color-input: #e8ecf4;
+  --color-input-foreground: #1e202b;
+  --color-ring: #4a25e1;
+  --color-sidebar-background: #4a25e1;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-primary: #ffffff;
+  --color-sidebar-primary-foreground: #4a25e1;
+  --color-sidebar-accent: #ffffff;
+  --color-sidebar-accent-foreground: #4a25e1;
+  --color-sidebar-border: rgba(255, 255, 255, 0.12);
+  --color-sidebar-ring: #4a25e1;
 
   /* Animation Durations */
   --duration-hover: 150ms;
@@ -57,54 +61,59 @@
   --duration-normal: 150ms;
   --duration-slow: 300ms;
 
-  /* Border Radius - Modern Refinement */
-  --radius: 0.625rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.25rem;
+  /* Border Radius - Rounded modern aesthetic */
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
 }
 
 .dark {
-  /* Dark Mode Colors */
-  --color-background: #09090b;
-  --color-foreground: #fafafa;
-  --color-surface: #121214;
-  --color-surface-2: #18181b;
-  --color-elevated: #18181b;
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-accent: #10b981;
-  --color-accent-hover: #34d399;
-  --color-accent-foreground: #052e16;
-  --color-accent-subtle: #064e3b;
+  /* Dark Mode Colors (Obsidian & Vivid Indigo) */
+  --color-background: #0b0d14;
+  --color-foreground: #f8fafc;
+  --color-surface: #141724;
+  --color-surface-2: #1b1f31;
+  --color-elevated: #1b1f31;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #6236ff;
+  --color-accent-hover: #754bfb;
+  --color-accent-foreground: #ffffff;
+  --color-accent-subtle: rgba(98, 54, 255, 0.18);
+  --color-brand: #6236ff;
+  --color-brand-hover: #754bfb;
+  --color-brand-foreground: #ffffff;
+  --color-brand-subtle: rgba(98, 54, 255, 0.18);
   --color-danger: #f87171;
-  --color-success: #4ade80;
+  --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-info: #60a5fa;
-  --color-border: #27272a;
-  --color-border-strong: #3f3f46;
-  --color-card: #121214;
-  --color-card-foreground: #fafafa;
-  --color-muted: #27272a;
-  --color-muted-foreground: #a1a1aa;
-  --color-popover: #18181b;
-  --color-popover-foreground: #fafafa;
-  --color-primary: #10b981;
-  --color-primary-foreground: #052e16;
-  --color-secondary: #27272a;
-  --color-secondary-foreground: #fafafa;
-  --color-input: #27272a;
-  --color-input-foreground: #fafafa;
-  --color-ring: rgba(16, 185, 129, 0.4);
-  --color-sidebar-background: #09090b;
-  --color-sidebar-foreground: #fafafa;
-  --color-sidebar-primary: #10b981;
-  --color-sidebar-primary-foreground: #052e16;
-  --color-sidebar-accent: #27272a;
-  --color-sidebar-accent-foreground: #fafafa;
-  --color-sidebar-border: #27272a;
-  --color-sidebar-ring: rgba(16, 185, 129, 0.4);
+  --color-border: #23273a;
+  --color-border-strong: #2f344e;
+  --color-card: #141724;
+  --color-card-foreground: #f8fafc;
+  --color-muted: #1c2033;
+  --color-muted-foreground: #94a3b8;
+  --color-popover: #1c2033;
+  --color-popover-foreground: #f8fafc;
+  --color-primary: #6236ff;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1c2033;
+  --color-secondary-foreground: #f8fafc;
+  --color-input: #23273a;
+  --color-input-foreground: #f8fafc;
+  --color-ring: rgba(98, 54, 255, 0.4);
+  --color-sidebar-background: #0f111e;
+  --color-sidebar-foreground: #f8fafc;
+  --color-sidebar-primary: #6236ff;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #1e2238;
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: #1e2238;
+  --color-sidebar-ring: rgba(98, 54, 255, 0.4);
 }
 
 * {

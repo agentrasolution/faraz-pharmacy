@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 import { formatDate } from "@/lib/utils";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
+import ExportButton from "@/components/shared/ExportButton";
 import type { Category } from "@/types";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -102,88 +103,103 @@ export default function Categories() {
   }
 
   return (
-    <div>
+    <div className="space-y-5">
       <PageHeader
         title="Categories"
-        description="Manage product categories"
-        action={{ label: "Add Category", onClick: openAdd }}
+        description="Organize and structure pharmaceutical product categories"
+        action={{
+          label: (
+            <span className="flex items-center gap-1.5">
+              <Plus className="h-4 w-4" />
+              Add Category
+            </span>
+          ),
+          onClick: openAdd,
+        }}
       />
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+
+      {/* Modern Search & Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[260px] max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary pointer-events-none" />
           <Input
             autoFocus
             placeholder="Search categories..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="pl-9"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="pl-10 h-10 rounded-full bg-surface border-border/80 shadow-xs focus:ring-2 focus:ring-brand/20 transition-all"
           />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportCSV}
-        >
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportPDF}
-        >
-          <Download className="h-4 w-4 mr-1" /> PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportButton type="csv" onClick={handleExportCSV} />
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+        </div>
       </div>
+
+      {/* Grid of Categories */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
-          Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
+          Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-2xl bg-surface-2/60" />
+          ))
         ) : categories.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-sm text-text-secondary">
+          <div className="col-span-full rounded-2xl border border-dashed border-border bg-surface/50 text-center py-16 text-sm text-text-secondary">
             {debouncedSearch
-              ? "No categories match your search"
-              : "No categories yet. Add your first category to get started."}
+              ? "No categories match your search query."
+              : "No categories added yet. Click 'Add Category' to get started."}
           </div>
         ) : (
           categories.map((cat: Category) => (
-            <Card key={cat.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      <Tags className="h-4 w-4 text-accent" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-medium text-sm text-text-primary truncate">{cat.name}</h3>
-                      <p className="text-[10px] text-text-secondary mt-0.5">Added: {formatDate(cat.created_at)}</p>
-                    </div>
+            <div
+              key={cat.id}
+              className="group rounded-2xl border border-border/80 bg-surface p-4.5 shadow-xs hover:shadow-md hover:border-brand/40 transition-all duration-200"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                  <div className="h-11 w-11 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Tags className="h-5 w-5" />
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => openEdit(cat)}
-                      className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
-                      title="Edit"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(cat.id)}
-                      className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm text-text-primary truncate tracking-tight">
+                      {cat.name}
+                    </h3>
+                    <p className="text-[11px] text-text-secondary mt-0.5 font-mono">
+                      Added: {formatDate(cat.created_at)}
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => openEdit(cat)}
+                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteId(cat.id)}
+                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           ))
         )}
       </div>
 
-      {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 px-1">
-          <p className="text-sm text-text-secondary">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+      {/* Floating Unified Pagination Bar */}
+      {meta && (
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <p className="text-xs text-text-secondary font-medium">
+            Showing <span className="font-semibold text-text-primary">{(page - 1) * limit + 1}</span> to{" "}
+            <span className="font-semibold text-text-primary">{Math.min(page * limit, meta.total)}</span> of{" "}
+            <span className="font-semibold text-text-primary">{meta.total}</span> categories
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -191,58 +207,71 @@ export default function Categories() {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
+              className="rounded-xl h-8 px-3 text-xs shadow-xs"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Previous
             </Button>
-            <span className="text-sm text-text-secondary px-2">
-              Page {page} of {meta.totalPages}
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-surface-2 text-text-primary">
+              Page {page} of {meta.totalPages || 1}
             </span>
             <Button
               variant="outline"
               size="sm"
               disabled={page >= meta.totalPages}
               onClick={() => setPage(page + 1)}
+              className="rounded-xl h-8 px-3 text-xs shadow-xs"
             >
-              <ChevronRight className="h-4 w-4" />
+              Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           </div>
         </div>
       )}
 
+      {/* Add / Edit Category Dialog */}
       <Dialog
         open={open}
         onOpenChange={(v) => {
-          if (!v) {
-            setEditingId(null);
-          }
+          if (!v) setEditingId(null);
           setOpen(v);
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md rounded-3xl">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Category" : "Add Category"}</DialogTitle>
+            <DialogTitle className="text-lg font-bold font-display">
+              {editingId ? "Edit Category" : "Add Category"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="px-5 pb-5 space-y-3">
-            <div>
-              <Label>Category Name</Label>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-text-primary">Category Name</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Tablets, Syrups, Injections"
+                placeholder="e.g. Antibiotics, Pain Relief, Syrups"
+                className="h-10 rounded-xl"
                 autoFocus
               />
             </div>
-            <Button
-              className="w-full"
-              disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
-              onClick={() => (editingId ? updateMutation.mutate() : createMutation.mutate())}
-            >
-              {createMutation.isPending || updateMutation.isPending
-                ? "Saving..."
-                : editingId
-                  ? "Update Category"
-                  : "Add Category"}
-            </Button>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="rounded-xl bg-gradient-to-r from-[#4A25E1] to-[#3612B8] text-white hover:from-[#3e1ed1] hover:to-[#2e0ea3] shadow-md shadow-brand/20"
+                disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
+                onClick={() => (editingId ? updateMutation.mutate() : createMutation.mutate())}
+              >
+                {createMutation.isPending || updateMutation.isPending
+                  ? "Saving..."
+                  : editingId
+                  ? "Save Changes"
+                  : "Create Category"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -253,7 +282,7 @@ export default function Categories() {
           if (!v) setDeleteId(null);
         }}
         title="Delete Category"
-        description="Are you sure you want to delete this category? Products assigned to it will not be affected."
+        description="Are you sure you want to delete this category? Products assigned to it will remain intact."
         confirmLabel="Delete"
         onConfirm={() => {
           if (deleteId) deleteMutation.mutate(deleteId);

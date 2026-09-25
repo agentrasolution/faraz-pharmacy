@@ -39,20 +39,20 @@ export function downloadExcel(options: ExcelExportOptions): void {
 <meta charset="utf-8">
 <title>${title}</title>
 <style>
-  body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 20px; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 32px; }
-  th { background: #0d9488; color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; border: 1px solid #0d9488; }
-  td { padding: 8px 12px; border: 1px solid #e5e7eb; font-size: 12px; }
-  tr:nth-child(even) { background: #f9fafb; }
-  tr:hover { background: #f0fdfa; }
-  .sheet-title { font-size: 16px; font-weight: 700; color: #0d9488; margin: 24px 0 12px; }
-  .totals { margin-top: 12px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; }
+  body { font-family: 'Outfit', 'Inter', system-ui, sans-serif; margin: 24px; background: #F8F9FD; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; margin-bottom: 32px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  th { background: #4A25E1; color: white; padding: 12px 14px; text-align: left; font-weight: 600; font-size: 12px; }
+  td { padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 12px; background: white; }
+  tr:nth-child(even) td { background: #fdfdfe; }
+  tr:hover td { background: #f4f2ff; }
+  .sheet-title { font-size: 16px; font-weight: 700; color: #4A25E1; margin: 24px 0 12px; }
+  .totals { margin-top: 12px; padding: 10px 14px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
   .no-data { text-align: center; padding: 20px; color: #6b7280; font-style: italic; }
 </style>
 </head>
 <body>
-  <h1 style="color: #0d9488; margin-bottom: 8px;">FARAZ PHARMACY</h1>
-  <p style="color: #6b7280; margin-bottom: 24px;">${title}</p>
+  <h1 style="color: #4A25E1; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px;">FARAZ PHARMACY</h1>
+  <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">${title}</p>
   ${sheets
     .map(
       (sheet) => `
@@ -92,7 +92,7 @@ export function downloadExcel(options: ExcelExportOptions): void {
 
       const btn = document.createElement('button');
       btn.textContent = 'Copy to Clipboard (paste into Excel)';
-      btn.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 24px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+      btn.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 20px;background:#4A25E1;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;z-index:9999;box-shadow:0 4px 12px rgba(74,37,225,0.25);';
       btn.onclick = function() {
         navigator.clipboard.writeText(tsv).then(function() {
           btn.textContent = 'Copied!';

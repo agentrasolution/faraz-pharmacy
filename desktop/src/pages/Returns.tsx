@@ -365,28 +365,33 @@ export default function Returns() {
   }
 
   return (
-    <div>
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Returns"
-        description="Process and track product returns"
+        title="Sales Returns & Refunds"
+        description="Customer medicine returns, batch restitution, and cash refunds"
         action={{ label: "New Return", onClick: openDialog, shortcut: "Mod+N" }}
       />
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             autoFocus
             ref={searchRef}
-            placeholder="Search returns..."
+            placeholder="Search returns by customer, medicine, or reason..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
           />
         </div>
-        <ExportButton type="csv" onClick={handleExportCSV} />
-        <ExportButton type="pdf" onClick={handleExportPDF} />
+        <div className="flex items-center gap-2">
+          <ExportButton type="csv" onClick={handleExportCSV} />
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+        </div>
       </div>
-      <div className="rounded-xl border border-border">
+
+      <div className="space-y-4">
         <DataTable
           columns={columns}
           data={filtered}
@@ -395,45 +400,50 @@ export default function Returns() {
           onRowClick={(r: ReturnEntry) => setSelectedReturn(r)}
         />
         
-        <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+        {/* Pagination Bar */}
+        <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span>
-              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+              Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
             </span>
             <div className="flex items-center gap-2">
-              <label htmlFor="limit-select">Rows per page:</label>
+              <span>Per page:</span>
               <select
-                id="limit-select"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+                className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
               >
-                {[10, 20, 30, 50, 100].map(val => (
-                  <option key={val} value={val}>{val}</option>
+                {[10, 20, 30, 50, 100].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page <= 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded-xl shadow-xs"
             >
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-xs font-semibold text-text-primary px-2">
               Page {meta.page} of {meta.totalPages || 1}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               disabled={meta.page >= (meta.totalPages || 1)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-xl shadow-xs"
             >
               Next
             </Button>
@@ -489,15 +499,15 @@ export default function Returns() {
 
             {/* Date Filters */}
             <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-text-secondary" />
+              <Calendar className="h-4 w-4 text-text-secondary" />
               {(["all", "today", "week", "month"] as DateFilter[]).map((f) => (
                 <button
                   key={f}
                   onClick={() => handleDateFilterChange(f)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     dateFilter === f
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-surface-3"
+                      ? "bg-gradient-to-r from-[#4A25E1] to-[#3612B8] text-white shadow-xs"
+                      : "bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-surface-2/80"
                   }`}
                 >
                   {f === "all"
@@ -534,12 +544,12 @@ export default function Returns() {
                         key={sale.id}
                         type="button"
                         onClick={() => selectSale(sale)}
-                        className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl border border-border/80 hover:border-brand/40 hover:bg-brand/[0.02] transition-all group"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-8 w-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">
-                              <FileText className="h-4 w-4 text-text-secondary" />
+                            <div className="h-9 w-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -584,12 +594,12 @@ export default function Returns() {
                           setInvoiceSearch("");
                           setInvoiceResults([]);
                         }}
-                        className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl border border-border/80 hover:border-brand/40 hover:bg-brand/[0.02] transition-all group"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-8 w-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">
-                              <FileText className="h-4 w-4 text-text-secondary" />
+                            <div className="h-9 w-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -638,12 +648,12 @@ export default function Returns() {
                           setInvoiceSearch("");
                           setInvoiceResults([]);
                         }}
-                        className="w-full text-left px-3 py-2.5 rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl border border-border/80 hover:border-brand/40 hover:bg-brand/[0.02] transition-all group"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-8 w-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">
-                              <FileText className="h-4 w-4 text-text-secondary" />
+                            <div className="h-9 w-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">

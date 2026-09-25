@@ -74,10 +74,10 @@ export default function PasswordConfirmDialog({
           </DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="px-5 pb-5 space-y-3">
+        <div className="px-5 pb-5 space-y-4">
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Lock className="h-4 w-4" /> Enter admin password to confirm
+            <Label className="flex items-center gap-2 text-xs font-medium text-text-primary">
+              <Lock className="h-4 w-4 text-brand" /> Enter admin password to confirm
             </Label>
             <Input
               type="password"
@@ -87,21 +87,31 @@ export default function PasswordConfirmDialog({
                 setError("");
               }}
               placeholder="Admin password"
+              className="h-10 rounded-xl"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleConfirm();
               }}
               autoFocus
             />
-            {error && <p className="text-xs text-danger">{error}</p>}
+            {error && <p className="text-xs text-danger font-medium bg-danger/10 px-2.5 py-1.5 rounded-lg">{error}</p>}
           </div>
-          <Button
-            variant="destructive"
-            className="w-full"
-            disabled={!password || loading || verifying}
-            onClick={handleConfirm}
-          >
-            {verifying ? "Verifying..." : loading ? "Processing..." : confirmLabel}
-          </Button>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button
+              variant="outline"
+              className="rounded-xl h-10 px-4 text-xs font-medium"
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-xl h-10 px-5 text-xs font-medium shadow-xs"
+              disabled={!password || loading || verifying}
+              onClick={handleConfirm}
+            >
+              {verifying ? "Verifying..." : loading ? "Processing..." : confirmLabel}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

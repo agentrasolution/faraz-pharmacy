@@ -331,9 +331,9 @@ export default function GlobalSearch() {
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search products, customers, invoices..."
-          className="h-9 w-80 pl-10 pr-14 rounded-xl border-2 border-accent/30 bg-accent/5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60 transition-all"
+          className="h-10 w-80 pl-10 pr-14 rounded-full border border-border bg-surface text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand shadow-xs transition-all"
         />
-        <kbd className="absolute right-2.5 pointer-events-none h-5 px-1.5 rounded border border-border bg-surface text-[10px] text-text-secondary font-medium">
+        <kbd className="absolute right-3 pointer-events-none h-5 px-1.5 rounded-full border border-border bg-surface-2 text-[10px] text-text-secondary font-mono font-medium">
           ⌘K
         </kbd>
       </div>

@@ -145,23 +145,23 @@ export default function PrintBarcodeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm" aria-describedby={undefined}>
+      <DialogContent className="max-w-sm rounded-3xl" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Barcode className="h-4 w-4 text-accent" />
+          <DialogTitle className="flex items-center gap-2 text-lg font-bold font-display">
+            <Barcode className="h-5 w-5 text-brand" />
             Print Barcode
           </DialogTitle>
         </DialogHeader>
         <div className="px-5 pb-5 space-y-4">
           {generating ? (
-            <div className="flex items-center justify-center h-24 text-sm text-text-secondary">
+            <div className="flex items-center justify-center h-24 text-xs text-text-secondary">
               Generating unique barcode...
             </div>
           ) : (
             <>
-              <div className="flex flex-col items-center justify-between p-3 rounded-lg border border-border bg-white text-black shadow-sm w-full max-w-[240px] mx-auto min-h-[85px] overflow-hidden">
+              <div className="flex flex-col items-center justify-between p-3.5 rounded-2xl border border-border/80 bg-white text-black shadow-xs w-full max-w-[240px] mx-auto min-h-[90px] overflow-hidden">
                 {productName ? (
-                  <p className="text-[11px] font-bold text-gray-900 text-center truncate w-full mb-1 px-1">
+                  <p className="text-[11px] font-bold text-gray-900 text-center truncate w-full mb-1.5 px-1 font-display">
                     {productName}
                   </p>
                 ) : null}
@@ -169,9 +169,9 @@ export default function PrintBarcodeDialog({
                   <svg id="barcode-svg" className="max-w-full" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label>Label Size</Label>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-text-primary">Label Size</Label>
                   <Select
                     value={labelSize}
                     onValueChange={(val) => {
@@ -181,7 +181,7 @@ export default function PrintBarcodeDialog({
                       } catch {}
                     }}
                   >
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="h-9 text-xs rounded-xl">
                       <SelectValue placeholder="Label size" />
                     </SelectTrigger>
                     <SelectContent>
@@ -193,8 +193,8 @@ export default function PrintBarcodeDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label>Copies</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-text-primary">Copies</Label>
                   <Input
                     type="number"
                     min={1}
@@ -203,14 +203,14 @@ export default function PrintBarcodeDialog({
                     onChange={(e) =>
                       setCopies(Math.min(100, Math.max(1, Number(e.target.value) || 1)))
                     }
-                    className="h-8 text-xs"
+                    className="h-9 text-xs rounded-xl"
                   />
                 </div>
               </div>
-              <div className="space-y-1">
-                <Label>Printer</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-text-primary">Printer</Label>
                 <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-9 rounded-xl">
                     <SelectValue placeholder="Default printer" />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,7 +229,10 @@ export default function PrintBarcodeDialog({
                   </p>
                 )}
               </div>
-              <Button className="w-full" onClick={handlePrint}>
+              <Button
+                className="w-full h-10 rounded-xl bg-gradient-to-r from-[#4A25E1] to-[#3612B8] text-white hover:from-[#3e1ed1] hover:to-[#2e0ea3] shadow-md shadow-brand/20 font-medium"
+                onClick={handlePrint}
+              >
                 Print {copies} label{copies > 1 ? "s" : ""}
               </Button>
             </>

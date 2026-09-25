@@ -288,18 +288,20 @@ export default function Settings() {
 
   if (locked) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-full max-w-sm space-y-6">
+      <div className="flex items-center justify-center min-h-[65vh]">
+        <div className="w-full max-w-sm rounded-3xl border border-border/80 bg-surface p-8 shadow-md space-y-6">
           <div className="text-center space-y-2">
-            <Lock className="h-10 w-10 mx-auto text-accent" />
-            <h1 className="text-xl font-semibold">Admin Access Required</h1>
-            <p className="text-sm text-text-secondary">
-              Enter admin credentials to access settings
+            <div className="h-14 w-14 rounded-2xl bg-[#4A25E1]/10 dark:bg-white/10 flex items-center justify-center mx-auto text-[#4A25E1] dark:text-[#754BFB]">
+              <Lock className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-display font-bold text-text-primary tracking-tight">Admin Access Required</h1>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Enter administrator credentials to configure backups and hardware settings
             </p>
           </div>
           <form onSubmit={handleAdminLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="settings-admin-user">Username</Label>
+              <Label htmlFor="settings-admin-user" className="text-xs font-semibold">Admin Username</Label>
               <Input
                 id="settings-admin-user"
                 value={adminUser}
@@ -308,7 +310,7 @@ export default function Settings() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="settings-admin-pass">Password</Label>
+              <Label htmlFor="settings-admin-pass" className="text-xs font-semibold">Password</Label>
               <Input
                 id="settings-admin-pass"
                 type="password"
@@ -316,13 +318,14 @@ export default function Settings() {
                 onChange={(e) => setAdminPass(e.target.value)}
               />
             </div>
-            {loginError && <p className="text-sm text-danger">{loginError}</p>}
+            {loginError && <p className="text-xs text-danger font-medium">{loginError}</p>}
             <Button
               type="submit"
-              className="w-full"
+              variant="brand"
+              className="w-full h-11 rounded-xl shadow-xs font-bold"
               disabled={loggingIn || !adminUser || !adminPass}
             >
-              {loggingIn ? "Verifying..." : "Unlock Settings"}
+              {loggingIn ? "Verifying Access..." : "Unlock Settings"}
             </Button>
           </form>
         </div>
@@ -333,21 +336,21 @@ export default function Settings() {
   const totalBackupSize = backups.reduce((sum: number, b: BackupEntry) => sum + b.size, 0);
 
   return (
-    <div>
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Settings"
-        description="Manage database backups and Google Drive integration"
+        title="System Settings & Database"
+        description="Configure automated database backups, storage paths, and cloud integrations"
       />
 
       <Tabs defaultValue="backup">
-        <TabsList className="mb-6">
-          <TabsTrigger value="backup" className="gap-2">
+        <TabsList className="mb-6 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs h-auto w-fit">
+          <TabsTrigger value="backup" className="gap-2 rounded-xl text-xs font-semibold px-4 py-2">
             <Database className="h-4 w-4" />
             Database Backup
           </TabsTrigger>
-          <TabsTrigger value="gdrive" className="gap-2">
+          <TabsTrigger value="gdrive" className="gap-2 rounded-xl text-xs font-semibold px-4 py-2">
             <HardDrive className="h-4 w-4" />
-            Google Drive Settings
+            Google Drive Cloud
           </TabsTrigger>
         </TabsList>
 
@@ -560,14 +563,14 @@ export default function Settings() {
                                   backupName: backup.name,
                                 });
                               }}
-                              className="h-8 w-8 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                              className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
                               title="Restore from this backup"
                             >
                               <RotateCcw className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => setDeleteBackup(backup.name)}
-                              className="h-8 w-8 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                              className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
                               title="Delete backup"
                             >
                               <Trash2 className="h-4 w-4" />

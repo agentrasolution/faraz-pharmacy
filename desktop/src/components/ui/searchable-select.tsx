@@ -54,17 +54,17 @@ export function SearchableSelect({
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-surface shadow-lg">
-          <div className="p-1">
+        <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border/80 bg-surface shadow-xl overflow-hidden">
+          <div className="p-1.5 border-b border-border/60">
             <input
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="w-full rounded-md border-0 bg-transparent px-2 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none"
+              className="w-full rounded-xl border border-border/60 bg-surface-2/60 px-3 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-brand/60"
             />
           </div>
-          <div className="max-h-48 overflow-y-auto pb-1">
+          <div className="max-h-48 overflow-y-auto p-1">
             {filtered.length === 0 ? (
               <p className="px-2.5 py-3 text-xs text-text-secondary text-center">No results</p>
             ) : (
@@ -78,9 +78,9 @@ export function SearchableSelect({
                     setSearch("");
                   }}
                   className={cn(
-                    "w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors",
+                    "w-full text-left px-3 py-2 text-xs rounded-xl transition-colors font-medium",
                     opt.value === value
-                      ? "bg-accent/10 text-accent font-medium"
+                      ? "bg-brand/10 text-brand"
                       : "text-text-primary hover:bg-surface-2"
                   )}
                 >

@@ -235,20 +235,20 @@ export default function Customers() {
               e.stopPropagation();
               openEdit(c);
             }}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
             title="Edit"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-4 w-4" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleDeleteClick(c);
             }}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
             title="Delete"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -315,10 +315,10 @@ export default function Customers() {
   });
 
   return (
-    <div>
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Customers"
-        description="Manage your customer relationships"
+        title="Customer Directory"
+        description="Customer accounts, contact directories, and ledger balances"
         action={{
           label: (
             <>
@@ -329,108 +329,97 @@ export default function Customers() {
           onClick: openAdd,
         }}
       />
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             autoFocus
             ref={searchRef}
-            placeholder="Search by name or phone..."
+            placeholder="Search by customer name or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
           />
         </div>
-        <ExportButton type="csv" onClick={handleExportCSV} />
-        <ExportButton type="pdf" onClick={handleExportPDF} />
-        <div className="flex items-center border border-border rounded-lg overflow-hidden">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={cn(
-              "p-2 transition-colors",
-              viewMode === "grid"
-                ? "bg-accent text-white"
-                : "text-text-secondary hover:bg-surface-2"
-            )}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={cn(
-              "p-2 transition-colors",
-              viewMode === "list"
-                ? "bg-accent text-white"
-                : "text-text-secondary hover:bg-surface-2"
-            )}
-          >
-            <List className="h-4 w-4" />
-          </button>
+        <div className="flex items-center gap-2">
+          <ExportButton type="csv" onClick={handleExportCSV} />
+          <ExportButton type="pdf" onClick={handleExportPDF} />
+          <div className="flex items-center border border-border/80 rounded-xl overflow-hidden bg-surface shadow-xs p-0.5">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors cursor-pointer",
+                viewMode === "grid"
+                  ? "bg-[#4A25E1] text-white shadow-xs"
+                  : "text-text-secondary hover:bg-surface-2"
+              )}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors cursor-pointer",
+                viewMode === "list"
+                  ? "bg-[#4A25E1] text-white shadow-xs"
+                  : "text-text-secondary hover:bg-surface-2"
+              )}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
+
       {viewMode === "list" ? (
-        <div className="rounded-xl border border-border">
-          <DataTable
-            columns={columns}
-            data={customers}
-            loading={isLoading}
-            keyExtractor={(c: Customer) => c.id}
-            onRowClick={(c: Customer) => navigate(`/customers/${c.id}`)}
-          />
-        </div>
+        <DataTable
+          columns={columns}
+          data={customers}
+          loading={isLoading}
+          keyExtractor={(c: Customer) => c.id}
+          onRowClick={(c: Customer) => navigate(`/customers/${c.id}`)}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-28 rounded-xl bg-surface-2 animate-pulse" />
+              <div key={i} className="h-36 rounded-2xl bg-surface-2 animate-pulse" />
             ))
           ) : customers.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-sm text-text-secondary">
-              {search ? "No customers match your search" : "No customers yet."}
+            <div className="col-span-full rounded-2xl border border-dashed border-border p-12 text-center text-sm text-text-secondary">
+              {search ? "No customers match your search" : "No customers registered yet."}
             </div>
           ) : (
             customers.map((c: Customer) => (
-              <Card
+              <div
                 key={c.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
+                className="group rounded-2xl border border-border/80 bg-surface p-5 shadow-xs hover:shadow-md hover:border-[#4A25E1]/40 transition-all duration-200 cursor-pointer flex flex-col justify-between"
                 onClick={() => navigate(`/customers/${c.id}`)}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      <Phone className="h-5 w-5 text-accent" />
+                <div>
+                  <div className="flex items-start gap-3.5 min-w-0">
+                    <div className="h-11 w-11 rounded-2xl bg-[#4A25E1]/10 dark:bg-white/10 text-[#4A25E1] dark:text-[#754BFB] flex items-center justify-center font-bold text-sm shrink-0 shadow-xs group-hover:scale-105 transition-all">
+                      {c.name?.slice(0, 2).toUpperCase() || "CU"}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-text-primary truncate">{c.name}</h3>
-                      <p className="text-xs text-text-secondary mt-0.5">{c.phone}</p>
+                      <h3 className="font-bold text-sm text-text-primary group-hover:text-[#4A25E1] dark:group-hover:text-[#754BFB] transition-colors truncate">
+                        {c.name}
+                      </h3>
+                      <p className="text-xs text-text-secondary mt-0.5 font-mono">{c.phone || "No phone"}</p>
                       {(c.father_name || c.father_phone) && (
                         <p className="text-[11px] text-text-secondary mt-0.5 truncate">
-                          Father: {c.father_name || "\u2014"}
-                          {c.father_phone ? ` \u00b7 ${c.father_phone}` : ""}
+                          S/O: {c.father_name || "—"}
+                          {c.father_phone ? ` · ${c.father_phone}` : ""}
                         </p>
                       )}
                       {c.address && (
-                        <p className="flex items-center gap-1 text-[11px] text-text-secondary mt-1">
+                        <p className="flex items-center gap-1 text-[11px] text-text-secondary mt-1 truncate">
                           <MapPin className="h-3 w-3 shrink-0" />
-                          {c.address}
+                          <span>{c.address}</span>
                         </p>
                       )}
-                      <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="text-text-secondary">
-                          Purchases:{" "}
-                          <span className="font-mono font-medium text-text-primary">
-                            {c.total_purchases ?? 0}
-                          </span>
-                        </span>
-                        {(c.outstanding_arrear ?? 0) > 0 && (
-                          <span className="text-warning">
-                            Arrear:{" "}
-                            <span className="font-mono font-medium">
-                              {formatCurrency(c.outstanding_arrear)}
-                            </span>
-                          </span>
-                        )}
-                      </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button
@@ -438,7 +427,7 @@ export default function Customers() {
                           e.stopPropagation();
                           openEdit(c);
                         }}
-                        className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/5 transition-colors"
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
                         title="Edit"
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -448,59 +437,77 @@ export default function Customers() {
                           e.stopPropagation();
                           handleDeleteClick(c);
                         }}
-                        className="h-7 w-7 rounded-md flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs">
+                  <span className="text-text-secondary font-medium">
+                    Sales: <span className="font-bold text-text-primary">{c.total_purchases ?? 0}</span>
+                  </span>
+                  {(c.outstanding_arrear ?? 0) > 0 ? (
+                    <span className="text-danger font-mono font-bold bg-danger/10 px-2 py-0.5 rounded-full text-[11px]">
+                      Arrear: {formatCurrency(c.outstanding_arrear)}
+                    </span>
+                  ) : (
+                    <span className="text-success font-medium text-[11px]">No debt</span>
+                  )}
+                </div>
+              </div>
             ))
           )}
         </div>
       )}
 
-      <div className="flex items-center justify-between mt-4 border-t border-border pt-4 px-4 pb-4">
-        <div className="flex items-center gap-4 text-sm text-text-secondary">
+      {/* Pagination Bar */}
+      <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4 text-xs text-text-secondary">
           <span>
-            Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
+            Showing {meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1} to{" "}
+            {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} entries
           </span>
           <div className="flex items-center gap-2">
-            <label htmlFor="limit-select">Rows per page:</label>
+            <span>Per page:</span>
             <select
-              id="limit-select"
               value={limit}
               onChange={(e) => {
                 setLimit(Number(e.target.value));
                 setPage(1);
               }}
-              className="bg-bg text-text border border-border rounded px-2 py-1 text-sm outline-none"
+              className="bg-surface-2 text-text-primary border border-border rounded-lg px-2 py-1 text-xs outline-none cursor-pointer"
             >
-              {[10, 20, 30, 50, 100].map(val => (
-                <option key={val} value={val}>{val}</option>
+              {[10, 20, 30, 50, 100].map((val) => (
+                <option key={val} value={val}>
+                  {val}
+                </option>
               ))}
             </select>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             disabled={meta.page <= 1}
-            onClick={() => setPage(p => p - 1)}
+            onClick={() => setPage((p) => p - 1)}
+            className="rounded-xl shadow-xs"
           >
             Previous
           </Button>
-          <div className="text-sm font-medium">
+          <div className="text-xs font-semibold text-text-primary px-2">
             Page {meta.page} of {meta.totalPages || 1}
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             disabled={meta.page >= (meta.totalPages || 1)}
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => setPage((p) => p + 1)}
+            className="rounded-xl shadow-xs"
           >
             Next
           </Button>

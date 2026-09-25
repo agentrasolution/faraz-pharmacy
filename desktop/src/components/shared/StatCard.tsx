@@ -57,9 +57,9 @@ export default function StatCard({
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-border bg-surface p-4 space-y-2.5">
-        <div className="h-3 w-20 bg-surface-2 rounded animate-pulse" />
-        <div className="h-6 w-28 bg-surface-2 rounded animate-pulse" />
+      <div className="rounded-2xl border border-border/80 bg-surface p-5 space-y-3">
+        <div className="h-3 w-20 bg-surface-2 rounded-full animate-pulse" />
+        <div className="h-7 w-28 bg-surface-2 rounded-full animate-pulse" />
       </div>
     );
   }
@@ -69,35 +69,35 @@ export default function StatCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35, ease: "easeOut" }}
-      whileHover={isClickable ? { y: -2, scale: 1.01 } : { y: -1 }}
+      whileHover={isClickable ? { y: -3, scale: 1.01 } : { y: -2 }}
       whileTap={isClickable ? { scale: 0.98 } : undefined}
       onClick={onClick}
-      className={`group rounded-xl border border-border bg-surface p-4 relative overflow-hidden transition-all duration-200 ${
-        isClickable ? "cursor-pointer hover:shadow-md hover:border-accent/30" : "hover:shadow-sm"
+      className={`group rounded-2xl border border-border/80 bg-surface p-5 relative overflow-hidden transition-all duration-200 shadow-xs ${
+        isClickable ? "cursor-pointer hover:shadow-md hover:border-[#4A25E1]/40" : "hover:shadow-md"
       }`}
     >
-      <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-accent/20 group-hover:bg-accent transition-colors duration-200" />
+      <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#4A25E1]/30 group-hover:bg-[#4A25E1] dark:group-hover:bg-[#754BFB] transition-colors duration-200" />
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-[11px] font-medium text-text-secondary tracking-wide uppercase">
+          <p className="text-[11px] font-bold text-text-secondary tracking-wider uppercase">
             {title}
           </p>
           <div className="flex items-baseline gap-1.5">
-            <p className="text-xl font-bold text-text-primary tabular-nums tracking-tight">
+            <p className="text-2xl font-bold font-display text-text-primary tabular-nums tracking-tight">
               {isCurrency ? formatCurrency(animatedValue) : animatedValue.toLocaleString()}
             </p>
             {typeof value === "number" && value !== animatedValue && (
-              <span className="text-[9px] text-text-secondary animate-pulse">...</span>
+              <span className="text-[10px] text-text-secondary animate-pulse">...</span>
             )}
           </div>
-          {subtitle && <p className="text-[10px] text-text-secondary">{subtitle}</p>}
+          {subtitle && <p className="text-[11px] text-text-secondary">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent group-hover:scale-105 group-hover:bg-accent/15 transition-all duration-200">
+          <div className="h-10 w-10 rounded-2xl bg-[#4A25E1]/10 dark:bg-white/10 flex items-center justify-center text-[#4A25E1] dark:text-[#754BFB] group-hover:scale-105 transition-all duration-200 shadow-xs">
             {icon}
           </div>
           {isClickable && (
-            <ArrowRight className="h-3.5 w-3.5 text-text-secondary/40 group-hover:text-accent group-hover:translate-x-0.5 transition-all duration-200" />
+            <ArrowRight className="h-4 w-4 text-text-secondary/40 group-hover:text-[#4A25E1] dark:group-hover:text-[#754BFB] group-hover:translate-x-1 transition-all duration-200" />
           )}
         </div>
       </div>

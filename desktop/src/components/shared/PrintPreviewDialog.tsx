@@ -148,8 +148,8 @@ export default function PrintPreviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-5 pt-4 pb-0">
-          <DialogTitle className="flex items-center gap-2 text-sm">
-            <Eye className="h-4 w-4 text-accent" />
+          <DialogTitle className="flex items-center gap-2 text-base font-bold font-display">
+            <Eye className="h-4 w-4 text-brand" />
             {title}
           </DialogTitle>
         </DialogHeader>
@@ -158,15 +158,15 @@ export default function PrintPreviewDialog({
           <div className="flex items-end gap-2.5 flex-wrap">
             <div className="space-y-1">
               <Label className="text-[10px] text-text-secondary font-medium">Paper Size</Label>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 {PAPER_SIZES.map(({ value, label }) => (
                   <button
                     key={value}
                     onClick={() => setPaperSize(value)}
-                    className={`px-2.5 py-1.5 rounded-md border text-[11px] font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
                       paperSize === value
-                        ? "border-accent bg-accent/5 text-accent"
-                        : "border-border text-text-secondary hover:border-accent/50"
+                        ? "border-brand bg-brand/10 text-brand shadow-xs"
+                        : "border-border/80 text-text-secondary hover:border-brand/40"
                     }`}
                   >
                     {label}
@@ -178,7 +178,7 @@ export default function PrintPreviewDialog({
             <div className="space-y-1 flex-1 min-w-[160px] max-w-[220px]">
               <Label className="text-[10px] text-text-secondary font-medium">Printer</Label>
               <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
-                <SelectTrigger className="h-7 text-[11px]">
+                <SelectTrigger className="h-8 text-xs rounded-xl">
                   <SelectValue placeholder="Default printer" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,23 +196,23 @@ export default function PrintPreviewDialog({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 gap-1 text-[11px]"
+              className="h-8 rounded-xl gap-1 text-xs"
               onClick={() => setShowMargins(!showMargins)}
               disabled={paperSize === "thermal"}
             >
-              <Settings2 className="h-3 w-3" />
+              <Settings2 className="h-3.5 w-3.5" />
               Margins
             </Button>
           </div>
 
           {showMargins && paperSize !== "thermal" && (
-            <div className="flex items-end gap-2 p-2.5 rounded-lg border border-border bg-surface-2/50">
-              <span className="text-[10px] text-text-secondary font-medium pb-1.5 pr-1">
+            <div className="flex items-end gap-2 p-3 rounded-2xl border border-border/80 bg-surface-2/60">
+              <span className="text-[10px] text-text-secondary font-semibold pb-1.5 pr-1">
                 Margins (mm)
               </span>
               {(["top", "left", "right", "bottom"] as const).map((side) => (
-                <div key={side} className="space-y-0.5">
-                  <Label className="text-[9px] text-text-secondary capitalize block">{side}</Label>
+                <div key={side} className="space-y-1">
+                  <Label className="text-[9px] text-text-secondary capitalize block font-medium">{side}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -220,11 +220,11 @@ export default function PrintPreviewDialog({
                     step={1}
                     value={margins[side]}
                     onChange={(e) => updateMargin(side, e.target.value)}
-                    className="h-7 w-14 text-[11px] font-mono text-center px-1"
+                    className="h-8 w-14 text-xs font-mono text-center px-1 rounded-xl"
                   />
                 </div>
               ))}
-              <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={resetMargins}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs rounded-xl" onClick={resetMargins}>
                 Reset
               </Button>
             </div>
@@ -235,13 +235,13 @@ export default function PrintPreviewDialog({
           {loadingHtml ? (
             <div className="flex items-center justify-center w-full h-48 text-xs text-text-secondary">
               <div className="flex flex-col items-center gap-2">
-                <span className="h-5 w-5 rounded-full border-2 border-border border-t-accent animate-spin" />
+                <span className="h-5 w-5 rounded-full border-2 border-border border-t-brand animate-spin" />
                 Loading preview...
               </div>
             </div>
           ) : html ? (
             <div
-              className="border border-border rounded-lg overflow-hidden bg-white shadow-sm"
+              className="border border-border/80 rounded-2xl overflow-hidden bg-white shadow-xs"
               style={{ width: previewWidth, minHeight: 200 }}
             >
               <iframe
@@ -262,12 +262,12 @@ export default function PrintPreviewDialog({
           )}
         </div>
 
-        <DialogFooter className="px-5 py-3 border-t border-border">
+        <DialogFooter className="px-5 py-3 border-t border-border/80">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="text-xs"
+            className="rounded-xl text-xs"
           >
             Cancel
           </Button>
@@ -275,7 +275,7 @@ export default function PrintPreviewDialog({
             size="sm"
             onClick={handlePrint}
             disabled={printing || loadingHtml}
-            className="gap-1.5 text-xs"
+            className="rounded-xl gap-1.5 text-xs bg-gradient-to-r from-[#4A25E1] to-[#3612B8] text-white hover:from-[#3e1ed1] hover:to-[#2e0ea3] shadow-md shadow-brand/20 font-medium"
           >
             <Printer className="h-3.5 w-3.5" />
             {printing ? "Printing..." : "Print"}
