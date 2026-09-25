@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   BarChart3,
+  Building2,
   Package,
   ShoppingCart,
   Wallet,
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import SalesReport from "./reports/SalesReport";
 import StockReport from "./reports/StockReport";
+import CompanyReport from "./reports/CompanyReport";
 import ExpensesReport from "./reports/ExpensesReport";
 import ArrearsReport from "./reports/ArrearsReport";
 import ExpiryReport from "./reports/ExpiryReport";
@@ -22,7 +24,15 @@ import ZakatReport from "./reports/ZakatReport";
 import IncomeReport from "./reports/IncomeReport";
 
 type ReportType =
-  "sales" | "stock" | "purchases" | "expenses" | "arrears" | "expiry" | "zakat" | "income";
+  | "sales"
+  | "stock"
+  | "company"
+  | "purchases"
+  | "expenses"
+  | "arrears"
+  | "expiry"
+  | "zakat"
+  | "income";
 
 interface ReportTab {
   id: ReportType;
@@ -33,6 +43,7 @@ interface ReportTab {
 const reportTabs: ReportTab[] = [
   { id: "sales", label: "Sales", icon: <BarChart3 className="h-4 w-4" /> },
   { id: "stock", label: "Stock", icon: <Package className="h-4 w-4" /> },
+  { id: "company", label: "Companies", icon: <Building2 className="h-4 w-4" /> },
   { id: "purchases", label: "Purchases", icon: <ShoppingCart className="h-4 w-4" /> },
   { id: "expenses", label: "Expenses", icon: <Wallet className="h-4 w-4" /> },
   { id: "arrears", label: "Arrears", icon: <AlertTriangle className="h-4 w-4" /> },
@@ -50,6 +61,8 @@ export default function Reports() {
         return <SalesReport />;
       case "stock":
         return <StockReport />;
+      case "company":
+        return <CompanyReport />;
       case "purchases":
         return <PurchaseReport />;
       case "expenses":
