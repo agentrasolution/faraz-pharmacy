@@ -77,6 +77,7 @@ export function generatePDF(options: PDFExportOptions): void {
   <div class="header">
     <h1>FARAZ PHARMACY</h1>
     <p>${title}</p>
+    ${subtitle ? `<p>${escapeHtml(subtitle)}</p>` : ""}
     ${dateRangeHtml}
     <div class="generated">Generated: ${generatedAt}</div>
   </div>
