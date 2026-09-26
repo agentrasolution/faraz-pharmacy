@@ -17,14 +17,14 @@
   --color-elevated: #ffffff;
   --color-text-primary: #1e202b;
   --color-text-secondary: #71768e;
-  --color-accent: #4a25e1;
-  --color-accent-hover: #3c19cf;
+  --color-accent: #3612b8;
+  --color-accent-hover: #2a0e94;
   --color-accent-foreground: #ffffff;
-  --color-accent-subtle: rgba(74, 37, 225, 0.12);
-  --color-brand: #4a25e1;
-  --color-brand-hover: #3c19cf;
+  --color-accent-subtle: rgba(54, 18, 184, 0.12);
+  --color-brand: #3612b8;
+  --color-brand-hover: #2a0e94;
   --color-brand-foreground: #ffffff;
-  --color-brand-subtle: rgba(74, 37, 225, 0.1);
+  --color-brand-subtle: rgba(54, 18, 184, 0.1);
   --color-danger: #ff5252;
   --color-success: #10b981;
   --color-warning: #f59e0b;
@@ -37,21 +37,21 @@
   --color-muted-foreground: #71768e;
   --color-popover: #ffffff;
   --color-popover-foreground: #1e202b;
-  --color-primary: #4a25e1;
+  --color-primary: #3612b8;
   --color-primary-foreground: #ffffff;
   --color-secondary: #f1f4fb;
   --color-secondary-foreground: #1e202b;
   --color-input: #e8ecf4;
   --color-input-foreground: #1e202b;
-  --color-ring: #4a25e1;
-  --color-sidebar-background: #4a25e1;
+  --color-ring: #3612b8;
+  --color-sidebar-background: #3612b8;
   --color-sidebar-foreground: #ffffff;
   --color-sidebar-primary: #ffffff;
-  --color-sidebar-primary-foreground: #4a25e1;
+  --color-sidebar-primary-foreground: #3612b8;
   --color-sidebar-accent: #ffffff;
-  --color-sidebar-accent-foreground: #4a25e1;
+  --color-sidebar-accent-foreground: #3612b8;
   --color-sidebar-border: rgba(255, 255, 255, 0.12);
-  --color-sidebar-ring: #4a25e1;
+  --color-sidebar-ring: #3612b8;
 
   /* Animation Durations */
   --duration-hover: 150ms;

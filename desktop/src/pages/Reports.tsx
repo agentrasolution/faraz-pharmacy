@@ -112,7 +112,7 @@ export default function Reports() {
                 className={cn(
                   "flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all duration-150 whitespace-nowrap cursor-pointer",
                   isActive
-                    ? "bg-[#4A25E1] text-white shadow-xs"
+                    ? "bg-[#3612B8] text-white shadow-sm"
                     : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
                 )}
               >

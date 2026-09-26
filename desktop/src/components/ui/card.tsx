@@ -13,7 +13,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       className={cn(
         "rounded-2xl border border-border/80 bg-surface shadow-xs relative transition-all duration-200",
         withEdge &&
-          "border-l-4 border-l-[#4A25E1] dark:border-l-[#6236FF]",
+          "border-l-4 border-l-[#3612B8] dark:border-l-[#6236FF]",
         className
       )}
       {...props}

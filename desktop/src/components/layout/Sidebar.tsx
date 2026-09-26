@@ -133,8 +133,8 @@ export default function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "h-full  bg-gradient-to-b from-[#4A25E1] via-[#431DDB] to-[#4A25E1] dark:from-[#0F111E] dark:via-[#111322] dark:to-[#0A0C16] flex flex-col shrink-0 transition-all duration-300 ease-in-out relative select-none z-40 text-white shadow-2xl ",
-        isExpanded ? "w-[240px]" : "w-[72px] "
+        "h-full bg-gradient-to-b from-[#3612B8] via-[#2A0E94] to-[#1F0875] dark:from-[#0F111E] dark:via-[#111322] dark:to-[#0A0C16] flex flex-col shrink-0 transition-all duration-300 ease-in-out relative select-none z-40 text-white shadow-2xl",
+        isExpanded ? "w-[240px]" : "w-[72px]"
       )}
     >
       {/* Brand Header */}
@@ -201,7 +201,7 @@ export default function Sidebar() {
                           : "justify-between h-10 pl-5 pr-3",
                         isActive
                           ? cn(
-                              "bg-background text-[#4A25E1] dark:text-white font-bold shadow-md z-20",
+                              "bg-background text-[#3612B8] dark:text-white font-bold shadow-md z-20",
                               isExpanded ? "rounded-l-2xl mr-0" : "rounded-2xl mx-2"
                             )
                           : cn(
@@ -238,7 +238,7 @@ export default function Sidebar() {
                           className={cn(
                             "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-150",
                             isActive
-                              ? "bg-[#4A25E1]/10 dark:bg-white/15 text-[#4A25E1] dark:text-[#754BFB]"
+                              ? "bg-[#3612B8]/10 dark:bg-white/15 text-[#3612B8] dark:text-[#754BFB]"
                               : "text-white/80 group-hover:scale-110"
                           )}
                         >
@@ -309,12 +309,12 @@ export default function Sidebar() {
             </p>
             <button
               onClick={handleNewSale}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white hover:bg-white/90 active:scale-95 text-[#4A25E1] font-bold text-xs tracking-tight shadow-md transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white hover:bg-white/90 active:scale-95 text-[#3612B8] font-bold text-xs tracking-tight shadow-md transition-all cursor-pointer"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
               <span>New Sale (F2)</span>
               {posWindowCount > 0 && (
-                <span className="bg-[#4A25E1]/15 text-[#4A25E1] text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
+                <span className="bg-[#3612B8]/15 text-[#3612B8] text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
                   {posWindowCount}
                 </span>
               )}
@@ -324,7 +324,7 @@ export default function Sidebar() {
           <button
             onClick={handleNewSale}
             title="New Sale (F2)"
-            className="w-full h-10 rounded-xl bg-white hover:bg-white/90 text-[#4A25E1] flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer relative"
+            className="w-full h-10 rounded-xl bg-white hover:bg-white/90 text-[#3612B8] flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer relative"
           >
             <ShoppingCart className="h-4 w-4" />
             {posWindowCount > 0 && (
