@@ -404,13 +404,13 @@ export default function CompanyReport() {
         {selectedCompany && <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />}
       </div>
 
-      <div className="relative z-10 mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-border/50 bg-surface-1 p-4">
+      <div className="relative z-20 mb-6 flex flex-wrap items-end gap-3 rounded-2xl border border-border/80 bg-surface shadow-xs p-4">
         <div className="min-w-[240px] flex-1">
           <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-text-secondary">
             Company
           </label>
           <Select value={selectedCompanyId} onValueChange={handleCompanyChange}>
-            <SelectTrigger className="h-9">
+            <SelectTrigger className="h-9 rounded-xl bg-surface border-border/80 text-xs shadow-xs">
               <SelectValue placeholder="Select a company" />
             </SelectTrigger>
             <SelectContent>

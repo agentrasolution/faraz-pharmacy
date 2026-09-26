@@ -176,7 +176,7 @@ export default function ArrearsReport() {
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
 
-      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50">
+      <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
         <div className="flex items-center border border-border rounded-lg overflow-hidden h-9">
           {(["all", "pending", "settled"] as const).map((s) => (

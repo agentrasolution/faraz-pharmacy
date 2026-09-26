@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Calendar, ChevronDown, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,16 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Automatically determine if current value matches one of the predefined quick ranges
+  const matchedRange = useMemo(() => {
+    if (activeRange) return activeRange;
+    const match = QUICK_RANGES.find((r) => {
+      const q = r.getRange();
+      return q.from === value.from && q.to === value.to;
+    });
+    return match ? match.label : null;
+  }, [activeRange, value.from, value.to]);
+
   function applyQuickRange(label: string) {
     const range = QUICK_RANGES.find((r) => r.label === label);
     if (!range) return;
@@ -122,38 +132,49 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
         <Button
           variant="outline"
           size="sm"
+          type="button"
           onClick={() => setOpen(!open)}
-          className="h-9 gap-2 bg-surface-1 border-border/60 hover:border-border"
+          className={cn(
+            "h-9 gap-2 bg-surface hover:bg-surface-2 border-border/80 text-text-primary rounded-xl shadow-xs transition-all font-medium text-xs cursor-pointer",
+            open && "border-brand ring-2 ring-brand/15"
+          )}
         >
-          <Calendar className="h-4 w-4 text-text-secondary" />
-          <span className="text-sm font-medium">{activeRange || "Date Range"}</span>
+          <Calendar className="h-4 w-4 text-brand" />
+          <span>{matchedRange || "Custom Range"}</span>
           <ChevronDown
-            className={cn("h-3 w-3 text-text-secondary transition-transform", open && "rotate-180")}
+            className={cn("h-3 w-3 text-text-secondary transition-transform duration-200", open && "rotate-180")}
           />
         </Button>
 
         {open && (
-          <div className="absolute top-full left-0 mt-2 w-52 bg-surface-1 border border-border rounded-xl shadow-xl z-[100] py-2 animate-in fade-in slide-in-from-top-2">
-            {QUICK_RANGES.map((range) => (
-              <button
-                key={range.label}
-                onClick={() => applyQuickRange(range.label)}
-                className={cn(
-                  "w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors",
-                  activeRange === range.label
-                    ? "bg-accent/10 text-accent font-medium"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
-                )}
-              >
-                <span>{range.label}</span>
-                {activeRange === range.label && <Check className="h-4 w-4" />}
-              </button>
-            ))}
+          <div className="absolute top-full left-0 mt-2 w-56 bg-surface border border-border/80 rounded-2xl shadow-2xl z-[100] p-1.5 backdrop-blur-xl animate-in fade-in slide-in-from-top-2 overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
+            <div className="px-3 py-1.5 text-[10px] font-bold text-text-secondary uppercase tracking-wider border-b border-border/40 mb-1">
+              Date Presets
+            </div>
+            {QUICK_RANGES.map((range) => {
+              const isSelected = matchedRange === range.label;
+              return (
+                <button
+                  key={range.label}
+                  type="button"
+                  onClick={() => applyQuickRange(range.label)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl font-medium transition-colors cursor-pointer text-left",
+                    isSelected
+                      ? "bg-brand/10 text-brand font-bold"
+                      : "text-text-primary hover:bg-surface-2"
+                  )}
+                >
+                  <span>{range.label}</span>
+                  {isSelected && <Check className="h-3.5 w-3.5 text-brand" />}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Input
           type="date"
           value={value.from}
@@ -161,9 +182,9 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
             onChange({ ...value, from: e.target.value });
             setActiveRange(null);
           }}
-          className="h-9 w-36 text-sm"
+          className="h-9 w-36 text-xs rounded-xl bg-surface border-border/80 shadow-xs"
         />
-        <span className="text-xs text-text-secondary font-medium">to</span>
+        <span className="text-xs text-text-secondary font-medium px-0.5">to</span>
         <Input
           type="date"
           value={value.to}
@@ -171,7 +192,7 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
             onChange({ ...value, to: e.target.value });
             setActiveRange(null);
           }}
-          className="h-9 w-36 text-sm"
+          className="h-9 w-36 text-xs rounded-xl bg-surface border-border/80 shadow-xs"
         />
       </div>
     </div>

@@ -133,18 +133,18 @@ export default function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "h-full bg-gradient-to-b from-[#4A25E1] via-[#431DDB] to-[#3612B8] dark:from-[#0F111E] dark:via-[#111322] dark:to-[#0A0C16] flex flex-col shrink-0 transition-all duration-300 ease-in-out relative select-none z-40 text-white shadow-2xl",
-        isExpanded ? "w-[240px]" : "w-[72px]"
+        "h-full  bg-gradient-to-b from-[#4A25E1] via-[#431DDB] to-[#4A25E1] dark:from-[#0F111E] dark:via-[#111322] dark:to-[#0A0C16] flex flex-col shrink-0 transition-all duration-300 ease-in-out relative select-none z-40 text-white shadow-2xl ",
+        isExpanded ? "w-[240px]" : "w-[72px] "
       )}
     >
       {/* Brand Header */}
       <div
         className={cn(
           "flex items-center h-16 relative",
-          isExpanded ? "px-5 gap-3" : "justify-center"
+          isExpanded ? "px-5" : "justify-center"
         )}
       >
-        <div className="flex items-center justify-center rounded-2xl h-10 w-10 bg-white/15 dark:bg-white/10 backdrop-blur-md shrink-0 shadow-inner border border-white/20 p-1.5">
+        <div className="flex items-center justify-center rounded-2xl h-20 w-20  shrink-0 p-1.5">
           <img src={logoSrc} alt="Faraz Pharmacy" className="h-full w-full object-contain filter drop-shadow" />
         </div>
         <AnimatePresence>
@@ -161,11 +161,11 @@ export default function Sidebar() {
                   Faraz
                 </span>
                 <span className="text-[10px] font-semibold bg-white/20 text-white px-1.5 py-0.5 rounded-full font-mono">
-                  v2.0
+                  Pharmacy
                 </span>
               </div>
               <p className="text-[10px] text-white/60 tracking-wider uppercase font-medium">
-                Pharmacy POS
+                By Mustafa Tawab
               </p>
             </motion.div>
           )}
@@ -262,7 +262,7 @@ export default function Sidebar() {
                       </div>
 
                       {isExpanded && (
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0 px-2">
                           {item.shortcut && (
                             <span
                               className={cn(

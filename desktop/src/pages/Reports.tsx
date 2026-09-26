@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   BarChart3,
   Building2,
@@ -55,6 +55,15 @@ const reportTabs: ReportTab[] = [
 
 export default function Reports() {
   const [activeReport, setActiveReport] = useState<ReportType>("sales");
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    tabRefs.current[activeReport]?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [activeReport]);
 
   function renderReport() {
     switch (activeReport) {
@@ -88,28 +97,33 @@ export default function Reports() {
         description="Comprehensive audit trails, gross profit statements, and stock valuations"
       />
 
-      {/* Airnow Horizontal Pill Carousel Strip */}
-      <div className="rounded-2xl border border-border/80 bg-surface p-2 shadow-xs overflow-x-auto scrollbar-none flex items-center gap-2 select-none">
-        {reportTabs.map((tab) => {
-          const isActive = activeReport === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveReport(tab.id)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all duration-150 whitespace-nowrap cursor-pointer",
-                isActive
-                  ? "bg-[#4A25E1] text-white shadow-sm"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
-              )}
-            >
-              <span className={isActive ? "text-white" : "text-text-secondary"}>
-                {tab.icon}
-              </span>
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Airnow Sticky Horizontal Pill Carousel Strip */}
+      <div className="sticky -top-5 lg:-top-6 z-30 pt-3 pb-2 -mt-3 bg-background/90 backdrop-blur-md transition-all">
+        <div className="rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-1.5 shadow-sm overflow-x-auto scrollbar-none flex items-center gap-1.5 select-none">
+          {reportTabs.map((tab) => {
+            const isActive = activeReport === tab.id;
+            return (
+              <button
+                key={tab.id}
+                ref={(el) => {
+                  tabRefs.current[tab.id] = el;
+                }}
+                onClick={() => setActiveReport(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all duration-150 whitespace-nowrap cursor-pointer",
+                  isActive
+                    ? "bg-[#4A25E1] text-white shadow-xs"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                )}
+              >
+                <span className={isActive ? "text-white" : "text-text-secondary"}>
+                  {tab.icon}
+                </span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Active Report Panel Container */}

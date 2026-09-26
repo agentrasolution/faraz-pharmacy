@@ -12,6 +12,7 @@
   --color-background: #f8f9fd;
   --color-foreground: #1e202b;
   --color-surface: #ffffff;
+  --color-surface-1: #ffffff;
   --color-surface-2: #f1f4fb;
   --color-elevated: #ffffff;
   --color-text-primary: #1e202b;
@@ -75,6 +76,7 @@
   --color-background: #0b0d14;
   --color-foreground: #f8fafc;
   --color-surface: #141724;
+  --color-surface-1: #141724;
   --color-surface-2: #1b1f31;
   --color-elevated: #1b1f31;
   --color-text-primary: #f8fafc;

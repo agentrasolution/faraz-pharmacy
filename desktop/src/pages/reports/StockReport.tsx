@@ -221,15 +221,15 @@ export default function StockReport() {
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
 
-      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50">
+      <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
         <Input
           placeholder="Search product or barcode..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 w-56"
+          className="h-9 w-56 rounded-xl bg-surface border-border/80 text-xs shadow-xs"
         />
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-44 h-9">
+          <SelectTrigger className="w-44 h-9 rounded-xl bg-surface border-border/80 text-xs shadow-xs">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>

@@ -115,7 +115,7 @@ export default function IncomeReport() {
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
 
-      <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50">
+      <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
       </div>
 
@@ -146,7 +146,7 @@ export default function IncomeReport() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-border/50 bg-surface-1 p-6">
+        <div className="rounded-2xl border border-border/80 bg-surface shadow-xs p-6">
           <h3 className="text-sm font-semibold text-text-primary mb-4 uppercase tracking-wide">
             Income Summary
           </h3>
