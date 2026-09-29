@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   Select,
   SelectContent,
@@ -37,7 +38,7 @@ import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import PrintBarcodeDialog from "@/components/shared/PrintBarcodeDialog";
 import { ShortcutHint } from "@/components/shared/Kbd";
-import type { Product, ProductPriceInput, Category } from "@/types";
+import type { Product, ProductPriceInput, Category, Company } from "@/types";
 
 interface CsvRow {
   rowNum: number;
@@ -222,6 +223,31 @@ export default function Products() {
     queryFn: () => api.categories.listPaginated({ limit: 1000 }),
   });
   const categories = categoriesResponse?.data ?? [];
+
+  const { data: companies } = useQuery({
+    queryKey: ["companies", "options"],
+    queryFn: () => api.companies.list(),
+  });
+
+  const companyOptions = useMemo(() => {
+    const options = (companies ?? []).map((company: Company) => ({
+      value: company.name,
+      label: company.name,
+    }));
+
+    // A product saved before companies became a fixed list can still carry a name
+    // that no longer exists. Keep it selectable so editing does not silently clear it.
+    if (form.company && !options.some((option) => option.value === form.company)) {
+      options.unshift({ value: form.company, label: `${form.company} (not in list)` });
+    }
+
+    return [{ value: "", label: "No company" }, ...options];
+  }, [companies, form.company]);
+
+  const knownCompanyNames = useMemo(
+    () => new Set((companies ?? []).map((company: Company) => company.name.toLowerCase())),
+    [companies]
+  );
 
   useEffect(() => {
     if (open && barcodeInputRef.current) {
@@ -615,6 +641,16 @@ export default function Products() {
       const row = importRows[i];
       if (row.error) {
         results[i] = { ...results[i], status: "rejected", message: row.error };
+        setImportProgress((p) => ({ ...p, done: p.done + 1 }));
+        setImportResults([...results]);
+        continue;
+      }
+      if (row.company && !knownCompanyNames.has(row.company.toLowerCase())) {
+        results[i] = {
+          ...results[i],
+          status: "rejected",
+          message: `Unknown company "${row.company}" — add it on the Companies page first`,
+        };
         setImportProgress((p) => ({ ...p, done: p.done + 1 }));
         setImportResults([...results]);
         continue;
@@ -1253,15 +1289,16 @@ export default function Products() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </div>
-            <div className="space-y-1">
-              <Label>Company</Label>
-              <Input
-                value={form.company}
-                onChange={(e) => setForm({ ...form, company: e.target.value })}
-                placeholder="e.g. GSK, Abbott"
-              />
-            </div>
             <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Company</Label>
+                <SearchableSelect
+                  options={companyOptions}
+                  value={form.company}
+                  onChange={(v) => setForm({ ...form, company: v })}
+                  placeholder="Search companies"
+                />
+              </div>
               <div className="space-y-1">
                 <Label>Category</Label>
                 <Select
@@ -1280,14 +1317,14 @@ export default function Products() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label>Location</Label>
-                <Input
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="e.g. Shelf A1"
-                />
-              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Location</Label>
+              <Input
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                placeholder="e.g. Shelf A1"
+              />
             </div>
             <div className="space-y-1">
               <div className="grid grid-cols-2 gap-3">

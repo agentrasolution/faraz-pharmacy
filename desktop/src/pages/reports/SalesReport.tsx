@@ -233,7 +233,7 @@ export default function SalesReport() {
       </div>
 
       <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50 flex-wrap">
-        <DateRangePicker value={dateRange} onChange={setDateRange} />
+        <DateRangePicker value={dateRange} onChange={setDateRange} className=" z-1 bg-white-800"/>
         <Select value={paymentFilter} onValueChange={setPaymentFilter}>
           <SelectTrigger className="w-40 h-9">
             <SelectValue placeholder="Payment Method" />

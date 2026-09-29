@@ -21,6 +21,17 @@ export const companiesController = {
     }
   },
 
+  async report(req: Request, res: Response, next: NextFunction) {
+    try {
+      const report = await companiesService.report({
+        search: req.query.search as string | undefined,
+      });
+      res.json(report);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const company = await companiesService.getById(req.params.id);

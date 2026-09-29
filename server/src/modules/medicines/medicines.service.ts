@@ -10,6 +10,21 @@ function formatProduct(p: any) {
   };
 }
 
+// The product form picks from the company list, so this only ever resolves an
+// existing company. It used to create one on the fly, which let a typo silently
+// add a new manufacturer to the company module.
+async function resolveCompanyId(company?: string): Promise<string | null> {
+  const name = company?.trim();
+  if (!name) return null;
+
+  const existing = await prisma.company.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+    select: { id: true },
+  });
+
+  return existing?.id ?? null;
+}
+
 export const medicinesService = {
   async list({ page = 1, limit = 50, search, includeArchived = false }: { page?: number; limit?: number; search?: string; includeArchived?: boolean }) {
     const where: any = includeArchived ? {} : { active: 1 };
@@ -91,18 +106,7 @@ export const medicinesService = {
           }))
         : [];
 
-
-    let companyId = null;
-    if (data.company && data.company.trim()) {
-      const companyName = data.company.trim();
-      const existingCompany = await prisma.company.findFirst({ where: { name: { equals: companyName, mode: 'insensitive' } } });
-      if (existingCompany) {
-        companyId = existingCompany.id;
-      } else {
-        const newCompany = await prisma.company.create({ data: { name: companyName } });
-        companyId = newCompany.id;
-      }
-    }
+    const companyId = await resolveCompanyId(data.company);
 
     const product = await prisma.product.create({
       data: {
@@ -139,18 +143,7 @@ export const medicinesService = {
         ? data.salePrice
         : Math.round(data.purchasePrice * (1 + (data.markupPercent ?? old.markupPercent) / 100));
 
-
-    let companyId = null;
-    if (data.company && data.company.trim()) {
-      const companyName = data.company.trim();
-      const existingCompany = await prisma.company.findFirst({ where: { name: { equals: companyName, mode: 'insensitive' } } });
-      if (existingCompany) {
-        companyId = existingCompany.id;
-      } else {
-        const newCompany = await prisma.company.create({ data: { name: companyName } });
-        companyId = newCompany.id;
-      }
-    }
+    const companyId = await resolveCompanyId(data.company);
 
     const updateData: Record<string, unknown> = {
       barcode: data.barcode,

@@ -15,6 +15,7 @@ import type {
   Company,
   CompanyInput,
   CompanyDetail,
+  CompanyReport,
   ReturnEntry,
   ReturnInput,
   Expense,
@@ -277,6 +278,12 @@ const api = {
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/companies/${id}`),
     getById: (id: string): Promise<CompanyDetail> => fetchJson("GET", `/api/companies/${id}`),
+    report: async (opts: { search?: string } = {}): Promise<CompanyReport> => {
+      const params = new URLSearchParams();
+      if (opts.search) params.set("search", opts.search);
+      const qs = params.toString();
+      return fetchJson("GET", `/api/companies/report${qs ? `?${qs}` : ""}`);
+    },
   },
   returns: {
     list: (): Promise<ReturnEntry[]> => fetchJson("GET", "/api/returns"),

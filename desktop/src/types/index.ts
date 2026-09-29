@@ -224,14 +224,37 @@ export interface DistributorInput {
 export interface Company {
   id: string;
   name: string;
-  address: string;
   created_at: string;
   product_count?: number;
 }
 
 export interface CompanyInput {
   name: string;
-  address?: string;
+}
+
+export interface CompanyReportRow {
+  id: string;
+  name: string;
+  created_at: string;
+  product_count: number;
+  total_stock: number;
+  stock_value_purchase: number;
+  stock_value_retail: number;
+  in_stock_count: number;
+  low_stock_count: number;
+  out_of_stock_count: number;
+  expired_count: number;
+  expiring_30_count: number;
+  expiring_90_count: number;
+  no_expiry_count: number;
+}
+
+export type CompanyReportTotals = Omit<CompanyReportRow, "id" | "name" | "created_at">;
+
+export interface CompanyReport {
+  data: CompanyReportRow[];
+  totals: CompanyReportTotals;
+  low_stock_threshold: number;
 }
 
 export interface CompanyDetail extends Company {

@@ -4,6 +4,7 @@ import { companiesController } from "./companies.controller";
 const router = Router();
 
 router.get("/", companiesController.list);
+router.get("/report", companiesController.report);
 router.get("/:id", companiesController.getById);
 router.post("/", companiesController.create);
 router.put("/:id", companiesController.update);
