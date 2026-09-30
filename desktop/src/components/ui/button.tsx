@@ -4,19 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-semibold ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4A25E1] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] cursor-pointer",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-semibold ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3612B8] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] cursor-pointer",
   {
     variants: {
       variant: {
-        primary: "bg-[#4A25E1] text-white hover:bg-[#3C19CF] shadow-xs hover:shadow",
-        default: "bg-[#4A25E1] text-white hover:bg-[#3C19CF] shadow-xs hover:shadow",
-        brand: "bg-[#4A25E1] text-white hover:bg-[#3C19CF] shadow-xs hover:shadow",
-        cyan: "bg-[#4A25E1] text-white hover:bg-[#3C19CF] shadow-xs font-bold",
+        primary: "bg-[#3612B8] text-white hover:bg-[#2A0E94] shadow-xs hover:shadow",
+        default: "bg-[#3612B8] text-white hover:bg-[#2A0E94] shadow-xs hover:shadow",
+        brand: "bg-[#3612B8] text-white hover:bg-[#2A0E94] shadow-xs hover:shadow",
+        cyan: "bg-[#3612B8] text-white hover:bg-[#2A0E94] shadow-xs font-bold",
         destructive: "bg-danger text-white hover:opacity-90 shadow-xs",
         outline: "border border-border bg-surface hover:bg-surface-2 hover:text-text-primary shadow-xs",
         secondary: "bg-surface-2 text-text-primary hover:bg-border/60",
         ghost: "hover:bg-surface-2 text-text-secondary hover:text-text-primary",
-        link: "text-[#4A25E1] dark:text-[#754BFB] underline-offset-4 hover:underline",
+        link: "text-[#3612B8] dark:text-[#754BFB] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",

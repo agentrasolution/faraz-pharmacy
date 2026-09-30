@@ -12,9 +12,9 @@ export const tokens = {
       text: "#0F172A",
       muted: "#64748B",
       border: "#E2E8F0",
-      primary: "#4A25E1",
-      primaryHover: "#3612B8",
-      accent: "#4A25E1",
+      primary: "#3612B8",
+      primaryHover: "#2A0E94",
+      accent: "#3612B8",
     },
     dark: {
       background: "#0B0D14",
@@ -31,7 +31,7 @@ export const tokens = {
       success: "#16A34A",
       warning: "#D97706",
       danger: "#DC2626",
-      info: "#4A25E1",
+      info: "#3612B8",
     },
   },
 

@@ -232,10 +232,15 @@ export default function SalesReport() {
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
 
+<<<<<<< HEAD
       <div className="relative z-10 flex items-center gap-3 mb-6 p-4 bg-surface-1 rounded-xl border border-border/50 flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} className=" z-1 bg-white-800"/>
+=======
+      <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
+>>>>>>> 56aa0df761dd82e06f0e4dd7056b08142b8ae1f1
         <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger className="w-40 h-9">
+          <SelectTrigger className="w-40 h-9 rounded-xl bg-surface border-border/80 text-xs">
             <SelectValue placeholder="Payment Method" />
           </SelectTrigger>
           <SelectContent>
@@ -251,10 +256,10 @@ export default function SalesReport() {
             placeholder="Search invoices, customers..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-9 rounded-xl bg-surface border-border/80 text-xs"
           />
         </div>
-        <Button variant="ghost" size="sm" className="h-9 text-text-secondary" onClick={handleReset}>
+        <Button variant="ghost" size="sm" className="h-9 rounded-xl text-text-secondary hover:text-text-primary" onClick={handleReset}>
           Reset
         </Button>
       </div>
