@@ -618,13 +618,8 @@ export default function CompanyReport() {
           <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-text-secondary">
             Company
           </label>
-<<<<<<< HEAD
-          <Select value={scope} onValueChange={handleScopeChange}>
-            <SelectTrigger className="h-9">
-=======
-          <Select value={selectedCompanyId} onValueChange={handleCompanyChange}>
+<Select value={scope} onValueChange={handleScopeChange}>
             <SelectTrigger className="h-9 rounded-xl bg-surface border-border/80 text-xs shadow-xs">
->>>>>>> 56aa0df761dd82e06f0e4dd7056b08142b8ae1f1
               <SelectValue placeholder="Select a company" />
             </SelectTrigger>
             <SelectContent>
