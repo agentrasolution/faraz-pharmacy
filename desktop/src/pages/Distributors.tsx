@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Pencil, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Pencil, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, Archive, RotateCcw } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,13 @@ export default function Distributors() {
   const [limit, setLimit] = useState(50);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
+  const [archivePasswordOpen, setArchivePasswordOpen] = useState(false);
+  const [restoreTargetId, setRestoreTargetId] = useState<string | null>(null);
+  const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
+  const [hardDeleteTargetId, setHardDeleteTargetId] = useState<string | null>(null);
+  const [hardDeletePasswordOpen, setHardDeletePasswordOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
     salesmanName: "",
@@ -41,11 +47,17 @@ export default function Distributors() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, limit]);
+  }, [debouncedSearch, limit, showArchived]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["distributors", page, limit, debouncedSearch],
-    queryFn: () => api.distributors.listPaginated({ page, limit, search: debouncedSearch }),
+    queryKey: ["distributors", page, limit, debouncedSearch, showArchived],
+    queryFn: () =>
+      api.distributors.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch,
+        archived: showArchived,
+      }),
   });
 
   const distributors = data?.data ?? [];
@@ -86,16 +98,48 @@ export default function Distributors() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.distributors.delete(id),
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => api.distributors.archive(id),
     onSuccess: () => {
-      toast.success("Distributor deleted");
+      toast.success("Distributor archived");
       queryClient.invalidateQueries({ queryKey: ["distributors"] });
-      setDeleteId(null);
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
     },
     onError: (err: Error) => {
       toast.error(err.message);
-      setDeleteId(null);
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => api.distributors.restore(id),
+    onSuccess: () => {
+      toast.success("Distributor restored");
+      queryClient.invalidateQueries({ queryKey: ["distributors"] });
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
+    },
+  });
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: (id: string) => api.distributors.hardDelete(id),
+    onSuccess: () => {
+      toast.success("Distributor permanently deleted");
+      queryClient.invalidateQueries({ queryKey: ["distributors"] });
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
     },
   });
 
@@ -191,6 +235,23 @@ export default function Distributors() {
           />
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "rounded-xl shadow-xs",
+              showArchived
+                ? "border-[#4A25E1] text-[#4A25E1] dark:border-[#754BFB] dark:text-[#754BFB]"
+                : ""
+            )}
+            onClick={() => {
+              setShowArchived(!showArchived);
+              setPage(1);
+            }}
+          >
+            <Archive className="h-3.5 w-3.5 mr-1" />
+            Archived
+          </Button>
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
           <div className="flex items-center border border-border/80 rounded-xl overflow-hidden bg-surface shadow-xs p-0.5">
@@ -267,20 +328,50 @@ export default function Distributors() {
               header: "",
               cell: (d: Distributor) => (
                 <div className="flex items-center gap-1 justify-end">
-                  <button
-                    onClick={() => openEdit(d)}
-                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
-                    title="Edit"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setDeleteId(d.id)}
-                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-                    title="Delete"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  {!showArchived ? (
+                    <>
+                      <button
+                        onClick={() => openEdit(d)}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
+                        title="Edit"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setArchiveTargetId(d.id);
+                          setArchivePasswordOpen(true);
+                        }}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
+                        title="Archive"
+                      >
+                        <Archive className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setRestoreTargetId(d.id);
+                          setRestorePasswordOpen(true);
+                        }}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors cursor-pointer"
+                        title="Restore"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setHardDeleteTargetId(d.id);
+                          setHardDeletePasswordOpen(true);
+                        }}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                        title="Delete Permanently"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               ),
             },
@@ -288,7 +379,7 @@ export default function Distributors() {
           data={distributors}
           loading={isLoading}
           keyExtractor={(d: Distributor) => d.id}
-          emptyMessage="No distributors found"
+          emptyMessage={showArchived ? "No archived distributors found" : "No distributors found"}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -298,7 +389,7 @@ export default function Distributors() {
             ))
           ) : distributors.length === 0 ? (
             <div className="col-span-full rounded-2xl border border-dashed border-border p-12 text-center text-sm text-text-secondary">
-              No distributors found
+              {showArchived ? "No archived distributors found" : "No distributors found"}
             </div>
           ) : (
             distributors.map((dist: Distributor) => (
@@ -312,20 +403,50 @@ export default function Distributors() {
                       {dist.name || "Unnamed Distributor"}
                     </h3>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => openEdit(dist)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
-                        title="Edit"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(dist.id)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {!showArchived ? (
+                        <>
+                          <button
+                            onClick={() => openEdit(dist)}
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setArchiveTargetId(dist.id);
+                              setArchivePasswordOpen(true);
+                            }}
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
+                            title="Archive"
+                          >
+                            <Archive className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setRestoreTargetId(dist.id);
+                              setRestorePasswordOpen(true);
+                            }}
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors cursor-pointer"
+                            title="Restore"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setHardDeleteTargetId(dist.id);
+                              setHardDeletePasswordOpen(true);
+                            }}
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                            title="Delete Permanently"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-surface-2/40 border border-border/60">
@@ -505,17 +626,54 @@ export default function Distributors() {
       </Dialog>
 
       <PasswordConfirmDialog
-        open={!!deleteId}
+        open={archivePasswordOpen}
         onOpenChange={(v) => {
-          if (!v) setDeleteId(null);
+          if (!v) {
+            setArchivePasswordOpen(false);
+            setArchiveTargetId(null);
+          }
         }}
-        title="Delete Distributor"
-        description="Are you sure you want to delete this distributor? Associated products and stock entries will not be affected."
-        confirmLabel="Delete"
+        title="Archive Distributor"
+        description="Enter admin password to archive this distributor."
+        confirmLabel="Archive"
+        loading={archiveMutation.isPending}
         onConfirm={() => {
-          if (deleteId) deleteMutation.mutate(deleteId);
+          if (archiveTargetId) archiveMutation.mutate(archiveTargetId);
         }}
-        loading={deleteMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={restorePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setRestorePasswordOpen(false);
+            setRestoreTargetId(null);
+          }
+        }}
+        title="Restore Distributor"
+        description="Enter admin password to restore this archived distributor."
+        confirmLabel="Restore"
+        loading={restoreMutation.isPending}
+        onConfirm={() => {
+          if (restoreTargetId) restoreMutation.mutate(restoreTargetId);
+        }}
+      />
+
+      <PasswordConfirmDialog
+        open={hardDeletePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setHardDeletePasswordOpen(false);
+            setHardDeleteTargetId(null);
+          }
+        }}
+        title="Delete Distributor Permanently"
+        description="This action cannot be undone. Enter admin password to permanently delete this distributor."
+        confirmLabel="Delete Permanently"
+        loading={hardDeleteMutation.isPending}
+        onConfirm={() => {
+          if (hardDeleteTargetId) hardDeleteMutation.mutate(hardDeleteTargetId);
+        }}
       />
     </div>
   );

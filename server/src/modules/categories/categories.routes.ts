@@ -9,5 +9,7 @@ router.get("/", categoriesController.list);
 router.post("/", validate(createCategorySchema), categoriesController.create);
 router.put("/:id", validate(updateCategorySchema), categoriesController.update);
 router.delete("/:id", categoriesController.delete);
+router.post("/:id/restore", categoriesController.restore);
+router.delete("/:id/hard", categoriesController.hardDelete);
 
 export { router as categoriesRoutes };

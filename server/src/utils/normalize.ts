@@ -40,6 +40,7 @@ export function normalizeDistributor(distributor: any): any {
     delivery_man_name: distributor.deliveryManName ?? "",
     delivery_man_contact: distributor.deliveryManContact ?? "",
     created_at: distributor.createdAt?.toISOString?.() ?? distributor.createdAt,
+    active: distributor.active ?? 1,
     product_count: distributor._count?.products ?? 0,
   };
 }

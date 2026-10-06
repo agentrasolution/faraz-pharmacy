@@ -9,8 +9,16 @@ export const companiesController = {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
       const search = req.query.search as string | undefined;
+      const archivedOnly = req.query.archived === "true" || req.query.archivedOnly === "true";
+      const includeArchived = req.query.includeArchived === "true";
 
-      const result = await companiesService.list({ page, limit, search });
+      const result = await companiesService.list({
+        page,
+        limit,
+        search,
+        archivedOnly,
+        includeArchived,
+      });
       if (isPaginated) {
         res.json(result);
       } else {
@@ -66,6 +74,26 @@ export const companiesController = {
     try {
       const { id } = req.params;
       await companiesService.remove(id);
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async restore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      await companiesService.restore(id);
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async hardDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      await companiesService.hardDelete(id);
       res.json({ success: true });
     } catch (error) {
       next(error);

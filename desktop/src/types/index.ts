@@ -1,6 +1,7 @@
 export interface Category {
   id: string;
   name: string;
+  active?: number;
   created_at: string;
 }
 
@@ -72,6 +73,7 @@ export interface Customer {
   address: string;
   father_name?: string;
   father_phone?: string;
+  active?: number;
   created_at: string;
   total_purchases?: number;
   outstanding_arrear?: number;
@@ -328,6 +330,7 @@ export interface Distributor {
   salesman_contact: string;
   delivery_man_name: string;
   delivery_man_contact: string;
+  active?: number;
   created_at: string;
   product_count?: number;
 }
@@ -343,6 +346,7 @@ export interface DistributorInput {
 export interface Company {
   id: string;
   name: string;
+  active?: number;
   created_at: string;
   product_count?: number;
 }
@@ -425,6 +429,7 @@ export interface Expense {
   date: string;
   payment_method?: string;
   status?: string;
+  active?: number;
   created_at: string;
 }
 

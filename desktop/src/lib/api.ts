@@ -168,12 +168,13 @@ const api = {
   },
   customers: {
     list: (): Promise<Customer[]> => fetchJson("GET", "/api/customers"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Customer>> => {
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; archived?: boolean }): Promise<PaginatedResponse<Customer>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
       if (opts.limit) params.set("limit", String(opts.limit));
       if (opts.search) params.set("search", opts.search);
+      if (opts.archived) params.set("archived", "true");
       
       const res = await fetchJson<any>("GET", `/api/customers?${params.toString()}`);
       if (Array.isArray(res)) {
@@ -186,8 +187,14 @@ const api = {
     create: (c: CustomerInput): Promise<Customer> => fetchJson("POST", "/api/customers", c),
     update: (id: string, c: CustomerInput): Promise<Customer> =>
       fetchJson("PUT", `/api/customers/${id}`, c),
-    delete: (id: string, opts?: { force?: boolean }): Promise<{ success: boolean }> =>
-      fetchJson("DELETE", `/api/customers/${id}${opts?.force ? "?force=true" : ""}`),
+    archive: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/customers/${id}`),
+    restore: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("POST", `/api/customers/${id}/restore`),
+    hardDelete: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/customers/${id}/hard`),
+    delete: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/customers/${id}`),
     getById: (id: string): Promise<Customer | null> => fetchJson("GET", `/api/customers/${id}`),
   },
   arrears: {
@@ -268,6 +275,7 @@ const api = {
       fetchJson("PUT", `/api/stock/${id}`, p),
     delete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/stock/${id}`),
     restore: (id: string): Promise<{ success: boolean }> => fetchJson("POST", `/api/stock/${id}/restore`),
+    hardDelete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/stock/${id}/hard`),
   },
   batches: {
     listByProduct: (productId: string): Promise<ProductBatch[]> =>
@@ -292,12 +300,13 @@ const api = {
   },
   distributors: {
     list: (): Promise<Distributor[]> => fetchJson("GET", "/api/distributors"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Distributor>> => {
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; archived?: boolean }): Promise<PaginatedResponse<Distributor>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
       if (opts.limit) params.set("limit", String(opts.limit));
       if (opts.search) params.set("search", opts.search);
+      if (opts.archived) params.set("archived", "true");
       
       const res = await fetchJson<any>("GET", `/api/distributors?${params.toString()}`);
       if (Array.isArray(res)) {
@@ -309,17 +318,24 @@ const api = {
       fetchJson("POST", "/api/distributors", d),
     update: (id: string, d: DistributorInput): Promise<Distributor> =>
       fetchJson("PUT", `/api/distributors/${id}`, d),
+    archive: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/distributors/${id}`),
+    restore: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("POST", `/api/distributors/${id}/restore`),
+    hardDelete: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/distributors/${id}/hard`),
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/distributors/${id}`),
   },
   companies: {
     list: (): Promise<Company[]> => fetchJson("GET", "/api/companies"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Company>> => {
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; archived?: boolean }): Promise<PaginatedResponse<Company>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
       if (opts.limit) params.set("limit", String(opts.limit));
       if (opts.search) params.set("search", opts.search);
+      if (opts.archived) params.set("archived", "true");
       
       const res = await fetchJson<any>("GET", `/api/companies?${params.toString()}`);
       if (Array.isArray(res)) {
@@ -330,6 +346,12 @@ const api = {
     create: (c: CompanyInput): Promise<Company> => fetchJson("POST", "/api/companies", c),
     update: (id: string, c: CompanyInput): Promise<Company> =>
       fetchJson("PUT", `/api/companies/${id}`, c),
+    archive: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/companies/${id}`),
+    restore: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("POST", `/api/companies/${id}/restore`),
+    hardDelete: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/companies/${id}/hard`),
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/companies/${id}`),
     getById: (id: string): Promise<CompanyDetail> => fetchJson("GET", `/api/companies/${id}`),
@@ -360,7 +382,7 @@ const api = {
   },
   expenses: {
     list: (): Promise<Expense[]> => fetchJson("GET", "/api/expenses"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string }): Promise<PaginatedResponse<Expense>> => {
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string; archived?: boolean }): Promise<PaginatedResponse<Expense>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
@@ -368,6 +390,7 @@ const api = {
       if (opts.search) params.set("search", opts.search);
       if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
       if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      if (opts.archived) params.set("archived", "true");
       
       const res = await fetchJson<any>("GET", `/api/expenses?${params.toString()}`);
       if (Array.isArray(res)) {
@@ -378,19 +401,26 @@ const api = {
     create: (e: ExpenseInput): Promise<Expense> => fetchJson("POST", "/api/expenses", e),
     update: (id: string, e: ExpenseInput): Promise<Expense> =>
       fetchJson("PUT", `/api/expenses/${id}`, e),
+    archive: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/expenses/${id}`),
+    restore: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("POST", `/api/expenses/${id}/restore`),
+    hardDelete: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/expenses/${id}/hard`),
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/expenses/${id}`),
   },
 
-
   categories: {
-    list: (): Promise<Category[]> => fetchJson("GET", "/api/categories"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Category>> => {
+    list: (opts?: { archived?: boolean }): Promise<Category[]> =>
+      fetchJson("GET", `/api/categories${opts?.archived ? "?archived=true" : ""}`),
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; archived?: boolean }): Promise<PaginatedResponse<Category>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
       if (opts.limit) params.set("limit", String(opts.limit));
       if (opts.search) params.set("search", opts.search);
+      if (opts.archived) params.set("archived", "true");
       
       const res = await fetchJson<any>("GET", `/api/categories?${params.toString()}`);
       if (Array.isArray(res)) {
@@ -401,6 +431,12 @@ const api = {
     create: (c: CategoryInput): Promise<Category> => fetchJson("POST", "/api/categories", c),
     update: (id: string, c: CategoryInput): Promise<Category> =>
       fetchJson("PUT", `/api/categories/${id}`, c),
+    archive: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/categories/${id}`),
+    restore: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("POST", `/api/categories/${id}/restore`),
+    hardDelete: (id: string): Promise<{ success: boolean }> =>
+      fetchJson("DELETE", `/api/categories/${id}/hard`),
     delete: (id: string): Promise<{ success: boolean }> =>
       fetchJson("DELETE", `/api/categories/${id}`),
   },

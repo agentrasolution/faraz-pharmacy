@@ -47,8 +47,24 @@ function daysUntilExpiry(expiry: string | null): number | null {
 }
 
 export const companiesService = {
-  async list({ page = 1, limit = 50, search }: { page?: number; limit?: number; search?: string } = {}) {
-    const where: Prisma.CompanyWhereInput = {};
+  async list({
+    page = 1,
+    limit = 50,
+    search,
+    includeArchived = false,
+    archivedOnly = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeArchived?: boolean;
+    archivedOnly?: boolean;
+  } = {}) {
+    const where: Prisma.CompanyWhereInput = archivedOnly
+      ? { active: 0 }
+      : includeArchived
+      ? {}
+      : { active: 1 };
 
     if (search && search.trim()) {
       const q = search.trim();
@@ -204,6 +220,28 @@ export const companiesService = {
   async remove(id: string) {
     const existing = await prisma.company.findUnique({ where: { id } });
     if (!existing) throw new NotFoundError("Company");
+    return prisma.company.update({
+      where: { id },
+      data: { active: 0 },
+    });
+  },
+
+  async restore(id: string) {
+    const existing = await prisma.company.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Company");
+    return prisma.company.update({
+      where: { id },
+      data: { active: 1 },
+    });
+  },
+
+  async hardDelete(id: string) {
+    const existing = await prisma.company.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Company");
+    await prisma.product.updateMany({
+      where: { companyId: id },
+      data: { companyId: null },
+    });
     await prisma.company.delete({ where: { id } });
     return { success: true };
   },

@@ -283,5 +283,35 @@ export const purchasesService = {
       return { success: true };
     });
   },
+
+  async hardDelete(id: string) {
+    const old = await prisma.stockPurchase.findUnique({ where: { id } });
+    if (!old) throw new NotFoundError("Stock purchase");
+
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      if (old.active === 1) {
+        if (old.batchId) {
+          await tx.productBatch.update({
+            where: { id: old.batchId },
+            data: { quantity: { decrement: old.quantity } },
+          });
+        }
+        const earliestBatch = await tx.productBatch.findFirst({
+          where: { productId: old.productId, active: 1, quantity: { gt: 0 } },
+          orderBy: { expiryDate: "asc" },
+        });
+        await tx.product.update({
+          where: { id: old.productId },
+          data: {
+            stockQty: { decrement: old.quantity },
+            expiry: earliestBatch?.expiryDate ?? undefined,
+          },
+        });
+      }
+
+      await tx.stockPurchase.delete({ where: { id } });
+      return { success: true };
+    });
+  },
 };
 

@@ -3,8 +3,24 @@ import { NotFoundError } from "../../utils/errors";
 import type { CreateCategoryInput } from "./categories.schema";
 
 export const categoriesService = {
-  async list({ page = 1, limit = 50, search }: { page?: number; limit?: number; search?: string } = {}) {
-    const where: Prisma.CategoryWhereInput = {};
+  async list({
+    page = 1,
+    limit = 50,
+    search,
+    includeArchived = false,
+    archivedOnly = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeArchived?: boolean;
+    archivedOnly?: boolean;
+  } = {}) {
+    const where: Prisma.CategoryWhereInput = archivedOnly
+      ? { active: 0 }
+      : includeArchived
+      ? {}
+      : { active: 1 };
 
     if (search) {
       const q = search.trim();
@@ -52,6 +68,24 @@ export const categoriesService = {
   },
 
   async remove(id: string) {
+    const existing = await prisma.category.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Category");
+    return prisma.category.update({
+      where: { id },
+      data: { active: 0 },
+    });
+  },
+
+  async restore(id: string) {
+    const existing = await prisma.category.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Category");
+    return prisma.category.update({
+      where: { id },
+      data: { active: 1 },
+    });
+  },
+
+  async hardDelete(id: string) {
     const existing = await prisma.category.findUnique({ where: { id } });
     if (!existing) throw new NotFoundError("Category");
     await prisma.category.delete({ where: { id } });

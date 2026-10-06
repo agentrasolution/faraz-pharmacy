@@ -9,5 +9,7 @@ router.get("/", expensesController.list);
 router.post("/", validate(createExpenseSchema), expensesController.create);
 router.put("/:id", validate(updateExpenseSchema), expensesController.update);
 router.delete("/:id", expensesController.delete);
+router.post("/:id/restore", expensesController.restore);
+router.delete("/:id/hard", expensesController.hardDelete);
 
 export { router as expensesRoutes };

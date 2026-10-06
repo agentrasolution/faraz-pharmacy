@@ -8,8 +8,16 @@ export const customersController = {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
       const search = req.query.search as string | undefined;
+      const archivedOnly = req.query.archived === "true" || req.query.archivedOnly === "true";
+      const includeArchived = req.query.includeArchived === "true";
       
-      const result = await customersService.list({ page, limit, search });
+      const result = await customersService.list({
+        page,
+        limit,
+        search,
+        archivedOnly,
+        includeArchived,
+      });
       
       if (isPaginated) {
         res.json(result);
@@ -61,8 +69,25 @@ export const customersController = {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const force = req.query.force === "true";
-      const result = await customersService.delete(req.params.id, force);
+      const result = await customersService.archive(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async restore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await customersService.restore(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async hardDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await customersService.hardDelete(req.params.id);
       res.json(result);
     } catch (err) {
       next(err);

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Plus, Phone, MapPin, Pencil, Trash2, LayoutGrid, List } from "lucide-react";
+import { Search, Plus, Phone, MapPin, Pencil, Trash2, LayoutGrid, List, Eye, Archive, RotateCcw } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF } from "@/lib/export";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
@@ -34,12 +33,13 @@ export default function Customers() {
   const [address, setAddress] = useState("");
   const [fatherName, setFatherName] = useState("");
   const [fatherPhone, setFatherPhone] = useState("");
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
-  const [deleteInfo, setDeleteInfo] = useState<{ salesCount: number; arrearsCount: number } | null>(
-    null
-  );
+  const [showArchived, setShowArchived] = useState(false);
+  const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
+  const [archivePasswordOpen, setArchivePasswordOpen] = useState(false);
+  const [restoreTargetId, setRestoreTargetId] = useState<string | null>(null);
+  const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
+  const [hardDeleteTargetId, setHardDeleteTargetId] = useState<string | null>(null);
+  const [hardDeletePasswordOpen, setHardDeletePasswordOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -48,8 +48,14 @@ export default function Customers() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: paginatedData, isLoading } = useQuery({
-    queryKey: ["customers", page, limit, debouncedSearch],
-    queryFn: () => api.customers.listPaginated({ page, limit, search: debouncedSearch }),
+    queryKey: ["customers", page, limit, debouncedSearch, showArchived],
+    queryFn: () =>
+      api.customers.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch,
+        archived: showArchived,
+      }),
   });
 
   const customers = paginatedData?.data || [];
@@ -91,47 +97,50 @@ export default function Customers() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.customers.delete(id),
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => api.customers.archive(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer deleted");
-      setDeleteId(null);
+      toast.success("Customer archived");
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
     },
-    onError: (err) => {
-      toast.error(err.message);
-      setDeleteId(null);
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to archive customer");
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
     },
   });
 
-  const forceDeleteMutation = useMutation({
-    mutationFn: async () => {
-      return api.customers.delete(deleteTarget!.id, { force: true });
-    },
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => api.customers.restore(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setForceDeleteOpen(false);
-      setDeleteTarget(null);
-      setDeleteInfo(null);
-      toast.success("Customer deleted");
+      toast.success("Customer restored");
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to restore customer");
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
     },
   });
 
-  function handleDeleteClick(c: Customer) {
-    if ((c.total_purchases ?? 0) > 0 || (c.outstanding_arrear ?? 0) > 0) {
-      setDeleteTarget(c);
-      setDeleteInfo({
-        salesCount: c.total_purchases ?? 0,
-        arrearsCount: c.outstanding_arrear ?? 0,
-      });
-      setForceDeleteOpen(true);
-    } else {
-      setDeleteId(c.id);
-    }
-  }
+  const hardDeleteMutation = useMutation({
+    mutationFn: (id: string) => api.customers.hardDelete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      toast.success("Customer permanently deleted");
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete customer");
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
+    },
+  });
 
 
 
@@ -230,26 +239,56 @@ export default function Customers() {
       header: "",
       cell: (c: Customer) => (
         <div className="flex items-center gap-1 justify-end">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              openEdit(c);
-            }}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(c);
-            }}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {!showArchived ? (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEdit(c);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
+                title="Edit"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setArchiveTargetId(c.id);
+                  setArchivePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors"
+                title="Archive"
+              >
+                <Archive className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRestoreTargetId(c.id);
+                  setRestorePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
+                title="Restore"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHardDeleteTargetId(c.id);
+                  setHardDeletePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
+                title="Delete Permanently"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       ),
     },
@@ -344,6 +383,23 @@ export default function Customers() {
           />
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "rounded-xl shadow-xs",
+              showArchived
+                ? "border-[#4A25E1] text-[#4A25E1] dark:border-[#754BFB] dark:text-[#754BFB]"
+                : ""
+            )}
+            onClick={() => {
+              setShowArchived(!showArchived);
+              setPage(1);
+            }}
+          >
+            <Archive className="h-3.5 w-3.5 mr-1" />
+            Archived
+          </Button>
           <ExportButton type="csv" onClick={handleExportCSV} />
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <div className="flex items-center border border-border/80 rounded-xl overflow-hidden bg-surface shadow-xs p-0.5">
@@ -422,26 +478,56 @@ export default function Customers() {
                       )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEdit(c);
-                        }}
-                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
-                        title="Edit"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(c);
-                        }}
-                        className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {!showArchived ? (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEdit(c);
+                            }}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-[#4A25E1] hover:bg-surface-2 transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setArchiveTargetId(c.id);
+                              setArchivePasswordOpen(true);
+                            }}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
+                            title="Archive"
+                          >
+                            <Archive className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRestoreTargetId(c.id);
+                              setRestorePasswordOpen(true);
+                            }}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors cursor-pointer"
+                            title="Restore"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHardDeleteTargetId(c.id);
+                              setHardDeletePasswordOpen(true);
+                            }}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                            title="Delete Permanently"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -515,24 +601,56 @@ export default function Customers() {
       </div>
 
       <PasswordConfirmDialog
-        open={forceDeleteOpen}
+        open={archivePasswordOpen}
         onOpenChange={(v) => {
           if (!v) {
-            setForceDeleteOpen(false);
-            setDeleteTarget(null);
-            setDeleteInfo(null);
+            setArchivePasswordOpen(false);
+            setArchiveTargetId(null);
           }
         }}
-        title="Force Delete Customer"
-        description={
-          deleteInfo
-            ? `${deleteTarget?.name} has existing records: ${deleteInfo.salesCount} invoice(s), ${deleteInfo.arrearsCount} arrear(s). Deleting will permanently remove their data.`
-            : undefined
-        }
-        confirmLabel="Force Delete"
-        onConfirm={() => forceDeleteMutation.mutate()}
-        loading={forceDeleteMutation.isPending}
+        title="Archive Customer"
+        description="Enter admin password to archive this customer. Customers with pending arrears cannot be archived."
+        confirmLabel="Archive"
+        loading={archiveMutation.isPending}
+        onConfirm={() => {
+          if (archiveTargetId) archiveMutation.mutate(archiveTargetId);
+        }}
       />
+
+      <PasswordConfirmDialog
+        open={restorePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setRestorePasswordOpen(false);
+            setRestoreTargetId(null);
+          }
+        }}
+        title="Restore Customer"
+        description="Enter admin password to restore this archived customer."
+        confirmLabel="Restore"
+        loading={restoreMutation.isPending}
+        onConfirm={() => {
+          if (restoreTargetId) restoreMutation.mutate(restoreTargetId);
+        }}
+      />
+
+      <PasswordConfirmDialog
+        open={hardDeletePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setHardDeletePasswordOpen(false);
+            setHardDeleteTargetId(null);
+          }
+        }}
+        title="Delete Customer Permanently"
+        description="This action cannot be undone. Enter admin password to permanently delete this customer."
+        confirmLabel="Delete Permanently"
+        loading={hardDeleteMutation.isPending}
+        onConfirm={() => {
+          if (hardDeleteTargetId) hardDeleteMutation.mutate(hardDeleteTargetId);
+        }}
+      />
+
       <Dialog
         open={open}
         onOpenChange={(v) => {
@@ -623,20 +741,6 @@ export default function Customers() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={!!deleteId}
-        onOpenChange={(v) => {
-          if (!v) setDeleteId(null);
-        }}
-        title="Delete Customer"
-        description="Are you sure you want to delete this customer?"
-        confirmLabel="Delete"
-        onConfirm={() => {
-          if (deleteId) deleteMutation.mutate(deleteId);
-        }}
-        loading={deleteMutation.isPending}
-      />
     </div>
   );
 }

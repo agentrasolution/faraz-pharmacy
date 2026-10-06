@@ -9,5 +9,7 @@ router.get("/:id", companiesController.getById);
 router.post("/", companiesController.create);
 router.put("/:id", companiesController.update);
 router.delete("/:id", companiesController.remove);
+router.post("/:id/restore", companiesController.restore);
+router.delete("/:id/hard", companiesController.hardDelete);
 
 export { router as companiesRoutes };

@@ -15,23 +15,45 @@ const customerStatsSelect = `
   (SELECT MAX(s.created_at) FROM sales s WHERE s.customer_id = c.id) AS last_purchase`;
 
 export const customersService = {
-  async list({ page = 1, limit = 100000, search }: { page?: number; limit?: number; search?: string } = {}) {
+  async list({
+    page = 1,
+    limit = 100000,
+    search,
+    includeArchived = false,
+    archivedOnly = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeArchived?: boolean;
+    archivedOnly?: boolean;
+  } = {}) {
     const skip = (page - 1) * limit;
-    
-    let whereClause = "";
-    let params: any[] = [];
-    
-    if (search) {
-      whereClause = `WHERE c.name ILIKE $1 OR c.phone ILIKE $1 OR c.father_name ILIKE $1 OR c.father_phone ILIKE $1`;
-      params.push(`%${search}%`);
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (archivedOnly) {
+      conditions.push("c.active = 0");
+    } else if (!includeArchived) {
+      conditions.push("c.active = 1");
     }
 
+    if (search && search.trim()) {
+      params.push(`%${search.trim()}%`);
+      conditions.push(
+        `(c.name ILIKE $${params.length} OR c.phone ILIKE $${params.length} OR c.father_name ILIKE $${params.length} OR c.father_phone ILIKE $${params.length})`
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
     const countQuery = `SELECT COUNT(*)::int as total FROM customers c ${whereClause}`;
-    const countResult = await prisma.$queryRawUnsafe<{total: number}[]>(countQuery, ...params);
+    const countResult = await prisma.$queryRawUnsafe<{ total: number }[]>(countQuery, ...params);
     const total = Number(countResult[0]?.total || 0);
 
     const dataQuery = `
-      SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.created_at,
+      SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.active, c.created_at,
         ${customerStatsSelect}
       FROM customers c
       ${whereClause}
@@ -47,8 +69,8 @@ export const customersService = {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit) || 1,
+      },
     };
   },
 
@@ -156,23 +178,54 @@ export const customersService = {
     });
   },
 
-  async delete(id: string, force = false) {
-    const salesCount = await prisma.sale.count({ where: { customerId: id } });
-    const arrearsCount = await prisma.arrear.count({ where: { customerId: id } });
+  async archive(id: string) {
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    if (!customer) throw new NotFoundError("Customer");
 
-    if ((salesCount > 0 || arrearsCount > 0) && !force) {
+    // Check for pending arrears / outstanding balance
+    const pendingArrears = await prisma.arrear.findMany({
+      where: {
+        customerId: id,
+        status: { not: "paid" },
+        balanceDue: { gt: 0 },
+      },
+    });
+
+    const totalOutstanding = pendingArrears.reduce((sum, a) => sum + (a.balanceDue || 0), 0);
+    if (totalOutstanding > 0) {
       throw new BadRequestError(
-        `Customer has ${salesCount} invoice(s) and ${arrearsCount} arrear(s). Use force delete to remove.`
+        `Cannot archive customer: Customer has pending arrears of Rs. ${totalOutstanding.toFixed(0)}. Outstanding balance must be settled before archiving.`
       );
     }
 
+    return prisma.customer.update({
+      where: { id },
+      data: { active: 0 },
+    });
+  },
+
+  async restore(id: string) {
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    if (!customer) throw new NotFoundError("Customer");
+    return prisma.customer.update({
+      where: { id },
+      data: { active: 1 },
+    });
+  },
+
+  async hardDelete(id: string) {
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    if (!customer) throw new NotFoundError("Customer");
+
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      if (force) {
-        await tx.sale.updateMany({ where: { customerId: id }, data: { customerId: null } });
-        await tx.arrear.deleteMany({ where: { customerId: id } });
-      }
+      await tx.sale.updateMany({ where: { customerId: id }, data: { customerId: null } });
+      await tx.arrear.deleteMany({ where: { customerId: id } });
       await tx.customer.delete({ where: { id } });
       return { success: true };
     });
+  },
+
+  async delete(id: string) {
+    return this.archive(id);
   },
 };

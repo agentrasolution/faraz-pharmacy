@@ -3,8 +3,24 @@ import { NotFoundError } from "../../utils/errors";
 import type { CreateDistributorInput } from "./suppliers.schema";
 
 export const suppliersService = {
-  async list({ page = 1, limit = 100000, search }: { page?: number; limit?: number; search?: string } = {}) {
-    const where: Prisma.DistributorWhereInput = {};
+  async list({
+    page = 1,
+    limit = 100000,
+    search,
+    includeArchived = false,
+    archivedOnly = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeArchived?: boolean;
+    archivedOnly?: boolean;
+  } = {}) {
+    const where: Prisma.DistributorWhereInput = archivedOnly
+      ? { active: 0 }
+      : includeArchived
+      ? {}
+      : { active: 1 };
 
     if (search) {
       const q = search.trim();
@@ -73,7 +89,41 @@ export const suppliersService = {
   async remove(id: string) {
     const existing = await prisma.distributor.findUnique({ where: { id } });
     if (!existing) throw new NotFoundError("Distributor");
-    await prisma.distributor.delete({ where: { id } });
+    return prisma.distributor.update({
+      where: { id },
+      data: { active: 0 },
+    });
+  },
+
+  async restore(id: string) {
+    const existing = await prisma.distributor.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Distributor");
+    return prisma.distributor.update({
+      where: { id },
+      data: { active: 1 },
+    });
+  },
+
+  async hardDelete(id: string) {
+    const existing = await prisma.distributor.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Distributor");
+
+    await prisma.$transaction(async (tx) => {
+      await tx.product.updateMany({
+        where: { distributorId: id },
+        data: { distributorId: null },
+      });
+      await tx.stockPurchase.updateMany({
+        where: { distributorId: id },
+        data: { distributorId: null },
+      });
+      await tx.productBatch.updateMany({
+        where: { distributorId: id },
+        data: { distributorId: null },
+      });
+      await tx.distributor.delete({ where: { id } });
+    });
+
     return { success: true };
   },
 };

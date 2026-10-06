@@ -64,5 +64,14 @@ export const purchasesController = {
       next(err);
     }
   },
+
+  async hardDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await purchasesService.hardDelete(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
 };
 

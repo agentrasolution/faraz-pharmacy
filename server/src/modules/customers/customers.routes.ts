@@ -11,5 +11,7 @@ router.get("/:id", customersController.getById);
 router.post("/", validate(createCustomerSchema), customersController.create);
 router.put("/:id", validate(updateCustomerSchema), customersController.update);
 router.delete("/:id", customersController.delete);
+router.post("/:id/restore", customersController.restore);
+router.delete("/:id/hard", customersController.hardDelete);
 
 export { router as customersRoutes };

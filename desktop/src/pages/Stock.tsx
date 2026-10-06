@@ -174,6 +174,8 @@ export default function Stock() {
 
   const [restoreTargetId, setRestoreTargetId] = useState<string | null>(null);
   const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
+  const [hardDeleteTargetId, setHardDeleteTargetId] = useState<string | null>(null);
+  const [hardDeletePasswordOpen, setHardDeletePasswordOpen] = useState(false);
 
   const restoreMutation = useMutation({
     mutationFn: (id: string) => api.stock.restore(id),
@@ -188,6 +190,22 @@ export default function Stock() {
       toast.error(err.message || "Failed to restore stock entry");
       setRestoreTargetId(null);
       setRestorePasswordOpen(false);
+    },
+  });
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: (id: string) => api.stock.hardDelete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Stock entry permanently deleted");
+      setHardDeleteTargetId(null);
+      setHardDeletePasswordOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to permanently delete stock entry");
+      setHardDeleteTargetId(null);
+      setHardDeletePasswordOpen(false);
     },
   });
 
@@ -380,23 +398,35 @@ export default function Stock() {
               </button>
               <button
                 onClick={() => setDeleteId(s.id)}
-                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-                title="Delete"
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors"
+                title="Archive"
               >
-                <Trash2 className="h-4 w-4" />
+                <Archive className="h-4 w-4" />
               </button>
             </>
           ) : (
-            <button
-              onClick={() => {
-                setRestoreTargetId(s.id);
-                setRestorePasswordOpen(true);
-              }}
-              className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
-              title="Restore"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  setRestoreTargetId(s.id);
+                  setRestorePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
+                title="Restore"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setHardDeleteTargetId(s.id);
+                  setHardDeletePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
+                title="Delete Permanently"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
       ),
@@ -661,9 +691,9 @@ export default function Stock() {
         onOpenChange={(v) => {
           if (!v) setDeleteId(null);
         }}
-        title="Delete Stock Entry"
-        description="This will remove the stock quantity from the product. The entry will be archived and can be viewed later."
-        confirmLabel="Delete"
+        title="Archive Stock Entry"
+        description="This will remove the stock quantity from the product. The entry will be archived and can be restored later."
+        confirmLabel="Archive"
         onConfirm={() => {
           if (deleteId) deleteMutation.mutate(deleteId);
         }}
@@ -685,6 +715,23 @@ export default function Stock() {
           if (restoreTargetId) restoreMutation.mutate(restoreTargetId);
         }}
         loading={restoreMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={hardDeletePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setHardDeletePasswordOpen(false);
+            setHardDeleteTargetId(null);
+          }
+        }}
+        title="Delete Stock Entry Permanently"
+        description="This action cannot be undone. Enter admin password to permanently delete this stock entry record."
+        confirmLabel="Delete Permanently"
+        onConfirm={() => {
+          if (hardDeleteTargetId) hardDeleteMutation.mutate(hardDeleteTargetId);
+        }}
+        loading={hardDeleteMutation.isPending}
       />
 
       <BatchTraceDialog

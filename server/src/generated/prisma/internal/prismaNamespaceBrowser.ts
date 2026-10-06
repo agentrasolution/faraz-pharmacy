@@ -173,7 +173,8 @@ export const DistributorScalarFieldEnum = {
   deliveryManContact: 'deliveryManContact',
   deliveryManName: 'deliveryManName',
   salesmanContact: 'salesmanContact',
-  salesmanName: 'salesmanName'
+  salesmanName: 'salesmanName',
+  active: 'active'
 } as const
 
 export type DistributorScalarFieldEnum = (typeof DistributorScalarFieldEnum)[keyof typeof DistributorScalarFieldEnum]
@@ -186,7 +187,8 @@ export const CustomerScalarFieldEnum = {
   address: 'address',
   createdAt: 'createdAt',
   fatherName: 'fatherName',
-  fatherPhone: 'fatherPhone'
+  fatherPhone: 'fatherPhone',
+  active: 'active'
 } as const
 
 export type CustomerScalarFieldEnum = (typeof CustomerScalarFieldEnum)[keyof typeof CustomerScalarFieldEnum]
@@ -314,6 +316,7 @@ export type ReturnItemScalarFieldEnum = (typeof ReturnItemScalarFieldEnum)[keyof
 export const CategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  active: 'active',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -328,6 +331,7 @@ export const ExpenseScalarFieldEnum = {
   amount: 'amount',
   notes: 'notes',
   date: 'date',
+  active: 'active',
   createdAt: 'createdAt'
 } as const
 
@@ -337,6 +341,7 @@ export type ExpenseScalarFieldEnum = (typeof ExpenseScalarFieldEnum)[keyof typeo
 export const CompanyScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  active: 'active',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

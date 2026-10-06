@@ -10,6 +10,7 @@ router.post("/", validate(createStockSchema), purchasesController.create);
 router.put("/:id", validate(updateStockSchema), purchasesController.update);
 router.delete("/:id", purchasesController.delete);
 router.post("/:id/restore", purchasesController.restore);
+router.delete("/:id/hard", purchasesController.hardDelete);
 
 export { router as purchasesRoutes };
 

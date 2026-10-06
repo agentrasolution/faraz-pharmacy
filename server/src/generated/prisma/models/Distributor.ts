@@ -20,8 +20,18 @@ export type DistributorModel = runtime.Types.Result.DefaultSelection<Prisma.$Dis
 
 export type AggregateDistributor = {
   _count: DistributorCountAggregateOutputType | null
+  _avg: DistributorAvgAggregateOutputType | null
+  _sum: DistributorSumAggregateOutputType | null
   _min: DistributorMinAggregateOutputType | null
   _max: DistributorMaxAggregateOutputType | null
+}
+
+export type DistributorAvgAggregateOutputType = {
+  active: number | null
+}
+
+export type DistributorSumAggregateOutputType = {
+  active: number | null
 }
 
 export type DistributorMinAggregateOutputType = {
@@ -32,6 +42,7 @@ export type DistributorMinAggregateOutputType = {
   deliveryManName: string | null
   salesmanContact: string | null
   salesmanName: string | null
+  active: number | null
 }
 
 export type DistributorMaxAggregateOutputType = {
@@ -42,6 +53,7 @@ export type DistributorMaxAggregateOutputType = {
   deliveryManName: string | null
   salesmanContact: string | null
   salesmanName: string | null
+  active: number | null
 }
 
 export type DistributorCountAggregateOutputType = {
@@ -52,9 +64,18 @@ export type DistributorCountAggregateOutputType = {
   deliveryManName: number
   salesmanContact: number
   salesmanName: number
+  active: number
   _all: number
 }
 
+
+export type DistributorAvgAggregateInputType = {
+  active?: true
+}
+
+export type DistributorSumAggregateInputType = {
+  active?: true
+}
 
 export type DistributorMinAggregateInputType = {
   id?: true
@@ -64,6 +85,7 @@ export type DistributorMinAggregateInputType = {
   deliveryManName?: true
   salesmanContact?: true
   salesmanName?: true
+  active?: true
 }
 
 export type DistributorMaxAggregateInputType = {
@@ -74,6 +96,7 @@ export type DistributorMaxAggregateInputType = {
   deliveryManName?: true
   salesmanContact?: true
   salesmanName?: true
+  active?: true
 }
 
 export type DistributorCountAggregateInputType = {
@@ -84,6 +107,7 @@ export type DistributorCountAggregateInputType = {
   deliveryManName?: true
   salesmanContact?: true
   salesmanName?: true
+  active?: true
   _all?: true
 }
 
@@ -125,6 +149,18 @@ export type DistributorAggregateArgs<ExtArgs extends runtime.Types.Extensions.In
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: DistributorAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: DistributorSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: DistributorMinAggregateInputType
@@ -155,6 +191,8 @@ export type DistributorGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   _count?: DistributorCountAggregateInputType | true
+  _avg?: DistributorAvgAggregateInputType
+  _sum?: DistributorSumAggregateInputType
   _min?: DistributorMinAggregateInputType
   _max?: DistributorMaxAggregateInputType
 }
@@ -167,7 +205,10 @@ export type DistributorGroupByOutputType = {
   deliveryManName: string
   salesmanContact: string
   salesmanName: string
+  active: number
   _count: DistributorCountAggregateOutputType | null
+  _avg: DistributorAvgAggregateOutputType | null
+  _sum: DistributorSumAggregateOutputType | null
   _min: DistributorMinAggregateOutputType | null
   _max: DistributorMaxAggregateOutputType | null
 }
@@ -198,6 +239,7 @@ export type DistributorWhereInput = {
   deliveryManName?: Prisma.StringFilter<"Distributor"> | string
   salesmanContact?: Prisma.StringFilter<"Distributor"> | string
   salesmanName?: Prisma.StringFilter<"Distributor"> | string
+  active?: Prisma.IntFilter<"Distributor"> | number
   products?: Prisma.ProductListRelationFilter
   stockPurchases?: Prisma.StockPurchaseListRelationFilter
   batches?: Prisma.ProductBatchListRelationFilter
@@ -211,6 +253,7 @@ export type DistributorOrderByWithRelationInput = {
   deliveryManName?: Prisma.SortOrder
   salesmanContact?: Prisma.SortOrder
   salesmanName?: Prisma.SortOrder
+  active?: Prisma.SortOrder
   products?: Prisma.ProductOrderByRelationAggregateInput
   stockPurchases?: Prisma.StockPurchaseOrderByRelationAggregateInput
   batches?: Prisma.ProductBatchOrderByRelationAggregateInput
@@ -227,6 +270,7 @@ export type DistributorWhereUniqueInput = Prisma.AtLeast<{
   deliveryManName?: Prisma.StringFilter<"Distributor"> | string
   salesmanContact?: Prisma.StringFilter<"Distributor"> | string
   salesmanName?: Prisma.StringFilter<"Distributor"> | string
+  active?: Prisma.IntFilter<"Distributor"> | number
   products?: Prisma.ProductListRelationFilter
   stockPurchases?: Prisma.StockPurchaseListRelationFilter
   batches?: Prisma.ProductBatchListRelationFilter
@@ -240,9 +284,12 @@ export type DistributorOrderByWithAggregationInput = {
   deliveryManName?: Prisma.SortOrder
   salesmanContact?: Prisma.SortOrder
   salesmanName?: Prisma.SortOrder
+  active?: Prisma.SortOrder
   _count?: Prisma.DistributorCountOrderByAggregateInput
+  _avg?: Prisma.DistributorAvgOrderByAggregateInput
   _max?: Prisma.DistributorMaxOrderByAggregateInput
   _min?: Prisma.DistributorMinOrderByAggregateInput
+  _sum?: Prisma.DistributorSumOrderByAggregateInput
 }
 
 export type DistributorScalarWhereWithAggregatesInput = {
@@ -256,6 +303,7 @@ export type DistributorScalarWhereWithAggregatesInput = {
   deliveryManName?: Prisma.StringWithAggregatesFilter<"Distributor"> | string
   salesmanContact?: Prisma.StringWithAggregatesFilter<"Distributor"> | string
   salesmanName?: Prisma.StringWithAggregatesFilter<"Distributor"> | string
+  active?: Prisma.IntWithAggregatesFilter<"Distributor"> | number
 }
 
 export type DistributorCreateInput = {
@@ -266,6 +314,7 @@ export type DistributorCreateInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   products?: Prisma.ProductCreateNestedManyWithoutDistributorInput
   stockPurchases?: Prisma.StockPurchaseCreateNestedManyWithoutDistributorInput
   batches?: Prisma.ProductBatchCreateNestedManyWithoutDistributorInput
@@ -279,6 +328,7 @@ export type DistributorUncheckedCreateInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutDistributorInput
   stockPurchases?: Prisma.StockPurchaseUncheckedCreateNestedManyWithoutDistributorInput
   batches?: Prisma.ProductBatchUncheckedCreateNestedManyWithoutDistributorInput
@@ -292,6 +342,7 @@ export type DistributorUpdateInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   products?: Prisma.ProductUpdateManyWithoutDistributorNestedInput
   stockPurchases?: Prisma.StockPurchaseUpdateManyWithoutDistributorNestedInput
   batches?: Prisma.ProductBatchUpdateManyWithoutDistributorNestedInput
@@ -305,6 +356,7 @@ export type DistributorUncheckedUpdateInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   products?: Prisma.ProductUncheckedUpdateManyWithoutDistributorNestedInput
   stockPurchases?: Prisma.StockPurchaseUncheckedUpdateManyWithoutDistributorNestedInput
   batches?: Prisma.ProductBatchUncheckedUpdateManyWithoutDistributorNestedInput
@@ -318,6 +370,7 @@ export type DistributorCreateManyInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
 }
 
 export type DistributorUpdateManyMutationInput = {
@@ -328,6 +381,7 @@ export type DistributorUpdateManyMutationInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DistributorUncheckedUpdateManyInput = {
@@ -338,6 +392,7 @@ export type DistributorUncheckedUpdateManyInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DistributorNullableScalarRelationFilter = {
@@ -353,6 +408,11 @@ export type DistributorCountOrderByAggregateInput = {
   deliveryManName?: Prisma.SortOrder
   salesmanContact?: Prisma.SortOrder
   salesmanName?: Prisma.SortOrder
+  active?: Prisma.SortOrder
+}
+
+export type DistributorAvgOrderByAggregateInput = {
+  active?: Prisma.SortOrder
 }
 
 export type DistributorMaxOrderByAggregateInput = {
@@ -363,6 +423,7 @@ export type DistributorMaxOrderByAggregateInput = {
   deliveryManName?: Prisma.SortOrder
   salesmanContact?: Prisma.SortOrder
   salesmanName?: Prisma.SortOrder
+  active?: Prisma.SortOrder
 }
 
 export type DistributorMinOrderByAggregateInput = {
@@ -373,6 +434,11 @@ export type DistributorMinOrderByAggregateInput = {
   deliveryManName?: Prisma.SortOrder
   salesmanContact?: Prisma.SortOrder
   salesmanName?: Prisma.SortOrder
+  active?: Prisma.SortOrder
+}
+
+export type DistributorSumOrderByAggregateInput = {
+  active?: Prisma.SortOrder
 }
 
 export type DistributorCreateNestedOneWithoutProductsInput = {
@@ -431,6 +497,7 @@ export type DistributorCreateWithoutProductsInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   stockPurchases?: Prisma.StockPurchaseCreateNestedManyWithoutDistributorInput
   batches?: Prisma.ProductBatchCreateNestedManyWithoutDistributorInput
 }
@@ -443,6 +510,7 @@ export type DistributorUncheckedCreateWithoutProductsInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   stockPurchases?: Prisma.StockPurchaseUncheckedCreateNestedManyWithoutDistributorInput
   batches?: Prisma.ProductBatchUncheckedCreateNestedManyWithoutDistributorInput
 }
@@ -471,6 +539,7 @@ export type DistributorUpdateWithoutProductsInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   stockPurchases?: Prisma.StockPurchaseUpdateManyWithoutDistributorNestedInput
   batches?: Prisma.ProductBatchUpdateManyWithoutDistributorNestedInput
 }
@@ -483,6 +552,7 @@ export type DistributorUncheckedUpdateWithoutProductsInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   stockPurchases?: Prisma.StockPurchaseUncheckedUpdateManyWithoutDistributorNestedInput
   batches?: Prisma.ProductBatchUncheckedUpdateManyWithoutDistributorNestedInput
 }
@@ -495,6 +565,7 @@ export type DistributorCreateWithoutStockPurchasesInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   products?: Prisma.ProductCreateNestedManyWithoutDistributorInput
   batches?: Prisma.ProductBatchCreateNestedManyWithoutDistributorInput
 }
@@ -507,6 +578,7 @@ export type DistributorUncheckedCreateWithoutStockPurchasesInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutDistributorInput
   batches?: Prisma.ProductBatchUncheckedCreateNestedManyWithoutDistributorInput
 }
@@ -535,6 +607,7 @@ export type DistributorUpdateWithoutStockPurchasesInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   products?: Prisma.ProductUpdateManyWithoutDistributorNestedInput
   batches?: Prisma.ProductBatchUpdateManyWithoutDistributorNestedInput
 }
@@ -547,6 +620,7 @@ export type DistributorUncheckedUpdateWithoutStockPurchasesInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   products?: Prisma.ProductUncheckedUpdateManyWithoutDistributorNestedInput
   batches?: Prisma.ProductBatchUncheckedUpdateManyWithoutDistributorNestedInput
 }
@@ -559,6 +633,7 @@ export type DistributorCreateWithoutBatchesInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   products?: Prisma.ProductCreateNestedManyWithoutDistributorInput
   stockPurchases?: Prisma.StockPurchaseCreateNestedManyWithoutDistributorInput
 }
@@ -571,6 +646,7 @@ export type DistributorUncheckedCreateWithoutBatchesInput = {
   deliveryManName?: string
   salesmanContact?: string
   salesmanName?: string
+  active?: number
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutDistributorInput
   stockPurchases?: Prisma.StockPurchaseUncheckedCreateNestedManyWithoutDistributorInput
 }
@@ -599,6 +675,7 @@ export type DistributorUpdateWithoutBatchesInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   products?: Prisma.ProductUpdateManyWithoutDistributorNestedInput
   stockPurchases?: Prisma.StockPurchaseUpdateManyWithoutDistributorNestedInput
 }
@@ -611,6 +688,7 @@ export type DistributorUncheckedUpdateWithoutBatchesInput = {
   deliveryManName?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanContact?: Prisma.StringFieldUpdateOperationsInput | string
   salesmanName?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.IntFieldUpdateOperationsInput | number
   products?: Prisma.ProductUncheckedUpdateManyWithoutDistributorNestedInput
   stockPurchases?: Prisma.StockPurchaseUncheckedUpdateManyWithoutDistributorNestedInput
 }
@@ -672,6 +750,7 @@ export type DistributorSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   deliveryManName?: boolean
   salesmanContact?: boolean
   salesmanName?: boolean
+  active?: boolean
   products?: boolean | Prisma.Distributor$productsArgs<ExtArgs>
   stockPurchases?: boolean | Prisma.Distributor$stockPurchasesArgs<ExtArgs>
   batches?: boolean | Prisma.Distributor$batchesArgs<ExtArgs>
@@ -686,6 +765,7 @@ export type DistributorSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   deliveryManName?: boolean
   salesmanContact?: boolean
   salesmanName?: boolean
+  active?: boolean
 }, ExtArgs["result"]["distributor"]>
 
 export type DistributorSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -696,6 +776,7 @@ export type DistributorSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   deliveryManName?: boolean
   salesmanContact?: boolean
   salesmanName?: boolean
+  active?: boolean
 }, ExtArgs["result"]["distributor"]>
 
 export type DistributorSelectScalar = {
@@ -706,9 +787,10 @@ export type DistributorSelectScalar = {
   deliveryManName?: boolean
   salesmanContact?: boolean
   salesmanName?: boolean
+  active?: boolean
 }
 
-export type DistributorOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "createdAt" | "deliveryManContact" | "deliveryManName" | "salesmanContact" | "salesmanName", ExtArgs["result"]["distributor"]>
+export type DistributorOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "createdAt" | "deliveryManContact" | "deliveryManName" | "salesmanContact" | "salesmanName" | "active", ExtArgs["result"]["distributor"]>
 export type DistributorInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   products?: boolean | Prisma.Distributor$productsArgs<ExtArgs>
   stockPurchases?: boolean | Prisma.Distributor$stockPurchasesArgs<ExtArgs>
@@ -733,6 +815,7 @@ export type $DistributorPayload<ExtArgs extends runtime.Types.Extensions.Interna
     deliveryManName: string
     salesmanContact: string
     salesmanName: string
+    active: number
   }, ExtArgs["result"]["distributor"]>
   composites: {}
 }
@@ -1166,6 +1249,7 @@ export interface DistributorFieldRefs {
   readonly deliveryManName: Prisma.FieldRef<"Distributor", 'String'>
   readonly salesmanContact: Prisma.FieldRef<"Distributor", 'String'>
   readonly salesmanName: Prisma.FieldRef<"Distributor", 'String'>
+  readonly active: Prisma.FieldRef<"Distributor", 'Int'>
 }
     
 

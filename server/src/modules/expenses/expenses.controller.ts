@@ -10,13 +10,23 @@ export const expensesController = {
       const search = req.query.search as string | undefined;
       const dateFrom = req.query.dateFrom as string | undefined;
       const dateTo = req.query.dateTo as string | undefined;
+      const archivedOnly = req.query.archived === "true" || req.query.archivedOnly === "true";
+      const includeArchived = req.query.includeArchived === "true";
 
-      const result = await expensesService.list({ page, limit, search, dateFrom, dateTo });
+      const result = await expensesService.list({
+        page,
+        limit,
+        search,
+        dateFrom,
+        dateTo,
+        archivedOnly,
+        includeArchived,
+      });
 
       if (isPaginated) {
         res.json({
           data: result.data,
-          meta: result.meta
+          meta: result.meta,
         });
       } else {
         res.json(result.data);
@@ -47,6 +57,24 @@ export const expensesController = {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await expensesService.delete(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async restore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await expensesService.restore(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async hardDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await expensesService.hardDelete(req.params.id);
       res.json(result);
     } catch (err) {
       next(err);

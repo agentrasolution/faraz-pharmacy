@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
-import { Plus, Wallet, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Wallet, Pencil, Trash2, Search, Archive, RotateCcw } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatCard from "@/components/shared/StatCard";
@@ -31,7 +31,13 @@ export default function Expenses() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
+  const [archivePasswordOpen, setArchivePasswordOpen] = useState(false);
+  const [restoreTargetId, setRestoreTargetId] = useState<string | null>(null);
+  const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
+  const [hardDeleteTargetId, setHardDeleteTargetId] = useState<string | null>(null);
+  const [hardDeletePasswordOpen, setHardDeletePasswordOpen] = useState(false);
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({
@@ -91,8 +97,14 @@ export default function Expenses() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: paginatedData, isLoading } = useQuery({
-    queryKey: ["expenses", page, limit, debouncedSearch, category],
-    queryFn: () => api.expenses.listPaginated({ page, limit, search: debouncedSearch }),
+    queryKey: ["expenses", page, limit, debouncedSearch, category, showArchived],
+    queryFn: () =>
+      api.expenses.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch,
+        archived: showArchived,
+      }),
   });
 
   const rawExpenses = paginatedData?.data || [];
@@ -155,16 +167,48 @@ export default function Expenses() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.expenses.delete(id),
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => api.expenses.archive(id),
     onSuccess: () => {
-      toast.success("Expense deleted");
+      toast.success("Expense archived");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      setDeleteId(null);
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
     },
     onError: (err: Error) => {
       toast.error(err.message);
-      setDeleteId(null);
+      setArchivePasswordOpen(false);
+      setArchiveTargetId(null);
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => api.expenses.restore(id),
+    onSuccess: () => {
+      toast.success("Expense restored");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+      setRestorePasswordOpen(false);
+      setRestoreTargetId(null);
+    },
+  });
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: (id: string) => api.expenses.hardDelete(id),
+    onSuccess: () => {
+      toast.success("Expense permanently deleted");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+      setHardDeletePasswordOpen(false);
+      setHardDeleteTargetId(null);
     },
   });
 
@@ -219,20 +263,50 @@ export default function Expenses() {
       header: "",
       cell: (e: Expense) => (
         <div className="flex items-center gap-1 justify-end">
-          <button
-            onClick={() => openEdit(e)}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setDeleteId(e.id)}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {!showArchived ? (
+            <>
+              <button
+                onClick={() => openEdit(e)}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
+                title="Edit"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setArchiveTargetId(e.id);
+                  setArchivePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-warning hover:bg-warning/10 transition-colors"
+                title="Archive"
+              >
+                <Archive className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  setRestoreTargetId(e.id);
+                  setRestorePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
+                title="Restore"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setHardDeleteTargetId(e.id);
+                  setHardDeletePasswordOpen(true);
+                }}
+                className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
+                title="Delete Permanently"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       ),
     },
@@ -289,6 +363,23 @@ export default function Expenses() {
               className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
             />
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "rounded-xl shadow-xs",
+              showArchived
+                ? "border-[#4A25E1] text-[#4A25E1] dark:border-[#754BFB] dark:text-[#754BFB]"
+                : ""
+            )}
+            onClick={() => {
+              setShowArchived(!showArchived);
+              setPage(1);
+            }}
+          >
+            <Archive className="h-3.5 w-3.5 mr-1" />
+            Archived
+          </Button>
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
         </div>
@@ -439,17 +530,54 @@ export default function Expenses() {
       </Dialog>
 
       <PasswordConfirmDialog
-        open={!!deleteId}
+        open={archivePasswordOpen}
         onOpenChange={(v) => {
-          if (!v) setDeleteId(null);
+          if (!v) {
+            setArchivePasswordOpen(false);
+            setArchiveTargetId(null);
+          }
         }}
-        title="Delete Expense"
-        description="Are you sure you want to delete this expense?"
-        confirmLabel="Delete"
+        title="Archive Expense"
+        description="Enter admin password to archive this expense record."
+        confirmLabel="Archive"
+        loading={archiveMutation.isPending}
         onConfirm={() => {
-          if (deleteId) deleteMutation.mutate(deleteId);
+          if (archiveTargetId) archiveMutation.mutate(archiveTargetId);
         }}
-        loading={deleteMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={restorePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setRestorePasswordOpen(false);
+            setRestoreTargetId(null);
+          }
+        }}
+        title="Restore Expense"
+        description="Enter admin password to restore this archived expense."
+        confirmLabel="Restore"
+        loading={restoreMutation.isPending}
+        onConfirm={() => {
+          if (restoreTargetId) restoreMutation.mutate(restoreTargetId);
+        }}
+      />
+
+      <PasswordConfirmDialog
+        open={hardDeletePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setHardDeletePasswordOpen(false);
+            setHardDeleteTargetId(null);
+          }
+        }}
+        title="Delete Expense Permanently"
+        description="This action cannot be undone. Enter admin password to permanently delete this expense record."
+        confirmLabel="Delete Permanently"
+        loading={hardDeleteMutation.isPending}
+        onConfirm={() => {
+          if (hardDeleteTargetId) hardDeleteMutation.mutate(hardDeleteTargetId);
+        }}
       />
     </div>
   );

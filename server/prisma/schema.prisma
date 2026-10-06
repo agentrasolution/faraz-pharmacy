@@ -99,6 +99,7 @@ model Distributor {
   deliveryManName    String          @default("") @map("delivery_man_name")
   salesmanContact    String          @default("") @map("salesman_contact")
   salesmanName       String          @default("") @map("salesman_name")
+  active             Int             @default(1)
   products           Product[]
   stockPurchases     StockPurchase[]
   batches            ProductBatch[]
@@ -114,6 +115,7 @@ model Customer {
   createdAt   DateTime @default(now()) @map("created_at")
   fatherName  String   @default("") @map("father_name")
   fatherPhone String   @default("") @map("father_phone")
+  active      Int      @default(1)
   arrears     Arrear[]
   sales       Sale[]
 
@@ -259,6 +261,7 @@ model ReturnItem {
 model Category {
   id        String   @id @default(uuid())
   name      String   @unique
+  active    Int      @default(1)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -272,6 +275,7 @@ model Expense {
   amount    Float    @default(0)
   notes     String   @default("")
   date      String
+  active    Int      @default(1)
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("expenses")
@@ -280,6 +284,7 @@ model Expense {
 model Company {
   id        String    @id @default(uuid())
   name      String    @unique
+  active    Int       @default(1)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   products  Product[]

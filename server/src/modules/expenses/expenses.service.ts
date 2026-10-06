@@ -3,8 +3,28 @@ import { NotFoundError } from "../../utils/errors";
 import type { CreateExpenseInput } from "./expenses.schema";
 
 export const expensesService = {
-  async list({ page = 1, limit = 100000, search, dateFrom, dateTo }: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string } = {}) {
-    const where: Prisma.ExpenseWhereInput = {};
+  async list({
+    page = 1,
+    limit = 100000,
+    search,
+    dateFrom,
+    dateTo,
+    includeArchived = false,
+    archivedOnly = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    includeArchived?: boolean;
+    archivedOnly?: boolean;
+  } = {}) {
+    const where: Prisma.ExpenseWhereInput = archivedOnly
+      ? { active: 0 }
+      : includeArchived
+      ? {}
+      : { active: 1 };
 
     if (search) {
       const q = search.trim();
@@ -75,6 +95,24 @@ export const expensesService = {
   },
 
   async delete(id: string) {
+    const existing = await prisma.expense.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Expense");
+    return prisma.expense.update({
+      where: { id },
+      data: { active: 0 },
+    });
+  },
+
+  async restore(id: string) {
+    const existing = await prisma.expense.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Expense");
+    return prisma.expense.update({
+      where: { id },
+      data: { active: 1 },
+    });
+  },
+
+  async hardDelete(id: string) {
     const existing = await prisma.expense.findUnique({ where: { id } });
     if (!existing) throw new NotFoundError("Expense");
     await prisma.expense.delete({ where: { id } });
