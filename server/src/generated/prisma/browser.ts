@@ -83,6 +83,11 @@ export type ArrearPayment = Prisma.ArrearPaymentModel
  */
 export type StockPurchase = Prisma.StockPurchaseModel
 /**
+ * Model ProductBatch
+ * 
+ */
+export type ProductBatch = Prisma.ProductBatchModel
+/**
  * Model ReturnEntry
  * 
  */

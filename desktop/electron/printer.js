@@ -54,7 +54,10 @@ function generateSaleReceiptHTML(sale) {
 
       return `
       <tr>
-          <td>${item.product_name}</td>
+          <td>
+            ${item.product_name}
+            ${item.batch_number ? `<div style="font-size:8.5px;color:#555;">B:${item.batch_number}${item.expiry ? ` Exp:${item.expiry.slice(0, 7)}` : ""}</div>` : ""}
+          </td>
           <td>${item.quantity}</td>
           <td>${unitPrice}</td>
           <td class="right">${item.subtotal}</td>
@@ -371,7 +374,7 @@ ${sale.customer_name ? `<span class="lbl">Customer:</span> ${sale.customer_name}
 </div>
 <table>
 <thead><tr><th style="width:50%">Item</th><th style="width:12%;text-align:center">Qty</th><th style="width:16%;text-align:right">Price</th><th style="width:22%;text-align:right">Total</th></tr></thead>
-<tbody>${items.map((i) => `<tr><td>${i.product_name}</td><td style="text-align:center">${i.quantity}</td><td style="text-align:right">${(i.subtotal / i.quantity).toFixed(0)}</td><td style="text-align:right">${i.subtotal.toFixed(0)}</td></tr>`).join("")}</tbody>
+<tbody>${items.map((i) => `<tr><td>${i.product_name}${i.batch_number ? ` <div style="font-size:8.5px;color:#666;">Batch: ${i.batch_number}${i.expiry ? ` | Exp: ${i.expiry.slice(0, 7)}` : ""}</div>` : ""}</td><td style="text-align:center">${i.quantity}</td><td style="text-align:right">${(i.subtotal / i.quantity).toFixed(0)}</td><td style="text-align:right">${i.subtotal.toFixed(0)}</td></tr>`).join("")}</tbody>
 </table>
 <table class="totals">
 <tr><td>Subtotal</td><td>${(sale.subtotal || 0).toFixed(0)}</td></tr>
@@ -516,7 +519,10 @@ table.items tbody tr:last-child td { border-bottom: none; }
       .map((item) => {
         const unitPrice = item.unit_price || item.subtotal / item.quantity;
         return `<tr>
-        <td>${item.product_name}</td>
+        <td>
+          ${item.product_name}
+          ${item.batch_number ? `<div style="font-size:8px;color:#666;">Batch: ${item.batch_number}${item.expiry ? ` | Exp: ${item.expiry.slice(0, 7)}` : ""}</div>` : ""}
+        </td>
         <td style="text-align:center">${item.quantity}</td>
         <td style="text-align:right">${Math.round(unitPrice)}</td>
         <td style="text-align:right">${item.subtotal.toFixed(0)}</td>
@@ -1866,6 +1872,10 @@ function generateESCPOSReceipt(sale) {
     const unitPrice = String(Math.round(item.subtotal / item.quantity)).padStart(colUnit);
     const amount = String(item.subtotal.toFixed(0)).padStart(colAmt);
     parts.push(escposText(name + qty + unitPrice + amount));
+    if (item.batch_number) {
+      const bInfo = `  B:${item.batch_number}${item.expiry ? ` Exp:${item.expiry.slice(0, 7)}` : ""}`;
+      parts.push(escposText(bInfo.padEnd(L).slice(0, L)));
+    }
   });
 
   parts.push(escposLine("-", L));

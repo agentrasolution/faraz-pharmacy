@@ -64,6 +64,7 @@ export const ModelName = {
   Arrear: 'Arrear',
   ArrearPayment: 'ArrearPayment',
   StockPurchase: 'StockPurchase',
+  ProductBatch: 'ProductBatch',
   ReturnEntry: 'ReturnEntry',
   ReturnItem: 'ReturnItem',
   Category: 'Category',
@@ -215,7 +216,10 @@ export const SaleItemScalarFieldEnum = {
   barcode: 'barcode',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
-  subtotal: 'subtotal'
+  subtotal: 'subtotal',
+  batchId: 'batchId',
+  batchNumber: 'batchNumber',
+  expiry: 'expiry'
 } as const
 
 export type SaleItemScalarFieldEnum = (typeof SaleItemScalarFieldEnum)[keyof typeof SaleItemScalarFieldEnum]
@@ -257,10 +261,31 @@ export const StockPurchaseScalarFieldEnum = {
   expiry: 'expiry',
   totalValue: 'totalValue',
   active: 'active',
+  batchId: 'batchId',
+  batchNumber: 'batchNumber',
   createdAt: 'createdAt'
 } as const
 
 export type StockPurchaseScalarFieldEnum = (typeof StockPurchaseScalarFieldEnum)[keyof typeof StockPurchaseScalarFieldEnum]
+
+
+export const ProductBatchScalarFieldEnum = {
+  id: 'id',
+  productId: 'productId',
+  batchNumber: 'batchNumber',
+  expiryDate: 'expiryDate',
+  quantity: 'quantity',
+  initialQty: 'initialQty',
+  purchasePrice: 'purchasePrice',
+  salePrice: 'salePrice',
+  distributorId: 'distributorId',
+  invoiceNumber: 'invoiceNumber',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductBatchScalarFieldEnum = (typeof ProductBatchScalarFieldEnum)[keyof typeof ProductBatchScalarFieldEnum]
 
 
 export const ReturnEntryScalarFieldEnum = {

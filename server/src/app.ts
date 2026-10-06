@@ -16,6 +16,7 @@ import { settingsRoutes } from "./modules/settings/settings.routes";
 import { categoriesRoutes } from "./modules/categories/categories.routes";
 import { companiesRoutes } from "./modules/companies/companies.routes";
 import { barcodesRoutes } from "./modules/barcodes/barcodes.routes";
+import { batchesRoutes } from "./modules/batches/batches.routes";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api/sales", salesRoutes);
 app.use("/api/customers", customersRoutes);
 app.use("/api/arrears", arrearsRoutes);
 app.use("/api/stock", purchasesRoutes);
+app.use("/api/batches", batchesRoutes);
 app.use("/api/distributors", suppliersRoutes);
 app.use("/api/returns", returnsRoutes);
 app.use("/api/expenses", expensesRoutes);

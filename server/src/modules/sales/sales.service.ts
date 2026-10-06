@@ -38,6 +38,44 @@ export const salesService = {
       });
 
       for (const item of data.items) {
+        let assignedBatchId = item.batchId ?? null;
+        let assignedBatchNo = item.batchNumber ?? null;
+        let assignedExpiry = item.expiry ?? null;
+
+        if (assignedBatchId) {
+          const specifiedBatch = await tx.productBatch.findUnique({
+            where: { id: assignedBatchId },
+          });
+          if (specifiedBatch) {
+            assignedBatchNo = specifiedBatch.batchNumber;
+            assignedExpiry = specifiedBatch.expiryDate;
+            await tx.productBatch.update({
+              where: { id: specifiedBatch.id },
+              data: { quantity: { decrement: item.quantity } },
+            });
+          }
+        } else {
+          // Automatic FEFO: Find the active batch expiring earliest with remaining stock
+          const fefoBatch = await tx.productBatch.findFirst({
+            where: {
+              productId: item.productId,
+              active: 1,
+              quantity: { gt: 0 },
+            },
+            orderBy: { expiryDate: "asc" },
+          });
+
+          if (fefoBatch) {
+            assignedBatchId = fefoBatch.id;
+            assignedBatchNo = fefoBatch.batchNumber;
+            assignedExpiry = fefoBatch.expiryDate;
+            await tx.productBatch.update({
+              where: { id: fefoBatch.id },
+              data: { quantity: { decrement: item.quantity } },
+            });
+          }
+        }
+
         await tx.saleItem.create({
           data: {
             saleId: sale.id,
@@ -47,12 +85,23 @@ export const salesService = {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             subtotal: item.subtotal,
+            batchId: assignedBatchId,
+            batchNumber: assignedBatchNo,
+            expiry: assignedExpiry,
           },
+        });
+
+        const nextEarliestBatch = await tx.productBatch.findFirst({
+          where: { productId: item.productId, active: 1, quantity: { gt: 0 } },
+          orderBy: { expiryDate: "asc" },
         });
 
         await tx.product.update({
           where: { id: item.productId },
-          data: { stockQty: { decrement: item.quantity } },
+          data: {
+            stockQty: { decrement: item.quantity },
+            expiry: nextEarliestBatch?.expiryDate ?? undefined,
+          },
         });
       }
 

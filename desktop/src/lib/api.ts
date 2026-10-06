@@ -27,6 +27,7 @@ import type {
   CustomerArrearSummary,
   CustomerLedgerDetail,
   CustomerPaymentReceipt,
+  ProductBatch,
 } from "@/types";
 import type { BackupResult, BackupEntry, GDriveConfig, AutoBackupConfig } from "@/types/electron";
 
@@ -267,6 +268,27 @@ const api = {
       fetchJson("PUT", `/api/stock/${id}`, p),
     delete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/stock/${id}`),
     restore: (id: string): Promise<{ success: boolean }> => fetchJson("POST", `/api/stock/${id}/restore`),
+  },
+  batches: {
+    listByProduct: (productId: string): Promise<ProductBatch[]> =>
+      fetchJson("GET", `/api/batches/product/${productId}`),
+    listExpiring: (days = 60): Promise<ProductBatch[]> =>
+      fetchJson("GET", `/api/batches/expiring?days=${days}`),
+    trace: (batchNumber: string): Promise<any> =>
+      fetchJson("GET", `/api/batches/trace?batchNumber=${encodeURIComponent(batchNumber)}`),
+    listAll: async (opts: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      productId?: string;
+    } = {}): Promise<PaginatedResponse<ProductBatch>> => {
+      const params = new URLSearchParams();
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.productId) params.set("productId", opts.productId);
+      return fetchJson("GET", `/api/batches?${params.toString()}`);
+    },
   },
   distributors: {
     list: (): Promise<Distributor[]> => fetchJson("GET", "/api/distributors"),

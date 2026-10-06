@@ -13,6 +13,7 @@ import {
   Search,
   Download,
   Archive,
+  ShieldAlert,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
@@ -29,6 +30,7 @@ import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import ExportButton from "@/components/shared/ExportButton";
 import { ShortcutHint } from "@/components/shared/Kbd";
+import BatchTraceDialog from "@/components/stock/BatchTraceDialog";
 import type { StockPurchase, Product, Distributor } from "@/types";
 
 export default function Stock() {
@@ -38,19 +40,23 @@ export default function Stock() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showValue, setShowValue] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
+  const [traceBatchOpen, setTraceBatchOpen] = useState(false);
+  const [traceBatchNumber, setTraceBatchNumber] = useState("");
   const [search, setSearch] = useState("");
   const [scanValue, setScanValue] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     productId: "",
     distributorId: "",
-        invoiceNumber: "",
+    invoiceNumber: "",
+    batchNumber: "",
     quantity: "",
     expiry: "",
   });
 
   const stockHeaders = [
     "Invoice",
+    "Batch #",
     "Date",
     "Supplier",
     "Product",
@@ -62,6 +68,7 @@ export default function Stock() {
   const stockExportRows = (data: StockPurchase[]) =>
     data.map((s) => [
       s.invoice_number || "—",
+      s.batch_number || "—",
       formatDate(s.created_at),
       s.distributor_name || "—",
       s.product_name,
@@ -134,7 +141,8 @@ export default function Stock() {
       api.stock.create({
         productId: form.productId,
         distributorId: form.distributorId || undefined,
-                invoiceNumber: form.invoiceNumber,
+        invoiceNumber: form.invoiceNumber,
+        batchNumber: form.batchNumber || undefined,
         quantity: Number(form.quantity),
         expiry: form.expiry || undefined,
       }),
@@ -142,7 +150,7 @@ export default function Stock() {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
-      setForm({ productId: "", distributorId: "", invoiceNumber: "", quantity: "", expiry: "" });
+      setForm({ productId: "", distributorId: "", invoiceNumber: "", batchNumber: "", quantity: "", expiry: "" });
       toast.success("Stock purchase recorded");
     },
     onError: (err) => {
@@ -188,7 +196,8 @@ export default function Stock() {
       api.stock.update(editingId!, {
         productId: form.productId,
         distributorId: form.distributorId || undefined,
-                invoiceNumber: form.invoiceNumber,
+        invoiceNumber: form.invoiceNumber,
+        batchNumber: form.batchNumber || undefined,
         quantity: Number(form.quantity),
         expiry: form.expiry || undefined,
       }),
@@ -200,7 +209,8 @@ export default function Stock() {
       setForm({
         productId: "",
         distributorId: "",
-                invoiceNumber: "",
+        invoiceNumber: "",
+        batchNumber: "",
         quantity: "",
         expiry: "",
       });
@@ -234,7 +244,8 @@ export default function Stock() {
     setForm({
       productId: "",
       distributorId: "",
-            invoiceNumber: "",
+      invoiceNumber: "",
+      batchNumber: "",
       quantity: "",
       expiry: "",
     });
@@ -247,7 +258,8 @@ export default function Stock() {
     setForm({
       productId: entry.product_id,
       distributorId: entry.distributor_id || "",
-            invoiceNumber: entry.invoice_number || "",
+      invoiceNumber: entry.invoice_number || "",
+      batchNumber: entry.batch_number || "",
       quantity: String(entry.quantity),
       expiry: entry.expiry || "",
     });
@@ -285,6 +297,30 @@ export default function Stock() {
         <span className="font-mono text-[11px] text-text-secondary">
           {s.invoice_number || "\u2014"}
         </span>
+      ),
+    },
+    {
+      key: "batch_number",
+      header: "Batch #",
+      cell: (s: StockPurchase) => (
+        <button
+          onClick={() => {
+            if (s.batch_number) {
+              setTraceBatchNumber(s.batch_number);
+              setTraceBatchOpen(true);
+            }
+          }}
+          disabled={!s.batch_number}
+          className={cn(
+            "font-mono text-[11px] font-semibold text-left transition-colors",
+            s.batch_number
+              ? "text-brand hover:underline cursor-pointer"
+              : "text-text-secondary cursor-default"
+          )}
+          title={s.batch_number ? "Click to trace batch & recall audit" : ""}
+        >
+          {s.batch_number || "\u2014"}
+        </button>
       ),
     },
     {
@@ -421,6 +457,18 @@ export default function Stock() {
           />
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl shadow-xs border-brand/30 text-brand hover:bg-brand/10 gap-1.5"
+            onClick={() => {
+              setTraceBatchNumber("");
+              setTraceBatchOpen(true);
+            }}
+          >
+            <ShieldAlert className="h-3.5 w-3.5" />
+            Batch Audit
+          </Button>
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
           <Button
@@ -540,27 +588,35 @@ export default function Stock() {
                 placeholder="Select product"
               />
             </div>
+            <div className="space-y-1">
+              <Label>Distributor</Label>
+              <SearchableSelect
+                options={distributors.map((d: Distributor) => ({
+                  value: d.id,
+                  label: d.name || "Unnamed",
+                }))}
+                value={form.distributorId}
+                onChange={(v) => setForm({ ...form, distributorId: v })}
+                placeholder="Select distributor"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>Distributor</Label>
-                <SearchableSelect
-                  options={distributors.map((d: Distributor) => ({
-                    value: d.id,
-                    label: d.name || "Unnamed",
-                  }))}
-                  value={form.distributorId}
-                  onChange={(v) => setForm({ ...form, distributorId: v })}
-                  placeholder="Select distributor"
+                <Label>Invoice Number</Label>
+                <Input
+                  value={form.invoiceNumber}
+                  onChange={(e) => setForm({ ...form, invoiceNumber: e.target.value })}
+                  placeholder="e.g. INV-001"
                 />
               </div>
-            </div>
-            <div className="space-y-1">
-              <Label>Invoice Number</Label>
-              <Input
-                value={form.invoiceNumber}
-                onChange={(e) => setForm({ ...form, invoiceNumber: e.target.value })}
-                placeholder="e.g. INV-001"
-              />
+              <div className="space-y-1">
+                <Label>Batch Number</Label>
+                <Input
+                  value={form.batchNumber}
+                  onChange={(e) => setForm({ ...form, batchNumber: e.target.value })}
+                  placeholder="e.g. B-2048 / LOT-99"
+                />
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Quantity</Label>
@@ -629,6 +685,12 @@ export default function Stock() {
           if (restoreTargetId) restoreMutation.mutate(restoreTargetId);
         }}
         loading={restoreMutation.isPending}
+      />
+
+      <BatchTraceDialog
+        open={traceBatchOpen}
+        onOpenChange={setTraceBatchOpen}
+        initialBatchNumber={traceBatchNumber}
       />
     </div>
   );

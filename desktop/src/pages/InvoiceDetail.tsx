@@ -32,7 +32,10 @@ export default function InvoiceDetail() {
         items:
           sale.items?.map((i) => ({
             product_name: i.product_name,
+            batch_number: i.batch_number,
+            expiry: i.expiry,
             quantity: i.quantity,
+            unit_price: i.unit_price,
             subtotal: i.subtotal,
           })) || [],
       };
@@ -50,7 +53,10 @@ export default function InvoiceDetail() {
       items:
         sale.items?.map((i) => ({
           product_name: i.product_name,
+          batch_number: i.batch_number,
+          expiry: i.expiry,
           quantity: i.quantity,
+          unit_price: i.unit_price,
           subtotal: i.subtotal,
         })) || [],
     };
@@ -192,9 +198,17 @@ export default function InvoiceDetail() {
                   <p className="text-xs font-semibold text-text-primary truncate">
                     {item.product_name}
                   </p>
-                  <p className="text-[11px] text-text-secondary mt-0.5">
-                    {item.quantity} &times; {formatCurrency(item.unit_price)}
-                    {item.barcode && <span className="ml-2 font-mono text-[10px]">({item.barcode})</span>}
+                  <p className="text-[11px] text-text-secondary mt-0.5 flex flex-wrap items-center gap-x-2">
+                    <span>
+                      {item.quantity} &times; {formatCurrency(item.unit_price)}
+                    </span>
+                    {item.barcode && <span className="font-mono text-[10px]">({item.barcode})</span>}
+                    {item.batch_number && (
+                      <span className="font-mono text-[10px] text-brand font-medium bg-brand/10 px-1.5 py-0.5 rounded">
+                        Batch: {item.batch_number}
+                        {item.expiry && ` · Exp: ${item.expiry.slice(0, 7)}`}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <span className="text-xs font-mono font-bold text-text-primary tabular-nums ml-3">

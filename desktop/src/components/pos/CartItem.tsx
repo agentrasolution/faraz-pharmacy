@@ -9,6 +9,9 @@ interface CartItemProps {
     unitPrice: number;
     quantity: number;
     subtotal: number;
+    batchId?: string;
+    batchNumber?: string;
+    expiry?: string;
   };
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onIncrementBy: (productId: string, amount: number) => void;
@@ -52,7 +55,15 @@ export default function CartItem({
     <div className="group flex items-center gap-2.5 py-2 border-b border-border last:border-0">
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-text-primary truncate">{item.productName}</p>
-        <p className="text-[10px] text-text-secondary">{formatCurrency(item.unitPrice)} each</p>
+        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+          <span className="text-[10px] text-text-secondary">{formatCurrency(item.unitPrice)} each</span>
+          {item.batchNumber ? (
+            <span className="inline-flex items-center text-[9px] px-1.5 py-0.2 rounded font-mono font-medium bg-brand/10 text-brand">
+              Batch: {item.batchNumber}
+              {item.expiry ? ` (${item.expiry.slice(0, 7)})` : ""}
+            </span>
+          ) : null}
+        </div>
         <div className="flex items-center gap-1 mt-1.5">
           {quickBtns.map((n) => (
             <button

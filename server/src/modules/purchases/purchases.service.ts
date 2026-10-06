@@ -27,6 +27,7 @@ export const purchasesService = {
       const q = search.trim();
       where.OR = [
         { invoiceNumber: { contains: q, mode: "insensitive" } },
+        { batchNumber: { contains: q, mode: "insensitive" } },
         { product: { name: { contains: q, mode: "insensitive" } } },
         { distributor: { name: { contains: q, mode: "insensitive" } } },
       ];
@@ -78,30 +79,84 @@ export const purchasesService = {
     const price = product?.purchasePrice ?? 0;
     const salePrice = product?.salePrice ?? 0;
     const totalValue = data.quantity * price;
+    const batchNo =
+      data.batchNumber?.trim() ||
+      (data.invoiceNumber?.trim()
+        ? `LOT-${data.invoiceNumber.trim().replace(/\s+/g, "")}`
+        : `B-${Date.now().toString().slice(-6)}`);
+    const expiry = data.expiry || "2028-12-31";
 
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      let batch = await tx.productBatch.findUnique({
+        where: {
+          productId_batchNumber: {
+            productId: data.productId,
+            batchNumber: batchNo,
+          },
+        },
+      });
+
+      if (batch) {
+        batch = await tx.productBatch.update({
+          where: { id: batch.id },
+          data: {
+            quantity: { increment: data.quantity },
+            initialQty: { increment: data.quantity },
+            expiryDate: expiry || batch.expiryDate,
+            purchasePrice: price,
+            salePrice,
+            distributorId: data.distributorId ?? batch.distributorId,
+            invoiceNumber: data.invoiceNumber || batch.invoiceNumber,
+            active: 1,
+          },
+        });
+      } else {
+        batch = await tx.productBatch.create({
+          data: {
+            productId: data.productId,
+            batchNumber: batchNo,
+            expiryDate: expiry,
+            quantity: data.quantity,
+            initialQty: data.quantity,
+            purchasePrice: price,
+            salePrice,
+            distributorId: data.distributorId ?? null,
+            invoiceNumber: data.invoiceNumber ?? "",
+            active: 1,
+          },
+        });
+      }
+
       const stockPurchase = await tx.stockPurchase.create({
         data: {
           productId: data.productId,
           distributorId: data.distributorId ?? null,
           invoiceNumber: data.invoiceNumber ?? "",
+          batchId: batch.id,
+          batchNumber: batchNo,
           quantity: data.quantity,
           purchasePrice: price,
           salePrice,
-          expiry: data.expiry ?? null,
+          expiry,
           totalValue,
         },
         include: {
           product: { select: { name: true } },
           distributor: { select: { name: true } },
+          batch: true,
         },
+      });
+
+      const earliestBatch = await tx.productBatch.findFirst({
+        where: { productId: data.productId, active: 1, quantity: { gt: 0 } },
+        orderBy: { expiryDate: "asc" },
       });
 
       await tx.product.update({
         where: { id: data.productId },
         data: {
           stockQty: { increment: data.quantity },
-          expiry: data.expiry ?? undefined,
+          expiry: earliestBatch?.expiryDate ?? expiry,
         },
       });
 
@@ -130,14 +185,30 @@ export const purchasesService = {
         include: {
           product: { select: { name: true } },
           distributor: { select: { name: true } },
+          batch: true,
         },
+      });
+
+      if (old.batchId) {
+        await tx.productBatch.update({
+          where: { id: old.batchId },
+          data: {
+            quantity: { increment: qtyDiff },
+            expiryDate: data.expiry ?? old.expiry ?? undefined,
+          },
+        });
+      }
+
+      const earliestBatch = await tx.productBatch.findFirst({
+        where: { productId: old.productId, active: 1, quantity: { gt: 0 } },
+        orderBy: { expiryDate: "asc" },
       });
 
       await tx.product.update({
         where: { id: old.productId },
         data: {
           stockQty: { increment: qtyDiff },
-          expiry: data.expiry ?? undefined,
+          expiry: earliestBatch?.expiryDate ?? undefined,
         },
       });
 
@@ -150,14 +221,29 @@ export const purchasesService = {
     if (!old) throw new NotFoundError("Stock purchase");
 
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updated = await tx.stockPurchase.update({
+      await tx.stockPurchase.update({
         where: { id },
         data: { active: 0 },
       });
 
+      if (old.batchId) {
+        await tx.productBatch.update({
+          where: { id: old.batchId },
+          data: { quantity: { decrement: old.quantity } },
+        });
+      }
+
+      const earliestBatch = await tx.productBatch.findFirst({
+        where: { productId: old.productId, active: 1, quantity: { gt: 0 } },
+        orderBy: { expiryDate: "asc" },
+      });
+
       await tx.product.update({
         where: { id: old.productId },
-        data: { stockQty: { decrement: old.quantity } },
+        data: {
+          stockQty: { decrement: old.quantity },
+          expiry: earliestBatch?.expiryDate ?? undefined,
+        },
       });
 
       return { success: true };
@@ -169,14 +255,29 @@ export const purchasesService = {
     if (!old) throw new NotFoundError("Stock purchase");
 
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updated = await tx.stockPurchase.update({
+      await tx.stockPurchase.update({
         where: { id },
         data: { active: 1 },
       });
 
+      if (old.batchId) {
+        await tx.productBatch.update({
+          where: { id: old.batchId },
+          data: { quantity: { increment: old.quantity } },
+        });
+      }
+
+      const earliestBatch = await tx.productBatch.findFirst({
+        where: { productId: old.productId, active: 1, quantity: { gt: 0 } },
+        orderBy: { expiryDate: "asc" },
+      });
+
       await tx.product.update({
         where: { id: old.productId },
-        data: { stockQty: { increment: old.quantity } },
+        data: {
+          stockQty: { increment: old.quantity },
+          expiry: earliestBatch?.expiryDate ?? undefined,
+        },
       });
 
       return { success: true };

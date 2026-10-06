@@ -7,6 +7,9 @@ export const saleItemSchema = z.object({
   quantity: z.number().int().positive(),
   unitPrice: z.number(),
   subtotal: z.number(),
+  batchId: z.string().optional(),
+  batchNumber: z.string().optional(),
+  expiry: z.string().optional(),
 });
 
 export const createSaleSchema = z.object({

@@ -200,10 +200,39 @@ export function useMultiSale() {
               purchasePrice: product.purchase_price ?? 0,
               stockQty: product.stock_qty,
               subtotal: product.sale_price,
+              batchId: (product as any).batch_id || (product as any).batchId || undefined,
+              batchNumber: (product as any).batch_number || (product as any).batchNumber || undefined,
+              expiry: (product as any).expiry || undefined,
             },
           ],
         };
       });
+    },
+    [updateActive]
+  );
+
+  const updateItemBatch = useCallback(
+    (
+      productId: string,
+      batch: { id: string; batchNumber: string; expiryDate: string; salePrice?: number }
+    ) => {
+      updateActive((s) => ({
+        ...s,
+        items: s.items.map((i) => {
+          if (i.productId === productId) {
+            const unitPrice = batch.salePrice ?? i.unitPrice;
+            return {
+              ...i,
+              batchId: batch.id,
+              batchNumber: batch.batchNumber,
+              expiry: batch.expiryDate,
+              unitPrice,
+              subtotal: i.quantity * unitPrice,
+            };
+          }
+          return i;
+        }),
+      }));
     },
     [updateActive]
   );
@@ -336,6 +365,7 @@ export function useMultiSale() {
     setTaxType,
     toggleTaxType,
     addItem,
+    updateItemBatch,
     incrementBy,
     updateQuantity,
     removeItem,

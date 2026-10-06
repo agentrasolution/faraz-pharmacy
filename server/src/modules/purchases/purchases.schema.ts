@@ -5,6 +5,7 @@ export const createStockSchema = z.object({
   distributorId: z.string().optional(),
   company: z.string().optional(),
   invoiceNumber: z.string().optional().default(""),
+  batchNumber: z.string().optional(),
   quantity: z.number().int().positive(),
   expiry: z.string().optional(),
 });
@@ -12,6 +13,7 @@ export const createStockSchema = z.object({
 export const updateStockSchema = z.object({
   quantity: z.number().int().min(0),
   expiry: z.string().optional(),
+  batchNumber: z.string().optional(),
   company: z.string().optional(),
   invoiceNumber: z.string().optional(),
   distributorId: z.string().optional(),

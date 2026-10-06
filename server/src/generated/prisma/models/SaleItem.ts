@@ -47,6 +47,9 @@ export type SaleItemMinAggregateOutputType = {
   quantity: number | null
   unitPrice: number | null
   subtotal: number | null
+  batchId: string | null
+  batchNumber: string | null
+  expiry: string | null
 }
 
 export type SaleItemMaxAggregateOutputType = {
@@ -58,6 +61,9 @@ export type SaleItemMaxAggregateOutputType = {
   quantity: number | null
   unitPrice: number | null
   subtotal: number | null
+  batchId: string | null
+  batchNumber: string | null
+  expiry: string | null
 }
 
 export type SaleItemCountAggregateOutputType = {
@@ -69,6 +75,9 @@ export type SaleItemCountAggregateOutputType = {
   quantity: number
   unitPrice: number
   subtotal: number
+  batchId: number
+  batchNumber: number
+  expiry: number
   _all: number
 }
 
@@ -94,6 +103,9 @@ export type SaleItemMinAggregateInputType = {
   quantity?: true
   unitPrice?: true
   subtotal?: true
+  batchId?: true
+  batchNumber?: true
+  expiry?: true
 }
 
 export type SaleItemMaxAggregateInputType = {
@@ -105,6 +117,9 @@ export type SaleItemMaxAggregateInputType = {
   quantity?: true
   unitPrice?: true
   subtotal?: true
+  batchId?: true
+  batchNumber?: true
+  expiry?: true
 }
 
 export type SaleItemCountAggregateInputType = {
@@ -116,6 +131,9 @@ export type SaleItemCountAggregateInputType = {
   quantity?: true
   unitPrice?: true
   subtotal?: true
+  batchId?: true
+  batchNumber?: true
+  expiry?: true
   _all?: true
 }
 
@@ -214,6 +232,9 @@ export type SaleItemGroupByOutputType = {
   quantity: number
   unitPrice: number
   subtotal: number
+  batchId: string | null
+  batchNumber: string | null
+  expiry: string | null
   _count: SaleItemCountAggregateOutputType | null
   _avg: SaleItemAvgAggregateOutputType | null
   _sum: SaleItemSumAggregateOutputType | null
@@ -248,8 +269,12 @@ export type SaleItemWhereInput = {
   quantity?: Prisma.IntFilter<"SaleItem"> | number
   unitPrice?: Prisma.FloatFilter<"SaleItem"> | number
   subtotal?: Prisma.FloatFilter<"SaleItem"> | number
+  batchId?: Prisma.StringNullableFilter<"SaleItem"> | string | null
+  batchNumber?: Prisma.StringNullableFilter<"SaleItem"> | string | null
+  expiry?: Prisma.StringNullableFilter<"SaleItem"> | string | null
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   sale?: Prisma.XOR<Prisma.SaleScalarRelationFilter, Prisma.SaleWhereInput>
+  batch?: Prisma.XOR<Prisma.ProductBatchNullableScalarRelationFilter, Prisma.ProductBatchWhereInput> | null
 }
 
 export type SaleItemOrderByWithRelationInput = {
@@ -261,8 +286,12 @@ export type SaleItemOrderByWithRelationInput = {
   quantity?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  batchId?: Prisma.SortOrderInput | Prisma.SortOrder
+  batchNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  expiry?: Prisma.SortOrderInput | Prisma.SortOrder
   product?: Prisma.ProductOrderByWithRelationInput
   sale?: Prisma.SaleOrderByWithRelationInput
+  batch?: Prisma.ProductBatchOrderByWithRelationInput
 }
 
 export type SaleItemWhereUniqueInput = Prisma.AtLeast<{
@@ -277,8 +306,12 @@ export type SaleItemWhereUniqueInput = Prisma.AtLeast<{
   quantity?: Prisma.IntFilter<"SaleItem"> | number
   unitPrice?: Prisma.FloatFilter<"SaleItem"> | number
   subtotal?: Prisma.FloatFilter<"SaleItem"> | number
+  batchId?: Prisma.StringNullableFilter<"SaleItem"> | string | null
+  batchNumber?: Prisma.StringNullableFilter<"SaleItem"> | string | null
+  expiry?: Prisma.StringNullableFilter<"SaleItem"> | string | null
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   sale?: Prisma.XOR<Prisma.SaleScalarRelationFilter, Prisma.SaleWhereInput>
+  batch?: Prisma.XOR<Prisma.ProductBatchNullableScalarRelationFilter, Prisma.ProductBatchWhereInput> | null
 }, "id">
 
 export type SaleItemOrderByWithAggregationInput = {
@@ -290,6 +323,9 @@ export type SaleItemOrderByWithAggregationInput = {
   quantity?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  batchId?: Prisma.SortOrderInput | Prisma.SortOrder
+  batchNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  expiry?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.SaleItemCountOrderByAggregateInput
   _avg?: Prisma.SaleItemAvgOrderByAggregateInput
   _max?: Prisma.SaleItemMaxOrderByAggregateInput
@@ -309,6 +345,9 @@ export type SaleItemScalarWhereWithAggregatesInput = {
   quantity?: Prisma.IntWithAggregatesFilter<"SaleItem"> | number
   unitPrice?: Prisma.FloatWithAggregatesFilter<"SaleItem"> | number
   subtotal?: Prisma.FloatWithAggregatesFilter<"SaleItem"> | number
+  batchId?: Prisma.StringNullableWithAggregatesFilter<"SaleItem"> | string | null
+  batchNumber?: Prisma.StringNullableWithAggregatesFilter<"SaleItem"> | string | null
+  expiry?: Prisma.StringNullableWithAggregatesFilter<"SaleItem"> | string | null
 }
 
 export type SaleItemCreateInput = {
@@ -318,8 +357,11 @@ export type SaleItemCreateInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchNumber?: string | null
+  expiry?: string | null
   product: Prisma.ProductCreateNestedOneWithoutSaleItemsInput
   sale: Prisma.SaleCreateNestedOneWithoutItemsInput
+  batch?: Prisma.ProductBatchCreateNestedOneWithoutSaleItemsInput
 }
 
 export type SaleItemUncheckedCreateInput = {
@@ -331,6 +373,9 @@ export type SaleItemUncheckedCreateInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchId?: string | null
+  batchNumber?: string | null
+  expiry?: string | null
 }
 
 export type SaleItemUpdateInput = {
@@ -340,8 +385,11 @@ export type SaleItemUpdateInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product?: Prisma.ProductUpdateOneRequiredWithoutSaleItemsNestedInput
   sale?: Prisma.SaleUpdateOneRequiredWithoutItemsNestedInput
+  batch?: Prisma.ProductBatchUpdateOneWithoutSaleItemsNestedInput
 }
 
 export type SaleItemUncheckedUpdateInput = {
@@ -353,6 +401,9 @@ export type SaleItemUncheckedUpdateInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type SaleItemCreateManyInput = {
@@ -364,6 +415,9 @@ export type SaleItemCreateManyInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchId?: string | null
+  batchNumber?: string | null
+  expiry?: string | null
 }
 
 export type SaleItemUpdateManyMutationInput = {
@@ -373,6 +427,8 @@ export type SaleItemUpdateManyMutationInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type SaleItemUncheckedUpdateManyInput = {
@@ -384,6 +440,9 @@ export type SaleItemUncheckedUpdateManyInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type SaleItemListRelationFilter = {
@@ -405,6 +464,9 @@ export type SaleItemCountOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  batchId?: Prisma.SortOrder
+  batchNumber?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
 }
 
 export type SaleItemAvgOrderByAggregateInput = {
@@ -422,6 +484,9 @@ export type SaleItemMaxOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  batchId?: Prisma.SortOrder
+  batchNumber?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
 }
 
 export type SaleItemMinOrderByAggregateInput = {
@@ -433,6 +498,9 @@ export type SaleItemMinOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  batchId?: Prisma.SortOrder
+  batchNumber?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
 }
 
 export type SaleItemSumOrderByAggregateInput = {
@@ -525,6 +593,48 @@ export type SaleItemUncheckedUpdateManyWithoutSaleNestedInput = {
   deleteMany?: Prisma.SaleItemScalarWhereInput | Prisma.SaleItemScalarWhereInput[]
 }
 
+export type SaleItemCreateNestedManyWithoutBatchInput = {
+  create?: Prisma.XOR<Prisma.SaleItemCreateWithoutBatchInput, Prisma.SaleItemUncheckedCreateWithoutBatchInput> | Prisma.SaleItemCreateWithoutBatchInput[] | Prisma.SaleItemUncheckedCreateWithoutBatchInput[]
+  connectOrCreate?: Prisma.SaleItemCreateOrConnectWithoutBatchInput | Prisma.SaleItemCreateOrConnectWithoutBatchInput[]
+  createMany?: Prisma.SaleItemCreateManyBatchInputEnvelope
+  connect?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+}
+
+export type SaleItemUncheckedCreateNestedManyWithoutBatchInput = {
+  create?: Prisma.XOR<Prisma.SaleItemCreateWithoutBatchInput, Prisma.SaleItemUncheckedCreateWithoutBatchInput> | Prisma.SaleItemCreateWithoutBatchInput[] | Prisma.SaleItemUncheckedCreateWithoutBatchInput[]
+  connectOrCreate?: Prisma.SaleItemCreateOrConnectWithoutBatchInput | Prisma.SaleItemCreateOrConnectWithoutBatchInput[]
+  createMany?: Prisma.SaleItemCreateManyBatchInputEnvelope
+  connect?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+}
+
+export type SaleItemUpdateManyWithoutBatchNestedInput = {
+  create?: Prisma.XOR<Prisma.SaleItemCreateWithoutBatchInput, Prisma.SaleItemUncheckedCreateWithoutBatchInput> | Prisma.SaleItemCreateWithoutBatchInput[] | Prisma.SaleItemUncheckedCreateWithoutBatchInput[]
+  connectOrCreate?: Prisma.SaleItemCreateOrConnectWithoutBatchInput | Prisma.SaleItemCreateOrConnectWithoutBatchInput[]
+  upsert?: Prisma.SaleItemUpsertWithWhereUniqueWithoutBatchInput | Prisma.SaleItemUpsertWithWhereUniqueWithoutBatchInput[]
+  createMany?: Prisma.SaleItemCreateManyBatchInputEnvelope
+  set?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  disconnect?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  delete?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  connect?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  update?: Prisma.SaleItemUpdateWithWhereUniqueWithoutBatchInput | Prisma.SaleItemUpdateWithWhereUniqueWithoutBatchInput[]
+  updateMany?: Prisma.SaleItemUpdateManyWithWhereWithoutBatchInput | Prisma.SaleItemUpdateManyWithWhereWithoutBatchInput[]
+  deleteMany?: Prisma.SaleItemScalarWhereInput | Prisma.SaleItemScalarWhereInput[]
+}
+
+export type SaleItemUncheckedUpdateManyWithoutBatchNestedInput = {
+  create?: Prisma.XOR<Prisma.SaleItemCreateWithoutBatchInput, Prisma.SaleItemUncheckedCreateWithoutBatchInput> | Prisma.SaleItemCreateWithoutBatchInput[] | Prisma.SaleItemUncheckedCreateWithoutBatchInput[]
+  connectOrCreate?: Prisma.SaleItemCreateOrConnectWithoutBatchInput | Prisma.SaleItemCreateOrConnectWithoutBatchInput[]
+  upsert?: Prisma.SaleItemUpsertWithWhereUniqueWithoutBatchInput | Prisma.SaleItemUpsertWithWhereUniqueWithoutBatchInput[]
+  createMany?: Prisma.SaleItemCreateManyBatchInputEnvelope
+  set?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  disconnect?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  delete?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  connect?: Prisma.SaleItemWhereUniqueInput | Prisma.SaleItemWhereUniqueInput[]
+  update?: Prisma.SaleItemUpdateWithWhereUniqueWithoutBatchInput | Prisma.SaleItemUpdateWithWhereUniqueWithoutBatchInput[]
+  updateMany?: Prisma.SaleItemUpdateManyWithWhereWithoutBatchInput | Prisma.SaleItemUpdateManyWithWhereWithoutBatchInput[]
+  deleteMany?: Prisma.SaleItemScalarWhereInput | Prisma.SaleItemScalarWhereInput[]
+}
+
 export type SaleItemCreateWithoutProductInput = {
   id?: string
   productName: string
@@ -532,7 +642,10 @@ export type SaleItemCreateWithoutProductInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchNumber?: string | null
+  expiry?: string | null
   sale: Prisma.SaleCreateNestedOneWithoutItemsInput
+  batch?: Prisma.ProductBatchCreateNestedOneWithoutSaleItemsInput
 }
 
 export type SaleItemUncheckedCreateWithoutProductInput = {
@@ -543,6 +656,9 @@ export type SaleItemUncheckedCreateWithoutProductInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchId?: string | null
+  batchNumber?: string | null
+  expiry?: string | null
 }
 
 export type SaleItemCreateOrConnectWithoutProductInput = {
@@ -583,6 +699,9 @@ export type SaleItemScalarWhereInput = {
   quantity?: Prisma.IntFilter<"SaleItem"> | number
   unitPrice?: Prisma.FloatFilter<"SaleItem"> | number
   subtotal?: Prisma.FloatFilter<"SaleItem"> | number
+  batchId?: Prisma.StringNullableFilter<"SaleItem"> | string | null
+  batchNumber?: Prisma.StringNullableFilter<"SaleItem"> | string | null
+  expiry?: Prisma.StringNullableFilter<"SaleItem"> | string | null
 }
 
 export type SaleItemCreateWithoutSaleInput = {
@@ -592,7 +711,10 @@ export type SaleItemCreateWithoutSaleInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchNumber?: string | null
+  expiry?: string | null
   product: Prisma.ProductCreateNestedOneWithoutSaleItemsInput
+  batch?: Prisma.ProductBatchCreateNestedOneWithoutSaleItemsInput
 }
 
 export type SaleItemUncheckedCreateWithoutSaleInput = {
@@ -603,6 +725,9 @@ export type SaleItemUncheckedCreateWithoutSaleInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchId?: string | null
+  batchNumber?: string | null
+  expiry?: string | null
 }
 
 export type SaleItemCreateOrConnectWithoutSaleInput = {
@@ -631,6 +756,58 @@ export type SaleItemUpdateManyWithWhereWithoutSaleInput = {
   data: Prisma.XOR<Prisma.SaleItemUpdateManyMutationInput, Prisma.SaleItemUncheckedUpdateManyWithoutSaleInput>
 }
 
+export type SaleItemCreateWithoutBatchInput = {
+  id?: string
+  productName: string
+  barcode: string
+  quantity?: number
+  unitPrice?: number
+  subtotal?: number
+  batchNumber?: string | null
+  expiry?: string | null
+  product: Prisma.ProductCreateNestedOneWithoutSaleItemsInput
+  sale: Prisma.SaleCreateNestedOneWithoutItemsInput
+}
+
+export type SaleItemUncheckedCreateWithoutBatchInput = {
+  id?: string
+  saleId: string
+  productId: string
+  productName: string
+  barcode: string
+  quantity?: number
+  unitPrice?: number
+  subtotal?: number
+  batchNumber?: string | null
+  expiry?: string | null
+}
+
+export type SaleItemCreateOrConnectWithoutBatchInput = {
+  where: Prisma.SaleItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.SaleItemCreateWithoutBatchInput, Prisma.SaleItemUncheckedCreateWithoutBatchInput>
+}
+
+export type SaleItemCreateManyBatchInputEnvelope = {
+  data: Prisma.SaleItemCreateManyBatchInput | Prisma.SaleItemCreateManyBatchInput[]
+  skipDuplicates?: boolean
+}
+
+export type SaleItemUpsertWithWhereUniqueWithoutBatchInput = {
+  where: Prisma.SaleItemWhereUniqueInput
+  update: Prisma.XOR<Prisma.SaleItemUpdateWithoutBatchInput, Prisma.SaleItemUncheckedUpdateWithoutBatchInput>
+  create: Prisma.XOR<Prisma.SaleItemCreateWithoutBatchInput, Prisma.SaleItemUncheckedCreateWithoutBatchInput>
+}
+
+export type SaleItemUpdateWithWhereUniqueWithoutBatchInput = {
+  where: Prisma.SaleItemWhereUniqueInput
+  data: Prisma.XOR<Prisma.SaleItemUpdateWithoutBatchInput, Prisma.SaleItemUncheckedUpdateWithoutBatchInput>
+}
+
+export type SaleItemUpdateManyWithWhereWithoutBatchInput = {
+  where: Prisma.SaleItemScalarWhereInput
+  data: Prisma.XOR<Prisma.SaleItemUpdateManyMutationInput, Prisma.SaleItemUncheckedUpdateManyWithoutBatchInput>
+}
+
 export type SaleItemCreateManyProductInput = {
   id?: string
   saleId: string
@@ -639,6 +816,9 @@ export type SaleItemCreateManyProductInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchId?: string | null
+  batchNumber?: string | null
+  expiry?: string | null
 }
 
 export type SaleItemUpdateWithoutProductInput = {
@@ -648,7 +828,10 @@ export type SaleItemUpdateWithoutProductInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sale?: Prisma.SaleUpdateOneRequiredWithoutItemsNestedInput
+  batch?: Prisma.ProductBatchUpdateOneWithoutSaleItemsNestedInput
 }
 
 export type SaleItemUncheckedUpdateWithoutProductInput = {
@@ -659,6 +842,9 @@ export type SaleItemUncheckedUpdateWithoutProductInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type SaleItemUncheckedUpdateManyWithoutProductInput = {
@@ -669,6 +855,9 @@ export type SaleItemUncheckedUpdateManyWithoutProductInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type SaleItemCreateManySaleInput = {
@@ -679,6 +868,9 @@ export type SaleItemCreateManySaleInput = {
   quantity?: number
   unitPrice?: number
   subtotal?: number
+  batchId?: string | null
+  batchNumber?: string | null
+  expiry?: string | null
 }
 
 export type SaleItemUpdateWithoutSaleInput = {
@@ -688,7 +880,10 @@ export type SaleItemUpdateWithoutSaleInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product?: Prisma.ProductUpdateOneRequiredWithoutSaleItemsNestedInput
+  batch?: Prisma.ProductBatchUpdateOneWithoutSaleItemsNestedInput
 }
 
 export type SaleItemUncheckedUpdateWithoutSaleInput = {
@@ -699,6 +894,9 @@ export type SaleItemUncheckedUpdateWithoutSaleInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type SaleItemUncheckedUpdateManyWithoutSaleInput = {
@@ -709,6 +907,61 @@ export type SaleItemUncheckedUpdateManyWithoutSaleInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type SaleItemCreateManyBatchInput = {
+  id?: string
+  saleId: string
+  productId: string
+  productName: string
+  barcode: string
+  quantity?: number
+  unitPrice?: number
+  subtotal?: number
+  batchNumber?: string | null
+  expiry?: string | null
+}
+
+export type SaleItemUpdateWithoutBatchInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  productName?: Prisma.StringFieldUpdateOperationsInput | string
+  barcode?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  product?: Prisma.ProductUpdateOneRequiredWithoutSaleItemsNestedInput
+  sale?: Prisma.SaleUpdateOneRequiredWithoutItemsNestedInput
+}
+
+export type SaleItemUncheckedUpdateWithoutBatchInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  saleId?: Prisma.StringFieldUpdateOperationsInput | string
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
+  productName?: Prisma.StringFieldUpdateOperationsInput | string
+  barcode?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type SaleItemUncheckedUpdateManyWithoutBatchInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  saleId?: Prisma.StringFieldUpdateOperationsInput | string
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
+  productName?: Prisma.StringFieldUpdateOperationsInput | string
+  barcode?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unitPrice?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
+  batchNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  expiry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -722,8 +975,12 @@ export type SaleItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   quantity?: boolean
   unitPrice?: boolean
   subtotal?: boolean
+  batchId?: boolean
+  batchNumber?: boolean
+  expiry?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
+  batch?: boolean | Prisma.SaleItem$batchArgs<ExtArgs>
 }, ExtArgs["result"]["saleItem"]>
 
 export type SaleItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -735,8 +992,12 @@ export type SaleItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   quantity?: boolean
   unitPrice?: boolean
   subtotal?: boolean
+  batchId?: boolean
+  batchNumber?: boolean
+  expiry?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
+  batch?: boolean | Prisma.SaleItem$batchArgs<ExtArgs>
 }, ExtArgs["result"]["saleItem"]>
 
 export type SaleItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -748,8 +1009,12 @@ export type SaleItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   quantity?: boolean
   unitPrice?: boolean
   subtotal?: boolean
+  batchId?: boolean
+  batchNumber?: boolean
+  expiry?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
+  batch?: boolean | Prisma.SaleItem$batchArgs<ExtArgs>
 }, ExtArgs["result"]["saleItem"]>
 
 export type SaleItemSelectScalar = {
@@ -761,20 +1026,26 @@ export type SaleItemSelectScalar = {
   quantity?: boolean
   unitPrice?: boolean
   subtotal?: boolean
+  batchId?: boolean
+  batchNumber?: boolean
+  expiry?: boolean
 }
 
-export type SaleItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "saleId" | "productId" | "productName" | "barcode" | "quantity" | "unitPrice" | "subtotal", ExtArgs["result"]["saleItem"]>
+export type SaleItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "saleId" | "productId" | "productName" | "barcode" | "quantity" | "unitPrice" | "subtotal" | "batchId" | "batchNumber" | "expiry", ExtArgs["result"]["saleItem"]>
 export type SaleItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
+  batch?: boolean | Prisma.SaleItem$batchArgs<ExtArgs>
 }
 export type SaleItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
+  batch?: boolean | Prisma.SaleItem$batchArgs<ExtArgs>
 }
 export type SaleItemIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   sale?: boolean | Prisma.SaleDefaultArgs<ExtArgs>
+  batch?: boolean | Prisma.SaleItem$batchArgs<ExtArgs>
 }
 
 export type $SaleItemPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -782,6 +1053,7 @@ export type $SaleItemPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     product: Prisma.$ProductPayload<ExtArgs>
     sale: Prisma.$SalePayload<ExtArgs>
+    batch: Prisma.$ProductBatchPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -792,6 +1064,9 @@ export type $SaleItemPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     quantity: number
     unitPrice: number
     subtotal: number
+    batchId: string | null
+    batchNumber: string | null
+    expiry: string | null
   }, ExtArgs["result"]["saleItem"]>
   composites: {}
 }
@@ -1188,6 +1463,7 @@ export interface Prisma__SaleItemClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   sale<T extends Prisma.SaleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SaleDefaultArgs<ExtArgs>>): Prisma.Prisma__SaleClient<runtime.Types.Result.GetResult<Prisma.$SalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  batch<T extends Prisma.SaleItem$batchArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SaleItem$batchArgs<ExtArgs>>): Prisma.Prisma__ProductBatchClient<runtime.Types.Result.GetResult<Prisma.$ProductBatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1225,6 +1501,9 @@ export interface SaleItemFieldRefs {
   readonly quantity: Prisma.FieldRef<"SaleItem", 'Int'>
   readonly unitPrice: Prisma.FieldRef<"SaleItem", 'Float'>
   readonly subtotal: Prisma.FieldRef<"SaleItem", 'Float'>
+  readonly batchId: Prisma.FieldRef<"SaleItem", 'String'>
+  readonly batchNumber: Prisma.FieldRef<"SaleItem", 'String'>
+  readonly expiry: Prisma.FieldRef<"SaleItem", 'String'>
 }
     
 
@@ -1623,6 +1902,25 @@ export type SaleItemDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many SaleItems to delete.
    */
   limit?: number
+}
+
+/**
+ * SaleItem.batch
+ */
+export type SaleItem$batchArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductBatch
+   */
+  select?: Prisma.ProductBatchSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductBatch
+   */
+  omit?: Prisma.ProductBatchOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductBatchInclude<ExtArgs> | null
+  where?: Prisma.ProductBatchWhereInput
 }
 
 /**

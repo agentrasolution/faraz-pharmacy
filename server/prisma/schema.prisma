@@ -63,6 +63,7 @@ model Product {
   returnItems    ReturnItem[]
   saleItems      SaleItem[]
   stockPurchases StockPurchase[]
+  batches        ProductBatch[]
 
   @@map("products")
 }
@@ -100,6 +101,7 @@ model Distributor {
   salesmanName       String          @default("") @map("salesman_name")
   products           Product[]
   stockPurchases     StockPurchase[]
+  batches            ProductBatch[]
 
   @@map("distributors")
 }
@@ -144,10 +146,14 @@ model SaleItem {
   productName String  @map("product_name")
   barcode     String
   quantity    Int     @default(1)
-  unitPrice   Float   @default(0) @map("unit_price")
-  subtotal    Float   @default(0)
-  product     Product @relation(fields: [productId], references: [id])
-  sale        Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  unitPrice   Float         @default(0) @map("unit_price")
+  subtotal    Float         @default(0)
+  batchId     String?       @map("batch_id")
+  batchNumber String?       @map("batch_number")
+  expiry      String?
+  product     Product       @relation(fields: [productId], references: [id])
+  sale        Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  batch       ProductBatch? @relation(fields: [batchId], references: [id])
 
   @@map("sale_items")
 }
@@ -188,13 +194,41 @@ model StockPurchase {
   purchasePrice Float        @default(0) @map("purchase_price")
   salePrice     Float        @default(0) @map("sale_price")
   expiry        String?
-  totalValue    Float        @default(0) @map("total_value")
-  active        Int          @default(1)
-  createdAt     DateTime     @default(now()) @map("created_at")
-  distributor   Distributor? @relation(fields: [distributorId], references: [id])
-  product       Product      @relation(fields: [productId], references: [id])
+  totalValue    Float         @default(0) @map("total_value")
+  active        Int           @default(1)
+  batchId       String?       @map("batch_id")
+  batchNumber   String        @default("") @map("batch_number")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  distributor   Distributor?  @relation(fields: [distributorId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+  batch         ProductBatch? @relation(fields: [batchId], references: [id])
 
   @@map("stock_purchases")
+}
+
+model ProductBatch {
+  id            String          @id @default(uuid())
+  productId     String          @map("product_id")
+  batchNumber   String          @map("batch_number")
+  expiryDate    String          @map("expiry_date")
+  quantity      Int             @default(0)
+  initialQty    Int             @default(0) @map("initial_qty")
+  purchasePrice Float           @default(0) @map("purchase_price")
+  salePrice     Float           @default(0) @map("sale_price")
+  distributorId String?         @map("distributor_id")
+  invoiceNumber String?         @map("invoice_number")
+  active        Int             @default(1)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  distributor   Distributor?    @relation(fields: [distributorId], references: [id])
+  product       Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  saleItems     SaleItem[]
+  stockPurchases StockPurchase[]
+
+  @@unique([productId, batchNumber])
+  @@index([productId, expiryDate])
+  @@index([batchNumber])
+  @@map("product_batches")
 }
 
 model ReturnEntry {

@@ -215,6 +215,9 @@ export default function POS() {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           subtotal: item.subtotal,
+          batchId: item.batchId,
+          batchNumber: item.batchNumber,
+          expiry: item.expiry,
         })),
         subtotal: cart.subtotal,
         discount,
@@ -229,6 +232,7 @@ export default function POS() {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["arrears-by-customer"] });
       queryClient.invalidateQueries({ queryKey: ["arrears"] });
+      queryClient.invalidateQueries({ queryKey: ["batches"] });
 
       let customerTotalArrears = 0;
       if (cart.customerId) {
@@ -239,14 +243,25 @@ export default function POS() {
       const printData = {
         ...sale,
         tax: cart.tax,
-        customer_name: cart.customerName,
+        customer_name: cart.customerName || sale.customer_name,
         customer_total_arrears: customerTotalArrears,
-        items: cart.items.map((item) => ({
-          product_name: item.productName,
-          quantity: item.quantity,
-          unit_price: item.unitPrice,
-          subtotal: item.subtotal,
-        })),
+        items: (sale.items && sale.items.length > 0)
+          ? sale.items.map((item: any) => ({
+              product_name: item.product_name,
+              batch_number: item.batch_number,
+              expiry: item.expiry,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              subtotal: item.subtotal,
+            }))
+          : cart.items.map((item) => ({
+              product_name: item.productName,
+              batch_number: item.batchNumber,
+              expiry: item.expiry,
+              quantity: item.quantity,
+              unit_price: item.unitPrice,
+              subtotal: item.subtotal,
+            })),
       };
       setPendingPrintData(printData);
       setLastReceipt(printData);

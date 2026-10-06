@@ -117,6 +117,9 @@ export interface SaleItem {
   returned_qty?: number;
   unit_price: number;
   subtotal: number;
+  batch_id?: string;
+  batch_number?: string;
+  expiry?: string;
 }
 
 export interface SaleInput {
@@ -137,6 +140,9 @@ export interface SaleItemInput {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  batchId?: string;
+  batchNumber?: string;
+  expiry?: string;
 }
 
 export interface Arrear {
@@ -267,6 +273,8 @@ export interface StockPurchase {
   company?: string;
   invoice_no?: string;
   invoice_number: string;
+  batch_id?: string;
+  batch_number?: string;
   quantity: number;
   purchase_price: number;
   sale_price: number;
@@ -288,10 +296,29 @@ export interface StockInput {
   distributorId?: string;
   company?: string;
   invoiceNumber?: string;
+  batchNumber?: string;
   purchasePrice?: number;
   salePrice?: number;
   quantity: number;
   expiry?: string;
+}
+
+export interface ProductBatch {
+  id: string;
+  product_id: string;
+  batch_number: string;
+  expiry_date: string;
+  quantity: number;
+  initial_qty: number;
+  purchase_price: number;
+  sale_price: number;
+  distributor_id?: string;
+  invoice_number?: string;
+  active: number;
+  created_at: string;
+  updated_at?: string;
+  distributor?: { id: string; name: string };
+  product?: { id: string; name: string; barcode: string; category?: string; location?: string };
 }
 
 export interface Distributor {

@@ -127,7 +127,10 @@ export default function Invoices() {
         items:
           printSale.items?.map((i) => ({
             product_name: i.product_name,
+            batch_number: i.batch_number,
+            expiry: i.expiry,
             quantity: i.quantity,
+            unit_price: i.unit_price,
             subtotal: i.subtotal,
           })) || [],
       };
@@ -145,7 +148,10 @@ export default function Invoices() {
       items:
         printSale.items?.map((i) => ({
           product_name: i.product_name,
+          batch_number: i.batch_number,
+          expiry: i.expiry,
           quantity: i.quantity,
+          unit_price: i.unit_price,
           subtotal: i.subtotal,
         })) || [],
     };
