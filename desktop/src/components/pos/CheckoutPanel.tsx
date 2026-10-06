@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ShoppingCart, Trash2, UserPlus, Eye, EyeOff } from "lucide-react";
+import { ShoppingCart, Trash2, UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,12 +106,22 @@ export default function CheckoutPanel({
     },
   });
   const [processing, setProcessing] = useState(false);
+  const [addAllToArrears, setAddAllToArrears] = useState(false);
 
-  const numPaid = Number(amountPaid) || 0;
+  useEffect(() => {
+    if (items.length === 0) setAddAllToArrears(false);
+  }, [items.length]);
+
+  const selectedCustomer = (customers as any[]).find((c) => c.id === customerId);
+  const customerPreviousArrears = Number(selectedCustomer?.outstanding_arrear || 0);
+
+  const numPaid = addAllToArrears ? 0 : (Number(amountPaid) || 0);
   const change = Math.max(0, numPaid - total);
-  const isPartial = numPaid > 0 && numPaid < total;
+  const isPartial = !addAllToArrears && numPaid > 0 && numPaid < total;
+  const isFullArrears = addAllToArrears && !!customerId;
   const canPay =
-    items.length > 0 && (numPaid >= total || (isPartial && !!customerId && addToArrears));
+    items.length > 0 &&
+    (isFullArrears || numPaid >= total || (isPartial && !!customerId && addToArrears));
 
   async function handleCheckout() {
     if (!canPay) return;
@@ -188,30 +198,50 @@ export default function CheckoutPanel({
 
       {items.length > 0 && (
         <div className="pt-3 space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <SearchableSelect
-                options={customers.map((c: Customer) => ({
-                  value: c.id,
-                  label: `${c.name}${c.phone ? ` (${c.phone})` : ""}`,
-                }))}
-                value={customerId || ""}
-                onChange={(v) => {
-                  const selected = customers.find((c: Customer) => c.id === v);
-                  onCustomerChange(v || undefined, selected?.name);
-                }}
-                placeholder="Customer (optional)"
-              />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <SearchableSelect
+                  options={customers.map((c: Customer) => ({
+                    value: c.id,
+                    label: `${c.name}${c.phone ? ` (${c.phone})` : ""}`,
+                  }))}
+                  value={customerId || ""}
+                  onChange={(v) => {
+                    const selected = customers.find((c: Customer) => c.id === v);
+                    onCustomerChange(v || undefined, selected?.name);
+                  }}
+                  placeholder="Customer (optional)"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setQuickAddOpen(true)}
+                title="Quick add customer"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setQuickAddOpen(true)}
-              title="Quick add customer"
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-            </Button>
+
+            {/* Previous Arrears Indicator Badge */}
+            {selectedCustomer && (
+              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl text-xs border bg-surface-2/60 border-border/80">
+                <span className="text-[11px] text-text-secondary font-medium">Previous Arrears:</span>
+                {customerPreviousArrears > 0 ? (
+                  <span className="font-mono font-bold text-warning flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5 text-warning" />
+                    {formatCurrency(customerPreviousArrears)}
+                  </span>
+                ) : (
+                  <span className="font-mono font-semibold text-success flex items-center gap-1 text-[11px]">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                    PKR 0 (Clear)
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <Separator />
 
@@ -361,12 +391,13 @@ export default function CheckoutPanel({
             <Input
               id="pos-amount-paid"
               type="number"
-              placeholder="Amount paid"
-              value={amountPaid}
+              placeholder={addAllToArrears ? "100% Credit (PKR 0 paid)" : "Amount paid"}
+              value={addAllToArrears ? "" : amountPaid}
               onChange={(e) => onAmountPaidChange?.(e.target.value)}
-              className="h-12 text-lg font-mono font-bold text-center rounded-2xl border-2 border-border/80 focus-visible:border-[#4A25E1] bg-surface shadow-xs"
+              disabled={addAllToArrears}
+              className="h-12 text-lg font-mono font-bold text-center rounded-2xl border-2 border-border/80 focus-visible:border-[#4A25E1] bg-surface shadow-xs disabled:bg-surface-2 disabled:text-text-secondary disabled:cursor-not-allowed"
             />
-            {change > 0 && (
+            {change > 0 && !addAllToArrears && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -375,7 +406,33 @@ export default function CheckoutPanel({
                 Change Due: {formatCurrency(change)}
               </motion.div>
             )}
-            {isPartial && (
+
+            {/* Checkbox: Add all amount to arrears */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-2/70 border border-border/80">
+              <Checkbox
+                id="add-all-to-arrears"
+                checked={addAllToArrears}
+                onCheckedChange={(val) => {
+                  const checked = val === true;
+                  setAddAllToArrears(checked);
+                  if (checked) {
+                    onAmountPaidChange?.("0");
+                    onAddToArrearsChange?.(true);
+                  } else {
+                    onAmountPaidChange?.("");
+                    onAddToArrearsChange?.(false);
+                  }
+                }}
+              />
+              <Label
+                htmlFor="add-all-to-arrears"
+                className="text-xs cursor-pointer text-text-primary font-semibold flex-1"
+              >
+                Add all amount to arrears (100% Credit)
+              </Label>
+            </div>
+
+            {isPartial && !addAllToArrears && (
               <div className="flex items-center gap-2 px-1">
                 <Checkbox
                   id="add-to-arrears"
@@ -390,20 +447,32 @@ export default function CheckoutPanel({
                 </Label>
               </div>
             )}
+
             <Button
               className="w-full h-12 text-sm font-bold gap-2 rounded-2xl shadow-md cursor-pointer"
               variant="brand"
               disabled={!canPay || processing}
               onClick={handleCheckout}
             >
-              {processing ? "Processing Transaction..." : `Pay ${formatCurrency(total)}`}
+              {processing
+                ? "Processing Transaction..."
+                : addAllToArrears
+                ? `Record to Arrears: ${formatCurrency(total)}`
+                : `Pay ${formatCurrency(total)}`}
             </Button>
-            {isPartial && !customerId && (
+
+            {addAllToArrears && !customerId && (
+              <p className="text-[11px] text-center text-danger font-semibold flex items-center justify-center gap-1">
+                <AlertCircle className="h-3.5 w-3.5" /> Please select a customer to charge to arrears
+              </p>
+            )}
+
+            {isPartial && !addAllToArrears && !customerId && (
               <p className="text-[11px] text-center text-danger font-medium">
                 Select a customer for partial credit payment
               </p>
             )}
-            {isPartial && !!customerId && !addToArrears && (
+            {isPartial && !addAllToArrears && !!customerId && !addToArrears && (
               <p className="text-[11px] text-center text-text-secondary font-medium">
                 Check the box above to add remaining to customer's arrears
               </p>

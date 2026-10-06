@@ -24,6 +24,9 @@ import type {
   CategoryInput,
   DashboardStats,
   BarcodeEntry,
+  CustomerArrearSummary,
+  CustomerLedgerDetail,
+  CustomerPaymentReceipt,
 } from "@/types";
 import type { BackupResult, BackupEntry, GDriveConfig, AutoBackupConfig } from "@/types/electron";
 
@@ -216,6 +219,30 @@ const api = {
       fetchJson("DELETE", `/api/arrears/${id}`),
     settle: (id: string, password: string): Promise<{ arrear: Arrear; paymentSaleId: string }> =>
       fetchJson("POST", `/api/arrears/${id}/settle`, { password }),
+    listByCustomer: async (opts: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      status?: string;
+    } = {}): Promise<PaginatedResponse<CustomerArrearSummary>> => {
+      const params = new URLSearchParams();
+      if (opts.page) params.set("page", String(opts.page));
+      if (opts.limit) params.set("limit", String(opts.limit));
+      if (opts.search) params.set("search", opts.search);
+      if (opts.status) params.set("status", opts.status);
+
+      return fetchJson<PaginatedResponse<CustomerArrearSummary>>(
+        "GET",
+        `/api/arrears/by-customer?${params.toString()}`
+      );
+    },
+    getCustomerLedger: (customerId: string): Promise<CustomerLedgerDetail> =>
+      fetchJson("GET", `/api/arrears/customer/${customerId}/ledger`),
+    recordCustomerPayment: (
+      customerId: string,
+      data: { amount: number; password: string }
+    ): Promise<CustomerPaymentReceipt> =>
+      fetchJson("POST", `/api/arrears/customer/${customerId}/pay`, data),
   },
   stock: {
     list: (): Promise<StockPurchase[]> => fetchJson("GET", "/api/stock"),

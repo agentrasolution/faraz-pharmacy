@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -11,63 +11,56 @@ import {
   Printer,
   History,
   Search,
+  FileText,
+  Users,
+  ChevronRight,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ExportButton from "@/components/shared/ExportButton";
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import DataTable from "@/components/shared/DataTable";
-import InvoiceDetailDialog from "@/components/shared/InvoiceDetailDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
+import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { downloadPDF, downloadCSV } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { api } from "@/lib/api";
-import type { Arrear, Customer, ArrearPayment } from "@/types";
+import ArrearLedgerDrawer from "@/components/arrears/ArrearLedgerDrawer";
+import ArrearPaymentReceiptDialog from "@/components/arrears/ArrearPaymentReceiptDialog";
+import type { CustomerArrearSummary, CustomerPaymentReceipt, Customer } from "@/types";
 
 export default function Arrears() {
   const queryClient = useQueryClient();
   const searchRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [open, setOpen] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [openAdd, setOpenAdd] = useState(false);
   const [form, setForm] = useState({ customerId: "", totalBill: "", amountPaid: "" });
-  const [passwordDialog, setPasswordDialog] = useState<{
-    open: boolean;
-    action: "pay" | "settle" | "delete";
-    targetId: string;
-    payAmount?: number;
-  }>({ open: false, action: "pay", targetId: "" });
-  const [adminPassword, setAdminPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [printDialog, setPrintDialog] = useState<{ open: boolean; saleId: string | null }>({
-    open: false,
-    saleId: null,
-  });
-  const [viewSaleId, setViewSaleId] = useState<string | null>(null);
+
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [printReceipt, setPrintReceipt] = useState<CustomerPaymentReceipt | null>(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const debouncedSearch = useDebounce(search, 300);
 
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, filter, limit]);
+
   const { data: paginatedData, isLoading } = useQuery({
-    queryKey: ["arrears", filter, page, limit, debouncedSearch],
+    queryKey: ["arrears-by-customer", filter, page, limit, debouncedSearch],
     queryFn: () =>
-      api.arrears.listPaginated({
+      api.arrears.listByCustomer({
         status: filter === "all" ? undefined : filter,
         page,
         limit,
@@ -75,32 +68,12 @@ export default function Arrears() {
       }),
   });
 
-  const arrears = paginatedData?.data || [];
+  const customerLedgers = paginatedData?.data || [];
   const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
     queryFn: api.customers.list,
-  });
-
-  const recordPayment = useMutation({
-    mutationFn: ({ id, amount, password }: { id: string; amount: number; password: string }) =>
-      api.arrears.recordPayment(id, amount, password),
-    onSuccess: (data) => {
-      toast.success("Payment recorded");
-      queryClient.invalidateQueries({ queryKey: ["arrears"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      setPayingId(null);
-      setPaymentAmount("");
-      setPrintDialog({ open: true, saleId: data.paymentSaleId });
-      setPasswordDialog({ open: false, action: "pay", targetId: "" });
-      setAdminPassword("");
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
   });
 
   const createMutation = useMutation({
@@ -110,92 +83,63 @@ export default function Arrears() {
         totalBill: Number(form.totalBill),
         amountPaid: form.amountPaid ? Number(form.amountPaid) : 0,
       }),
-    onSuccess: () => {
-      toast.success("Arrear added");
-      queryClient.invalidateQueries({ queryKey: ["arrears"] });
+    onSuccess: (newArrear) => {
+      toast.success("Arrear entry created");
+      queryClient.invalidateQueries({ queryKey: ["arrears-by-customer"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setOpen(false);
+      setOpenAdd(false);
       setForm({ customerId: "", totalBill: "", amountPaid: "" });
+      setSelectedCustomerId(newArrear.customer_id);
     },
     onError: (err: Error) => {
       toast.error(err.message);
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.arrears.delete(id),
-    onSuccess: () => {
-      toast.success("Arrear deleted");
-      queryClient.invalidateQueries({ queryKey: ["arrears"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      setPasswordDialog({ open: false, action: "pay", targetId: "" });
-      setAdminPassword("");
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
-  });
+  // Calculate high-level summary cards
+  const totalOutstanding = useMemo(
+    () => customerLedgers.reduce((s: number, c: CustomerArrearSummary) => s + c.balance_due, 0),
+    [customerLedgers]
+  );
+  const customersWithDues = useMemo(
+    () => customerLedgers.filter((c: CustomerArrearSummary) => c.balance_due > 0).length,
+    [customerLedgers]
+  );
 
-  const settleMutation = useMutation({
-    mutationFn: ({ id, password }: { id: string; password: string }) =>
-      api.arrears.settle(id, password),
-    onSuccess: (data) => {
-      toast.success("Arrear settled");
-      queryClient.invalidateQueries({ queryKey: ["arrears"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      setPrintDialog({ open: true, saleId: data.paymentSaleId });
-      setPasswordDialog({ open: false, action: "pay", targetId: "" });
-      setAdminPassword("");
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
-  });
-
-  async function handleAdminAction(action: "pay" | "settle" | "delete") {
-    setPasswordError("");
-    const { targetId, payAmount } = passwordDialog;
-
-    if (action === "pay" && payAmount) {
-      recordPayment.mutate({ id: targetId, amount: payAmount, password: adminPassword });
-    } else if (action === "settle") {
-      settleMutation.mutate({ id: targetId, password: adminPassword });
-    } else if (action === "delete") {
-      deleteMutation.mutate(targetId);
-    }
-  }
-
-  const totalOutstanding = arrears
-    .filter((a: Arrear) => a.status === "pending")
-    .reduce((s: number, a: Arrear) => s + a.balance_due, 0);
-
-  const filtered = arrears;
-
-  const arrearHeaders = ["Customer", "Date", "Total Bill", "Paid", "Balance Due", "Status"];
-  const arrearRows = filtered.map((a: Arrear) => [
-    a.customer_name,
-    formatDateTime(a.created_at),
-    formatCurrency(a.total_bill),
-    formatCurrency(a.amount_paid),
-    formatCurrency(a.balance_due),
-    a.status,
+  const exportHeaders = [
+    "Customer",
+    "Phone",
+    "Father Name",
+    "Total Credit",
+    "Amount Paid",
+    "Balance Due",
+    "Pending Bills",
+    "Status",
+  ];
+  const exportRows = customerLedgers.map((c: CustomerArrearSummary) => [
+    c.customer_name,
+    c.phone || "—",
+    c.father_name || "—",
+    formatCurrency(c.total_bill),
+    formatCurrency(c.amount_paid),
+    formatCurrency(c.balance_due),
+    c.pending_invoices,
+    c.status === "pending" ? "Pending Dues" : "Settled",
   ]);
 
   function handleExportPDF() {
-    downloadPDF("arrears.pdf", "Arrears Report", arrearHeaders, arrearRows);
+    downloadPDF("arrears_customers.pdf", "Customer Arrears Ledger Report", exportHeaders, exportRows);
   }
 
   function handleExportCSV() {
-    downloadCSV("arrears.csv", arrearHeaders, arrearRows);
+    downloadCSV("arrears_customers.csv", exportHeaders, exportRows);
   }
 
   useModuleShortcuts({
     onAdd: () => {
       setForm({ customerId: "", totalBill: "", amountPaid: "" });
-      setOpen(true);
+      setOpenAdd(true);
     },
     onSearch: () => searchRef.current?.focus(),
     onExportPDF: handleExportPDF,
@@ -206,164 +150,146 @@ export default function Arrears() {
     {
       key: "customer_name",
       header: "Customer",
-      cell: (a: Arrear) => <span className="font-medium text-text-primary">{a.customer_name}</span>,
-    },
-    {
-      key: "created_at",
-      header: "Date",
-      cell: (a: Arrear) => (
-        <span className="font-mono text-xs text-text-secondary">
-          {formatDateTime(a.created_at)}
-        </span>
+      cell: (row: CustomerArrearSummary) => (
+        <div
+          onClick={() => setSelectedCustomerId(row.customer_id)}
+          className="cursor-pointer group space-y-0.5"
+        >
+          <span className="font-bold text-text-primary group-hover:text-brand transition-colors block text-xs">
+            {row.customer_name}
+          </span>
+          <div className="flex items-center gap-1.5 text-[11px] text-text-secondary">
+            {row.phone && <span className="font-mono">{row.phone}</span>}
+            {row.father_name && <span>• S/O {row.father_name}</span>}
+          </div>
+        </div>
       ),
     },
     {
       key: "total_bill",
-      header: "Total Bill",
-      cell: (a: Arrear) => <span className="font-mono">{formatCurrency(a.total_bill)}</span>,
+      header: "Total Credit",
+      cell: (row: CustomerArrearSummary) => (
+        <span className="font-mono text-xs">{formatCurrency(row.total_bill)}</span>
+      ),
     },
     {
       key: "amount_paid",
-      header: "Paid",
-      cell: (a: Arrear) => <span className="font-mono">{formatCurrency(a.amount_paid)}</span>,
+      header: "Total Paid",
+      cell: (row: CustomerArrearSummary) => (
+        <span className="font-mono text-xs text-success">{formatCurrency(row.amount_paid)}</span>
+      ),
     },
     {
       key: "balance_due",
       header: "Balance Due",
-      cell: (a: Arrear) => (
-        <span className="font-mono font-medium text-warning">{formatCurrency(a.balance_due)}</span>
+      cell: (row: CustomerArrearSummary) => (
+        <span className="font-mono text-xs font-bold text-warning">
+          {formatCurrency(row.balance_due)}
+        </span>
+      ),
+    },
+    {
+      key: "invoices",
+      header: "Invoices",
+      cell: (row: CustomerArrearSummary) => (
+        <span className="text-[11px] text-text-secondary font-mono">
+          {row.pending_invoices > 0 ? (
+            <span className="text-warning font-semibold">{row.pending_invoices} Pending</span>
+          ) : (
+            <span className="text-success font-semibold">0 Pending</span>
+          )}{" "}
+          ({row.total_invoices} Total)
+        </span>
+      ),
+    },
+    {
+      key: "latest_date",
+      header: "Last Activity",
+      cell: (row: CustomerArrearSummary) => (
+        <span className="font-mono text-[11px] text-text-secondary">
+          {row.latest_date ? formatDate(row.latest_date) : "—"}
+        </span>
       ),
     },
     {
       key: "status",
       header: "Status",
-      cell: (a: Arrear) => <StatusBadge status={a.status} />,
+      cell: (row: CustomerArrearSummary) => <StatusBadge status={row.status} />,
       className: "text-center",
     },
     {
       key: "actions",
-      header: "Action",
-      cell: (a: Arrear) => (
-        <div className="flex items-center gap-1.5 justify-center">
-          <button
-            onClick={() => setExpanded(expanded === a.id ? null : a.id)}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
-            title={expanded === a.id ? "Hide history" : "Payment history"}
+      header: "Actions",
+      cell: (row: CustomerArrearSummary) => (
+        <div className="flex items-center gap-1.5 justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-xl text-xs gap-1 cursor-pointer font-semibold shadow-2xs"
+            onClick={() => setSelectedCustomerId(row.customer_id)}
           >
-            <History className="h-4 w-4" />
-          </button>
-          {a.status === "pending" && (
-            <>
-              {payingId === a.id ? (
-                <>
-                  <Input
-                    type="number"
-                    placeholder="Amount"
-                    value={paymentAmount}
-                    min="0.01"
-                    max={a.balance_due}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="h-8 w-24 text-sm font-mono"
-                    autoFocus
-                  />
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    onClick={() => {
-                      setPasswordDialog({
-                        open: true,
-                        action: "pay",
-                        targetId: a.id,
-                        payAmount: Number(paymentAmount),
-                      });
-                      setAdminPassword("");
-                    }}
-                    disabled={
-                      !paymentAmount ||
-                      Number(paymentAmount) <= 0 ||
-                      Number(paymentAmount) > a.balance_due
-                    }
-                  >
-                    Pay
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8"
-                    onClick={() => setPayingId(null)}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8"
-                    onClick={() => setPayingId(a.id)}
-                  >
-                    Record Payment
-                  </Button>
-                  <button
-                    onClick={() => {
-                      setPasswordDialog({ open: true, action: "settle", targetId: a.id });
-                      setAdminPassword("");
-                    }}
-                    className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
-                    title="Mark Settled"
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                  </button>
-                </>
-              )}
-            </>
+            <FileText className="h-3.5 w-3.5 text-brand" />
+            <span>Ledger</span>
+          </Button>
+          {row.balance_due > 0 && (
+            <Button
+              size="sm"
+              variant="brand"
+              className="h-8 rounded-xl text-xs gap-1 cursor-pointer font-semibold shadow-xs"
+              onClick={() => setSelectedCustomerId(row.customer_id)}
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>Pay</span>
+            </Button>
           )}
-          <button
-            onClick={() => {
-              setPasswordDialog({ open: true, action: "delete", targetId: a.id });
-              setAdminPassword("");
-            }}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
         </div>
       ),
-      className: "text-center",
+      className: "text-right",
     },
   ];
 
   return (
-    <div>
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Arrears"
-        description="Track and manage outstanding payments"
+        title="Customer Arrears & Khata"
+        description="Customer-centric ledger, accumulated debt balances, and payment vouchers"
         action={{
-          label: "Add Arrear",
+          label: "Add Arrear Entry",
           onClick: () => {
             setForm({ customerId: "", totalBill: "", amountPaid: "" });
-            setOpen(true);
+            setOpenAdd(true);
           },
           shortcut: "Mod+N",
         }}
       />
-      <div className="mb-4">
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           title="Total Outstanding Debt"
           value={formatCurrency(totalOutstanding)}
           icon={<CreditCard className="h-5 w-5" />}
-          subtitle="Pending customer balances"
+          subtitle="Total pending customer balances"
+        />
+        <StatCard
+          title="Customers with Dues"
+          value={customersWithDues}
+          icon={<Users className="h-5 w-5" />}
+          subtitle="Customers currently with active debt"
+        />
+        <StatCard
+          title="Total Credit Customers"
+          value={meta.total}
+          icon={<FileText className="h-5 w-5" />}
+          subtitle="Registered customer credit accounts"
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
             ref={searchRef}
-            placeholder="Search arrears by customer or invoice..."
+            placeholder="Search by customer name, phone, or father name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
@@ -376,21 +302,20 @@ export default function Arrears() {
       </div>
 
       {/* Pill Filter Tabs */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs w-fit mb-5">
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs w-fit">
         {[
-          { id: "all", label: "All Ledgers" },
-          { id: "pending", label: "Pending Dues" },
+          { id: "all", label: "All Customer Ledgers" },
+          { id: "pending", label: "Pending Dues Only" },
           { id: "settled", label: "Fully Settled" },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => {
               setFilter(tab.id);
-              setPayingId(null);
               setPage(1);
             }}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer",
+              "text-xs font-semibold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer",
               filter === tab.id
                 ? "bg-[#4A25E1] text-white shadow-xs"
                 : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
@@ -401,14 +326,15 @@ export default function Arrears() {
         ))}
       </div>
 
+      {/* Main Table */}
       <div className="space-y-4">
         <DataTable
           columns={columns}
-          data={filtered}
+          data={customerLedgers}
           loading={isLoading}
-          keyExtractor={(a: Arrear) => a.id}
+          keyExtractor={(c: CustomerArrearSummary) => c.customer_id}
         />
-        
+
         {/* Pagination Bar */}
         <div className="rounded-2xl border border-border/80 bg-surface p-3 px-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-xs text-text-secondary">
@@ -450,7 +376,7 @@ export default function Arrears() {
             <Button
               variant="outline"
               size="sm"
-              disabled={meta.page >= (meta.totalPages || 1)}
+              disabled={meta.page >= meta.totalPages}
               onClick={() => setPage((p) => p + 1)}
               className="rounded-xl shadow-xs"
             >
@@ -460,198 +386,84 @@ export default function Arrears() {
         </div>
       </div>
 
-      {expanded &&
-        (() => {
-          const arrear = arrears.find((a: Arrear) => a.id === expanded);
-          if (!arrear) return null;
-          const payments = arrear.payments ?? [];
-          return (
-            <div className="mt-3 rounded-xl border border-border overflow-hidden bg-bg-secondary/30">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
-                <History className="h-4 w-4 text-text-secondary" />
-                <span className="text-sm font-medium text-text-primary">
-                  Payment History — {arrear.customer_name}
-                </span>
-                <span className="text-xs text-text-secondary ml-auto font-mono">
-                  {payments.length} payment{payments.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              {payments.length === 0 ? (
-                <div className="text-center text-text-secondary py-8 text-xs">
-                  No payments recorded yet
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/60">
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-text-secondary">
-                          Date
-                        </th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-text-secondary">
-                          Amount
-                        </th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-text-secondary">
-                          Running Total Paid
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payments.map((p: ArrearPayment, i: number) => {
-                        const runningTotal = payments
-                          .slice(0, i + 1)
-                          .reduce((s, x) => s + x.amount, 0);
-                        return (
-                          <tr key={p.id} className="border-b border-border/40">
-                            <td className="px-4 py-2.5 font-mono text-xs text-text-secondary">
-                              {formatDateTime(p.created_at)}
-                            </td>
-                            <td className="px-4 py-2.5 font-mono font-medium text-success">
-                              {formatCurrency(p.amount)}
-                            </td>
-                            <td className="px-4 py-2.5 font-mono text-text-primary">
-                              {formatCurrency(runningTotal)} / {formatCurrency(arrear.total_bill)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          );
-        })()}
+      {/* Customer Ledger Drawer (Slide-over) */}
+      <ArrearLedgerDrawer
+        open={!!selectedCustomerId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedCustomerId(null);
+        }}
+        customerId={selectedCustomerId}
+        onPaymentSuccess={(receipt) => {
+          setPrintReceipt(receipt);
+        }}
+      />
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+      {/* Payment Receipt Voucher Dialog */}
+      <ArrearPaymentReceiptDialog
+        open={!!printReceipt}
+        onOpenChange={(open) => {
+          if (!open) setPrintReceipt(null);
+        }}
+        receipt={printReceipt}
+      />
+
+      {/* Manual Arrear Add Modal */}
+      <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+        <DialogContent className="max-w-md p-6 bg-surface border border-border/80 rounded-3xl shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Add Arrear</DialogTitle>
+            <DialogTitle className="text-base font-bold">Add Customer Arrear Entry</DialogTitle>
           </DialogHeader>
-          <div className="px-5 pb-5 space-y-3">
-            <div>
-              <Label>Customer</Label>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Customer *</Label>
               <SearchableSelect
                 options={customers.map((c: Customer) => ({
                   value: c.id,
-                  label: `${c.name} (${c.phone})`,
+                  label: `${c.name}${c.phone ? ` (${c.phone})` : ""}`,
                 }))}
                 value={form.customerId}
-                onChange={(v) => setForm({ ...form, customerId: v })}
-                placeholder="Select customer"
+                onChange={(val) => setForm((f) => ({ ...f, customerId: val }))}
+                placeholder="Select customer..."
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Total Bill</Label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={form.totalBill}
-                  onChange={(e) => setForm({ ...form, totalBill: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Amount Paid (optional)</Label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={form.amountPaid}
-                  onChange={(e) => setForm({ ...form, amountPaid: e.target.value })}
-                />
-              </div>
-            </div>
-            <Button
-              className="w-full"
-              disabled={!form.customerId || !form.totalBill || createMutation.isPending}
-              onClick={() => createMutation.mutate()}
-            >
-              {createMutation.isPending ? "Adding..." : "Add Arrear"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={passwordDialog.open}
-        onOpenChange={(o) => setPasswordDialog({ ...passwordDialog, open: o })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="h-4 w-4" />
-              Admin Password Required
-            </DialogTitle>
-            <DialogDescription>Enter your admin password to confirm this action.</DialogDescription>
-          </DialogHeader>
-          <div className="px-5 pb-5 space-y-3">
-            <div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Total Bill Amount (PKR) *</Label>
               <Input
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="Enter password"
-                autoFocus
+                type="number"
+                min="1"
+                placeholder="0"
+                value={form.totalBill}
+                onChange={(e) => setForm((f) => ({ ...f, totalBill: e.target.value }))}
+                className="font-mono text-sm h-10 rounded-xl"
               />
             </div>
-            {passwordError && <p className="text-sm text-danger">{passwordError}</p>}
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setPasswordDialog({ open: false, action: "pay", targetId: "" })}
-              >
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Initial Amount Paid (optional)</Label>
+              <Input
+                type="number"
+                min="0"
+                placeholder="0"
+                value={form.amountPaid}
+                onChange={(e) => setForm((f) => ({ ...f, amountPaid: e.target.value }))}
+                className="font-mono text-sm h-10 rounded-xl"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-3">
+              <Button variant="outline" onClick={() => setOpenAdd(false)} className="rounded-xl">
                 Cancel
               </Button>
               <Button
-                onClick={() => handleAdminAction(passwordDialog.action)}
-                disabled={!adminPassword}
+                variant="brand"
+                disabled={!form.customerId || !form.totalBill || createMutation.isPending}
+                onClick={() => createMutation.mutate()}
+                className="rounded-xl shadow-xs"
               >
-                Confirm
+                {createMutation.isPending ? "Saving..." : "Create Arrear Entry"}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
-      <Dialog
-        open={printDialog.open}
-        onOpenChange={(o) => {
-          if (!o) setPrintDialog({ open: false, saleId: null });
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Printer className="h-4 w-4" />
-              Print Receipt?
-            </DialogTitle>
-            <DialogDescription>
-              Do you want to print the receipt for this payment?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-5 pb-5 flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setPrintDialog({ open: false, saleId: null })}>
-              No
-            </Button>
-            <Button
-              onClick={() => {
-                setViewSaleId(printDialog.saleId);
-                setPrintDialog({ open: false, saleId: null });
-              }}
-            >
-              Yes, Print
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <InvoiceDetailDialog
-        open={!!viewSaleId}
-        onOpenChange={(v) => {
-          if (!v) setViewSaleId(null);
-        }}
-        saleId={viewSaleId}
-      />
     </div>
   );
 }

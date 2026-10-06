@@ -87,4 +87,39 @@ export const arrearsController = {
       next(err);
     }
   },
+
+  async listByCustomer(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 50);
+      const search = req.query.search as string | undefined;
+      const status = req.query.status as string | undefined;
+
+      const result = await arrearsService.listByCustomer({ status, page, limit, search });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async getCustomerLedger(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await arrearsService.getCustomerLedger(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async recordCustomerPayment(req: Request, res: Response, next: NextFunction) {
+    try {
+      const amount = Number(req.body.amount);
+      const password = req.body.password;
+      const result = await arrearsService.recordCustomerPayment(req.params.id, amount, password);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
 };
+

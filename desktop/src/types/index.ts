@@ -166,6 +166,96 @@ export interface ArrearInput {
   saleId?: string;
 }
 
+export interface CustomerArrearSummary {
+  customer_id: string;
+  customer_name: string;
+  phone: string;
+  father_name: string;
+  father_phone: string;
+  address: string;
+  total_bill: number;
+  amount_paid: number;
+  balance_due: number;
+  pending_invoices: number;
+  total_invoices: number;
+  latest_date: string | null;
+  status: "pending" | "settled";
+}
+
+export interface ArrearSaleItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  barcode: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface ArrearSaleDetail {
+  id: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  amount_paid: number;
+  created_at: string;
+  items: ArrearSaleItem[];
+}
+
+export interface CustomerLedgerArrear {
+  id: string;
+  sale_id: string | null;
+  total_bill: number;
+  amount_paid: number;
+  balance_due: number;
+  status: string;
+  created_at: string;
+  sale: ArrearSaleDetail | null;
+  payments: ArrearPayment[];
+}
+
+export interface CustomerLedgerPayment {
+  id: string;
+  arrear_id: string;
+  invoice_number: string;
+  amount: number;
+  payment_sale_id: string | null;
+  created_at: string;
+}
+
+export interface CustomerLedgerDetail {
+  customer: {
+    id: string;
+    name: string;
+    phone: string;
+    father_name: string;
+    father_phone: string;
+    address: string;
+  };
+  stats: {
+    total_bill: number;
+    amount_paid: number;
+    balance_due: number;
+    pending_invoices: number;
+    total_invoices: number;
+  };
+  arrears: CustomerLedgerArrear[];
+  payments: CustomerLedgerPayment[];
+}
+
+export interface CustomerPaymentReceipt {
+  receiptId: string;
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  previousBalance: number;
+  amountPaid: number;
+  remainingBalance: number;
+  createdAt: string;
+  allocated?: Array<{ arrearId: string; invoiceId: string | null; amount: number }>;
+}
+
+
 export interface StockPurchase {
   id: string;
   product_id: string;

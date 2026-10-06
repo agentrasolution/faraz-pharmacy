@@ -220,6 +220,9 @@ export default function POS() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["arrears-by-customer"] });
+      queryClient.invalidateQueries({ queryKey: ["arrears"] });
 
       let customerTotalArrears = 0;
       if (cart.customerId) {
