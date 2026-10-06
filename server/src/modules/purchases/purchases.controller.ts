@@ -11,8 +11,9 @@ export const purchasesController = {
       const search = req.query.search as string | undefined;
       const dateFrom = req.query.dateFrom as string | undefined;
       const dateTo = req.query.dateTo as string | undefined;
+      const archived = req.query.archived === "true" || req.query.archivedOnly === "true";
 
-      const result = await purchasesService.list({ page, limit, search, dateFrom, dateTo });
+      const result = await purchasesService.list({ page, limit, search, dateFrom, dateTo, archived });
       const normalizedData = normalizeStockPurchaseList(result.data);
 
       if (isPaginated) {
@@ -54,4 +55,14 @@ export const purchasesController = {
       next(err);
     }
   },
+
+  async restore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await purchasesService.restore(req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
 };
+

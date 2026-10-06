@@ -9,5 +9,7 @@ router.get("/", purchasesController.list);
 router.post("/", validate(createStockSchema), purchasesController.create);
 router.put("/:id", validate(updateStockSchema), purchasesController.update);
 router.delete("/:id", purchasesController.delete);
+router.post("/:id/restore", purchasesController.restore);
 
 export { router as purchasesRoutes };
+

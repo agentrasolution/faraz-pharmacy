@@ -89,13 +89,17 @@ const api = {
   products: {
     list: (): Promise<Product[]> => fetchJson("GET", "/api/products"),
     listAll: (): Promise<Product[]> => fetchJson("GET", "/api/products?includeArchived=true"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string; includeArchived?: boolean }): Promise<PaginatedResponse<Product>> => {
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; includeArchived?: boolean; archivedOnly?: boolean }): Promise<PaginatedResponse<Product>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
       if (opts.limit) params.set("limit", String(opts.limit));
       if (opts.search) params.set("search", opts.search);
-      if (opts.includeArchived) params.set("includeArchived", "true");
+      if (opts.archivedOnly) {
+        params.set("archivedOnly", "true");
+      } else if (opts.includeArchived) {
+        params.set("includeArchived", "true");
+      }
       
       const res = await fetchJson<any>("GET", `/api/products?${params.toString()}`);
       
@@ -215,7 +219,7 @@ const api = {
   },
   stock: {
     list: (): Promise<StockPurchase[]> => fetchJson("GET", "/api/stock"),
-    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string }): Promise<PaginatedResponse<StockPurchase>> => {
+    listPaginated: async (opts: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string; archived?: boolean }): Promise<PaginatedResponse<StockPurchase>> => {
       const params = new URLSearchParams();
       params.set("paginated", "true");
       if (opts.page) params.set("page", String(opts.page));
@@ -223,6 +227,7 @@ const api = {
       if (opts.search) params.set("search", opts.search);
       if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
       if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      if (opts.archived) params.set("archived", "true");
       
       const res = await fetchJson<any>("GET", `/api/stock?${params.toString()}`);
       if (Array.isArray(res)) {
@@ -234,6 +239,7 @@ const api = {
     update: (id: string, p: StockInput): Promise<StockPurchase> =>
       fetchJson("PUT", `/api/stock/${id}`, p),
     delete: (id: string): Promise<{ success: boolean }> => fetchJson("DELETE", `/api/stock/${id}`),
+    restore: (id: string): Promise<{ success: boolean }> => fetchJson("POST", `/api/stock/${id}/restore`),
   },
   distributors: {
     list: (): Promise<Distributor[]> => fetchJson("GET", "/api/distributors"),

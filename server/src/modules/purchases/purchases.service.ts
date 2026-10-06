@@ -4,8 +4,24 @@ import { emitEvent } from "../../socket";
 import type { CreateStockInput } from "./purchases.schema";
 
 export const purchasesService = {
-  async list({ page = 1, limit = 100000, search, dateFrom, dateTo }: { page?: number; limit?: number; search?: string; dateFrom?: string; dateTo?: string } = {}) {
-    const where: Prisma.StockPurchaseWhereInput = {};
+  async list({
+    page = 1,
+    limit = 100000,
+    search,
+    dateFrom,
+    dateTo,
+    archived = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    archived?: boolean;
+  } = {}) {
+    const where: Prisma.StockPurchaseWhereInput = {
+      active: archived ? 0 : 1,
+    };
 
     if (search) {
       const q = search.trim();
@@ -147,4 +163,24 @@ export const purchasesService = {
       return { success: true };
     });
   },
+
+  async restore(id: string) {
+    const old = await prisma.stockPurchase.findUnique({ where: { id } });
+    if (!old) throw new NotFoundError("Stock purchase");
+
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const updated = await tx.stockPurchase.update({
+        where: { id },
+        data: { active: 1 },
+      });
+
+      await tx.product.update({
+        where: { id: old.productId },
+        data: { stockQty: { increment: old.quantity } },
+      });
+
+      return { success: true };
+    });
+  },
 };
+

@@ -172,6 +172,54 @@ export default function Sidebar() {
         </AnimatePresence>
       </div>
 
+      {/* Primary Action CTA: New Sale (F2) */}
+      <div className={cn("pt-1 pb-2.5", isExpanded ? "px-3" : "px-2 flex justify-center")}>
+        {isExpanded ? (
+          <button
+            onClick={handleNewSale}
+            className="w-full group flex items-center justify-between py-2.5 px-3 rounded-xl bg-white hover:bg-white/95 active:scale-[0.98] text-[#3612B8] font-bold text-xs tracking-tight shadow-md hover:shadow-lg transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-6 w-6 rounded-lg bg-[#3612B8]/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <ShoppingCart className="h-3.5 w-3.5 text-[#3612B8]" />
+              </div>
+              <span className="truncate">New Sale</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {posWindowCount > 0 ? (
+                <span className="bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold leading-none shadow-xs flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                  {posWindowCount}
+                </span>
+              ) : (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                </span>
+              )}
+              <span className="bg-[#3612B8]/10 text-[#3612B8] text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold leading-none">
+                F2
+              </span>
+            </div>
+          </button>
+        ) : (
+          <button
+            onClick={handleNewSale}
+            title="New Sale (F2)"
+            className="w-10 h-10 rounded-xl bg-white hover:bg-white/95 text-[#3612B8] flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer relative group"
+          >
+            <ShoppingCart className="h-4 w-4 group-hover:scale-110 transition-transform" />
+            {posWindowCount > 0 ? (
+              <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow">
+                {posWindowCount}
+              </span>
+            ) : (
+              <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            )}
+          </button>
+        )}
+      </div>
+
       {/* Navigation Groups */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-2 pb-4 space-y-4 pr-0 scrollbar-none" data-sidebar>
         {navGroups.map((group, gIdx) => (
@@ -288,53 +336,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Floating Bottom Action / Live POS Widget */}
-      <div className={cn("pb-3", isExpanded ? "px-3" : "px-2")}>
-        {isExpanded ? (
-          <div className="rounded-2xl bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/15 p-3.5 space-y-2.5 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                </span>
-                <span className="text-[11px] font-semibold tracking-wide text-white">
-                  Quick POS
-                </span>
-              </div>
-              <Sparkles className="h-3.5 w-3.5 text-white/90" />
-            </div>
-            <p className="text-[10px] text-white/70 leading-relaxed">
-              Instant sales billing & scanner terminal
-            </p>
-            <button
-              onClick={handleNewSale}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white hover:bg-white/90 active:scale-95 text-[#3612B8] font-bold text-xs tracking-tight shadow-md transition-all cursor-pointer"
-            >
-              <ShoppingCart className="h-3.5 w-3.5" />
-              <span>New Sale (F2)</span>
-              {posWindowCount > 0 && (
-                <span className="bg-[#3612B8]/15 text-[#3612B8] text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
-                  {posWindowCount}
-                </span>
-              )}
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleNewSale}
-            title="New Sale (F2)"
-            className="w-full h-10 rounded-xl bg-white hover:bg-white/90 text-[#3612B8] flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer relative"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {posWindowCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#3612B8] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow">
-                {posWindowCount}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
 
       {/* User Section & Logout */}
       <div className={cn("border-t border-white/10 pt-3 pb-3 space-y-1", isExpanded ? "px-3" : "px-2")}>

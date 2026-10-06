@@ -211,11 +211,14 @@ export default function Products() {
       page,
       limit,
       search: debouncedSearch,
-      includeArchived: showArchived,
+      archivedOnly: showArchived,
     }),
   });
 
-  const products = paginatedData?.data || [];
+  const rawProducts = paginatedData?.data || [];
+  const products = rawProducts.filter((p: Product) =>
+    showArchived ? !p.active : !!p.active
+  );
   const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const { data: categoriesResponse } = useQuery({

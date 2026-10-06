@@ -26,8 +26,25 @@ async function resolveCompanyId(company?: string): Promise<string | null> {
 }
 
 export const medicinesService = {
-  async list({ page = 1, limit = 50, search, includeArchived = false }: { page?: number; limit?: number; search?: string; includeArchived?: boolean }) {
-    const where: any = includeArchived ? {} : { active: 1 };
+  async list({
+    page = 1,
+    limit = 50,
+    search,
+    includeArchived = false,
+    archivedOnly = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeArchived?: boolean;
+    archivedOnly?: boolean;
+  }) {
+    const where: any = archivedOnly
+      ? { active: 0 }
+      : includeArchived
+      ? {}
+      : { active: 1 };
+
     
     if (search) {
       where.OR = [

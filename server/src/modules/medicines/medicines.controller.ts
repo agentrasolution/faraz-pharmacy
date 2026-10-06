@@ -10,8 +10,9 @@ export const medicinesController = {
       const limit = Math.max(1, parseInt(req.query.limit as string) || (isPaginated ? 50 : 100000));
       const search = req.query.search as string | undefined;
       const includeArchived = req.query.includeArchived === "true";
+      const archivedOnly = req.query.archivedOnly === "true" || req.query.archived === "true";
       
-      const result = await medicinesService.list({ page, limit, search, includeArchived });
+      const result = await medicinesService.list({ page, limit, search, includeArchived, archivedOnly });
       result.data = normalizeProductList(result.data) as any[];
       
       if (isPaginated) {

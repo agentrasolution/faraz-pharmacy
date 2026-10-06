@@ -12,6 +12,7 @@ import {
   Barcode,
   Search,
   Download,
+  Archive,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
@@ -21,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF, downloadExcel } from "@/lib/export";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
@@ -98,13 +99,25 @@ export default function Stock() {
   const [limit, setLimit] = useState(50);
   const debouncedSearch = useDebounce(search, 300);
 
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, showArchived, limit]);
+
   const { data: paginatedData, isLoading } = useQuery({
     queryKey: ["stock", page, limit, debouncedSearch, showArchived],
-    queryFn: () => api.stock.listPaginated({ page, limit, search: debouncedSearch }),
+    queryFn: () =>
+      api.stock.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch,
+        archived: showArchived,
+      }),
   });
 
   const rawStock = paginatedData?.data || [];
-  const stockEntries = showArchived ? rawStock : rawStock.filter((s: StockPurchase) => s.active !== 0);
+  const stockEntries = rawStock.filter((s: StockPurchase) =>
+    showArchived ? s.active === 0 : s.active !== 0
+  );
   const meta = paginatedData?.meta || { total: 0, page: 1, limit: 50, totalPages: 1 };
 
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: api.products.list });
@@ -148,6 +161,25 @@ export default function Stock() {
     onError: (err) => {
       toast.error(err.message);
       setDeleteId(null);
+    },
+  });
+
+  const [restoreTargetId, setRestoreTargetId] = useState<string | null>(null);
+  const [restorePasswordOpen, setRestorePasswordOpen] = useState(false);
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => api.stock.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Stock entry restored");
+      setRestoreTargetId(null);
+      setRestorePasswordOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to restore stock entry");
+      setRestoreTargetId(null);
+      setRestorePasswordOpen(false);
     },
   });
 
@@ -318,7 +350,18 @@ export default function Stock() {
                 <Trash2 className="h-4 w-4" />
               </button>
             </>
-          ) : null}
+          ) : (
+            <button
+              onClick={() => {
+                setRestoreTargetId(s.id);
+                setRestorePasswordOpen(true);
+              }}
+              className="h-8 w-8 rounded-xl flex items-center justify-center text-text-secondary hover:text-success hover:bg-success/10 transition-colors"
+              title="Restore"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -380,17 +423,20 @@ export default function Stock() {
         <div className="flex items-center gap-2">
           <ExportButton type="pdf" onClick={handleExportPDF} />
           <ExportButton type="csv" onClick={handleExportCSV} />
-          <button
-            onClick={() => setShowArchived(!showArchived)}
-            className={`text-xs font-semibold flex items-center gap-1.5 px-3 h-9 rounded-xl border border-border/80 transition-all cursor-pointer ${
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "rounded-xl shadow-xs",
               showArchived
-                ? "bg-[#4A25E1] text-white shadow-xs"
-                : "bg-surface text-text-secondary hover:text-text-primary hover:bg-surface-2"
-            }`}
+                ? "border-[#4A25E1] text-[#4A25E1] dark:border-[#754BFB] dark:text-[#754BFB] bg-[#4A25E1]/10"
+                : ""
+            )}
+            onClick={() => setShowArchived(!showArchived)}
           >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Show archived</span>
-          </button>
+            <Archive className="h-3.5 w-3.5 mr-1" />
+            {showArchived ? "Archived Stock" : "Archived"}
+          </Button>
         </div>
       </div>
 
@@ -566,6 +612,23 @@ export default function Stock() {
           if (deleteId) deleteMutation.mutate(deleteId);
         }}
         loading={deleteMutation.isPending}
+      />
+
+      <PasswordConfirmDialog
+        open={restorePasswordOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setRestorePasswordOpen(false);
+            setRestoreTargetId(null);
+          }
+        }}
+        title="Restore Stock Entry"
+        description="Enter admin password to restore this archived stock entry and restore its quantity to inventory."
+        confirmLabel="Restore"
+        onConfirm={() => {
+          if (restoreTargetId) restoreMutation.mutate(restoreTargetId);
+        }}
+        loading={restoreMutation.isPending}
       />
     </div>
   );
