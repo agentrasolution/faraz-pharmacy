@@ -34,7 +34,7 @@ export default function Distributors() {
     deliveryManName: "",
     deliveryManContact: "",
   });
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const searchRef = useRef<HTMLInputElement>(null);
 
   const debouncedSearch = useDebounce(search, 300);

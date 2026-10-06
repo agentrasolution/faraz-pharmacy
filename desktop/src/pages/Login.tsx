@@ -87,18 +87,19 @@ export default function Login() {
         {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
 
-      <div className="flex-1 flex items-center justify-center p-6 relative">
+      {/* Left Panel: 60% Form Area */}
+      <div className="w-full lg:w-[60%] flex items-center justify-center p-6 sm:p-10 lg:p-12 relative shrink-0">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-brand/5 blur-3xl pointer-events-none" />
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="w-full max-w-md relative z-10"
+          className="w-full max-w-[440px] relative z-10"
         >
           <div className="rounded-3xl border border-border/80 bg-surface p-8 sm:p-10 shadow-xl shadow-brand/5">
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#4A25E1] to-[#3612B8] flex items-center justify-center p-2 shadow-md shadow-brand/20">
+                <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#3612B8] to-[#2A0E94] flex items-center justify-center p-2 shadow-md shadow-brand/20">
                   <img src={logoSrc} alt="" className="h-full w-full object-contain filter brightness-0 invert" />
                 </div>
                 <div>
@@ -168,7 +169,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-10 rounded-xl bg-gradient-to-r from-[#4A25E1] to-[#3612B8] hover:from-[#3e1ed1] hover:to-[#2e0ea3] text-white shadow-md shadow-brand/20 font-medium transition-all"
+                className="w-full h-10 rounded-xl bg-gradient-to-r from-[#3612B8] to-[#2A0E94] hover:from-[#2A0E94] hover:to-[#1F0875] text-white shadow-md shadow-brand/20 font-medium transition-all"
                 disabled={loading}
               >
                 {loading ? (
@@ -198,44 +199,45 @@ export default function Login() {
         </motion.div>
       </div>
 
-      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-[#4A25E1] via-[#431DDB] to-[#3612B8] relative overflow-hidden p-12">
+      {/* Right Panel: 40% Branding & Showcase */}
+      <div className="hidden lg:flex lg:w-[40%] items-center justify-center bg-gradient-to-b from-[#3612B8] via-[#2A0E94] to-[#1F0875] relative overflow-hidden p-8 xl:p-12 shrink-0">
         {/* Ambient glow decorative blobs */}
-        <div className="absolute top-10 left-10 w-96 h-96 rounded-full bg-[#754BFB]/25 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#3612B8]/40 blur-3xl pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:24px_24px] opacity-40 pointer-events-none" />
+        <div className="absolute top-10 left-10 w-80 h-80 rounded-full bg-[#754BFB]/20 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-[#1F0875]/60 blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:24px_24px] opacity-40 pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
-          className="relative z-10 text-center max-w-md"
+          className="relative z-10 text-center max-w-sm w-full mx-auto"
         >
-          <div className="w-28 h-28 p-5 mx-auto mb-8 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+          <div className="w-24 h-24 p-4 mx-auto mb-6 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
             <img src={logoSrc} alt="Faraz Pharmacy" className="w-full h-full object-contain filter brightness-0 invert" />
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-xs font-medium mb-4">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             Airnow Modern SaaS Edition
           </div>
-          <h2 className="text-3xl font-display font-bold text-white tracking-tight">
+          <h2 className="text-2xl xl:text-3xl font-display font-bold text-white tracking-tight">
             Faraz Pharmacy
           </h2>
-          <p className="text-sm text-white/80 mt-3 leading-relaxed">
+          <p className="text-xs xl:text-sm text-white/80 mt-2.5 leading-relaxed">
             High performance Point-of-Sale, real-time inventory tracking, and intelligent analytics designed for modern pharmacies.
           </p>
 
-          <div className="mt-8 grid grid-cols-3 gap-3 text-left">
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-              <p className="text-xs text-white/60">Search & POS</p>
-              <p className="text-sm font-bold text-white mt-0.5">Ultra Fast</p>
+          <div className="mt-7 grid grid-cols-3 gap-2 xl:gap-3 text-left">
+            <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+              <p className="text-[11px] text-white/60 truncate">Search & POS</p>
+              <p className="text-xs xl:text-sm font-bold text-white mt-0.5 truncate">Ultra Fast</p>
             </div>
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-              <p className="text-xs text-white/60">Shortcuts</p>
-              <p className="text-sm font-bold text-white mt-0.5">F1 - F13</p>
+            <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+              <p className="text-[11px] text-white/60 truncate">Shortcuts</p>
+              <p className="text-xs xl:text-sm font-bold text-white mt-0.5 truncate">F1 - F13</p>
             </div>
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-              <p className="text-xs text-white/60">Backup</p>
-              <p className="text-sm font-bold text-white mt-0.5">Auto Drive</p>
+            <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+              <p className="text-[11px] text-white/60 truncate">Backup</p>
+              <p className="text-xs xl:text-sm font-bold text-white mt-0.5 truncate">Auto Drive</p>
             </div>
           </div>
         </motion.div>

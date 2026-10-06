@@ -31,6 +31,20 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      onPointerDownOutside={(e) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest?.("[data-searchable-select-panel]")) {
+          e.preventDefault();
+        }
+        props.onPointerDownOutside?.(e);
+      }}
+      onInteractOutside={(e) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest?.("[data-searchable-select-panel]")) {
+          e.preventDefault();
+        }
+        props.onInteractOutside?.(e);
+      }}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-0 border border-border/80 bg-surface p-0 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in data-[state=closed]:animate-zoom-out-95 data-[state=open]:animate-zoom-in-95 sm:rounded-2xl overflow-hidden",
         className
