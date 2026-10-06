@@ -151,6 +151,14 @@ export default function InvoiceDetailDialog({
                   </span>
                 </div>
               )}
+              {sale.tax && sale.tax > 0 ? (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Tax</span>
+                  <span className="font-mono text-text-primary tabular-nums">
+                    +{formatCurrency(sale.tax)}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-border -mx-1 px-1">
                 <span className="text-text-primary">Total</span>
                 <span className="font-mono tabular-nums">{formatCurrency(sale.total)}</span>

@@ -123,6 +123,7 @@ model Sale {
   customerId String?       @map("customer_id")
   subtotal   Float         @default(0)
   discount   Float         @default(0)
+  tax        Float         @default(0)
   total      Float         @default(0)
   amountPaid Float         @default(0) @map("amount_paid")
   change     Float         @default(0)

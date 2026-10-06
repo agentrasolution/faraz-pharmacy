@@ -13,6 +13,7 @@ export const createSaleSchema = z.object({
   customerId: z.string().optional(),
   subtotal: z.number(),
   discount: z.number().default(0),
+  tax: z.number().default(0).optional(),
   total: z.number(),
   amountPaid: z.number(),
   items: z.array(saleItemSchema).min(1),

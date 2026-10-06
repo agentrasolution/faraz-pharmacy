@@ -80,6 +80,7 @@ export function normalizeSale(sale: any): any {
     customer_name: sale.customer?.name ?? null,
     subtotal: sale.subtotal ?? 0,
     discount: sale.discount ?? 0,
+    tax: sale.tax ?? 0,
     total: sale.total ?? 0,
     amount_paid: sale.amountPaid ?? 0,
     change: sale.change ?? 0,

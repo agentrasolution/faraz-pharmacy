@@ -19,6 +19,7 @@ function normalizeSale(s: Record<string, unknown> | null): Record<string, unknow
     customer_name: (s as any).customer?.name ?? null,
     subtotal: s.subtotal,
     discount: s.discount,
+    tax: (s as any).tax ?? 0,
     total: s.total,
     amount_paid: s.amountPaid,
     change: s.change,

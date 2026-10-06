@@ -29,6 +29,7 @@ export const salesService = {
           customerId: data.customerId ?? null,
           subtotal: data.subtotal,
           discount: data.discount,
+          tax: data.tax ?? 0,
           total: data.total,
           amountPaid: data.amountPaid,
           change: Math.max(0, data.amountPaid - data.total),

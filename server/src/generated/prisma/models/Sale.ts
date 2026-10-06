@@ -29,6 +29,7 @@ export type AggregateSale = {
 export type SaleAvgAggregateOutputType = {
   subtotal: number | null
   discount: number | null
+  tax: number | null
   total: number | null
   amountPaid: number | null
   change: number | null
@@ -37,6 +38,7 @@ export type SaleAvgAggregateOutputType = {
 export type SaleSumAggregateOutputType = {
   subtotal: number | null
   discount: number | null
+  tax: number | null
   total: number | null
   amountPaid: number | null
   change: number | null
@@ -47,6 +49,7 @@ export type SaleMinAggregateOutputType = {
   customerId: string | null
   subtotal: number | null
   discount: number | null
+  tax: number | null
   total: number | null
   amountPaid: number | null
   change: number | null
@@ -59,6 +62,7 @@ export type SaleMaxAggregateOutputType = {
   customerId: string | null
   subtotal: number | null
   discount: number | null
+  tax: number | null
   total: number | null
   amountPaid: number | null
   change: number | null
@@ -71,6 +75,7 @@ export type SaleCountAggregateOutputType = {
   customerId: number
   subtotal: number
   discount: number
+  tax: number
   total: number
   amountPaid: number
   change: number
@@ -83,6 +88,7 @@ export type SaleCountAggregateOutputType = {
 export type SaleAvgAggregateInputType = {
   subtotal?: true
   discount?: true
+  tax?: true
   total?: true
   amountPaid?: true
   change?: true
@@ -91,6 +97,7 @@ export type SaleAvgAggregateInputType = {
 export type SaleSumAggregateInputType = {
   subtotal?: true
   discount?: true
+  tax?: true
   total?: true
   amountPaid?: true
   change?: true
@@ -101,6 +108,7 @@ export type SaleMinAggregateInputType = {
   customerId?: true
   subtotal?: true
   discount?: true
+  tax?: true
   total?: true
   amountPaid?: true
   change?: true
@@ -113,6 +121,7 @@ export type SaleMaxAggregateInputType = {
   customerId?: true
   subtotal?: true
   discount?: true
+  tax?: true
   total?: true
   amountPaid?: true
   change?: true
@@ -125,6 +134,7 @@ export type SaleCountAggregateInputType = {
   customerId?: true
   subtotal?: true
   discount?: true
+  tax?: true
   total?: true
   amountPaid?: true
   change?: true
@@ -224,6 +234,7 @@ export type SaleGroupByOutputType = {
   customerId: string | null
   subtotal: number
   discount: number
+  tax: number
   total: number
   amountPaid: number
   change: number
@@ -259,6 +270,7 @@ export type SaleWhereInput = {
   customerId?: Prisma.StringNullableFilter<"Sale"> | string | null
   subtotal?: Prisma.FloatFilter<"Sale"> | number
   discount?: Prisma.FloatFilter<"Sale"> | number
+  tax?: Prisma.FloatFilter<"Sale"> | number
   total?: Prisma.FloatFilter<"Sale"> | number
   amountPaid?: Prisma.FloatFilter<"Sale"> | number
   change?: Prisma.FloatFilter<"Sale"> | number
@@ -275,6 +287,7 @@ export type SaleOrderByWithRelationInput = {
   customerId?: Prisma.SortOrderInput | Prisma.SortOrder
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -294,6 +307,7 @@ export type SaleWhereUniqueInput = Prisma.AtLeast<{
   customerId?: Prisma.StringNullableFilter<"Sale"> | string | null
   subtotal?: Prisma.FloatFilter<"Sale"> | number
   discount?: Prisma.FloatFilter<"Sale"> | number
+  tax?: Prisma.FloatFilter<"Sale"> | number
   total?: Prisma.FloatFilter<"Sale"> | number
   amountPaid?: Prisma.FloatFilter<"Sale"> | number
   change?: Prisma.FloatFilter<"Sale"> | number
@@ -310,6 +324,7 @@ export type SaleOrderByWithAggregationInput = {
   customerId?: Prisma.SortOrderInput | Prisma.SortOrder
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -330,6 +345,7 @@ export type SaleScalarWhereWithAggregatesInput = {
   customerId?: Prisma.StringNullableWithAggregatesFilter<"Sale"> | string | null
   subtotal?: Prisma.FloatWithAggregatesFilter<"Sale"> | number
   discount?: Prisma.FloatWithAggregatesFilter<"Sale"> | number
+  tax?: Prisma.FloatWithAggregatesFilter<"Sale"> | number
   total?: Prisma.FloatWithAggregatesFilter<"Sale"> | number
   amountPaid?: Prisma.FloatWithAggregatesFilter<"Sale"> | number
   change?: Prisma.FloatWithAggregatesFilter<"Sale"> | number
@@ -341,6 +357,7 @@ export type SaleCreateInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -357,6 +374,7 @@ export type SaleUncheckedCreateInput = {
   customerId?: string | null
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -371,6 +389,7 @@ export type SaleUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -387,6 +406,7 @@ export type SaleUncheckedUpdateInput = {
   customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -402,6 +422,7 @@ export type SaleCreateManyInput = {
   customerId?: string | null
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -413,6 +434,7 @@ export type SaleUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -425,6 +447,7 @@ export type SaleUncheckedUpdateManyInput = {
   customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -447,6 +470,7 @@ export type SaleCountOrderByAggregateInput = {
   customerId?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -457,6 +481,7 @@ export type SaleCountOrderByAggregateInput = {
 export type SaleAvgOrderByAggregateInput = {
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -467,6 +492,7 @@ export type SaleMaxOrderByAggregateInput = {
   customerId?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -479,6 +505,7 @@ export type SaleMinOrderByAggregateInput = {
   customerId?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -489,6 +516,7 @@ export type SaleMinOrderByAggregateInput = {
 export type SaleSumOrderByAggregateInput = {
   subtotal?: Prisma.SortOrder
   discount?: Prisma.SortOrder
+  tax?: Prisma.SortOrder
   total?: Prisma.SortOrder
   amountPaid?: Prisma.SortOrder
   change?: Prisma.SortOrder
@@ -594,6 +622,7 @@ export type SaleCreateWithoutCustomerInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -608,6 +637,7 @@ export type SaleUncheckedCreateWithoutCustomerInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -652,6 +682,7 @@ export type SaleScalarWhereInput = {
   customerId?: Prisma.StringNullableFilter<"Sale"> | string | null
   subtotal?: Prisma.FloatFilter<"Sale"> | number
   discount?: Prisma.FloatFilter<"Sale"> | number
+  tax?: Prisma.FloatFilter<"Sale"> | number
   total?: Prisma.FloatFilter<"Sale"> | number
   amountPaid?: Prisma.FloatFilter<"Sale"> | number
   change?: Prisma.FloatFilter<"Sale"> | number
@@ -663,6 +694,7 @@ export type SaleCreateWithoutItemsInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -678,6 +710,7 @@ export type SaleUncheckedCreateWithoutItemsInput = {
   customerId?: string | null
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -707,6 +740,7 @@ export type SaleUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -722,6 +756,7 @@ export type SaleUncheckedUpdateWithoutItemsInput = {
   customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -735,6 +770,7 @@ export type SaleCreateWithoutArrearsInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -750,6 +786,7 @@ export type SaleUncheckedCreateWithoutArrearsInput = {
   customerId?: string | null
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -779,6 +816,7 @@ export type SaleUpdateWithoutArrearsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -794,6 +832,7 @@ export type SaleUncheckedUpdateWithoutArrearsInput = {
   customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -807,6 +846,7 @@ export type SaleCreateWithoutReturnsInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -822,6 +862,7 @@ export type SaleUncheckedCreateWithoutReturnsInput = {
   customerId?: string | null
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -851,6 +892,7 @@ export type SaleUpdateWithoutReturnsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -866,6 +908,7 @@ export type SaleUncheckedUpdateWithoutReturnsInput = {
   customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -879,6 +922,7 @@ export type SaleCreateManyCustomerInput = {
   id: string
   subtotal?: number
   discount?: number
+  tax?: number
   total?: number
   amountPaid?: number
   change?: number
@@ -890,6 +934,7 @@ export type SaleUpdateWithoutCustomerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -904,6 +949,7 @@ export type SaleUncheckedUpdateWithoutCustomerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -918,6 +964,7 @@ export type SaleUncheckedUpdateManyWithoutCustomerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   subtotal?: Prisma.FloatFieldUpdateOperationsInput | number
   discount?: Prisma.FloatFieldUpdateOperationsInput | number
+  tax?: Prisma.FloatFieldUpdateOperationsInput | number
   total?: Prisma.FloatFieldUpdateOperationsInput | number
   amountPaid?: Prisma.FloatFieldUpdateOperationsInput | number
   change?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -979,6 +1026,7 @@ export type SaleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   customerId?: boolean
   subtotal?: boolean
   discount?: boolean
+  tax?: boolean
   total?: boolean
   amountPaid?: boolean
   change?: boolean
@@ -996,6 +1044,7 @@ export type SaleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   customerId?: boolean
   subtotal?: boolean
   discount?: boolean
+  tax?: boolean
   total?: boolean
   amountPaid?: boolean
   change?: boolean
@@ -1009,6 +1058,7 @@ export type SaleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   customerId?: boolean
   subtotal?: boolean
   discount?: boolean
+  tax?: boolean
   total?: boolean
   amountPaid?: boolean
   change?: boolean
@@ -1022,6 +1072,7 @@ export type SaleSelectScalar = {
   customerId?: boolean
   subtotal?: boolean
   discount?: boolean
+  tax?: boolean
   total?: boolean
   amountPaid?: boolean
   change?: boolean
@@ -1029,7 +1080,7 @@ export type SaleSelectScalar = {
   createdAt?: boolean
 }
 
-export type SaleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "customerId" | "subtotal" | "discount" | "total" | "amountPaid" | "change" | "status" | "createdAt", ExtArgs["result"]["sale"]>
+export type SaleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "customerId" | "subtotal" | "discount" | "tax" | "total" | "amountPaid" | "change" | "status" | "createdAt", ExtArgs["result"]["sale"]>
 export type SaleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   arrears?: boolean | Prisma.Sale$arrearsArgs<ExtArgs>
   returns?: boolean | Prisma.Sale$returnsArgs<ExtArgs>
@@ -1057,6 +1108,7 @@ export type $SalePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     customerId: string | null
     subtotal: number
     discount: number
+    tax: number
     total: number
     amountPaid: number
     change: number
@@ -1493,6 +1545,7 @@ export interface SaleFieldRefs {
   readonly customerId: Prisma.FieldRef<"Sale", 'String'>
   readonly subtotal: Prisma.FieldRef<"Sale", 'Float'>
   readonly discount: Prisma.FieldRef<"Sale", 'Float'>
+  readonly tax: Prisma.FieldRef<"Sale", 'Float'>
   readonly total: Prisma.FieldRef<"Sale", 'Float'>
   readonly amountPaid: Prisma.FieldRef<"Sale", 'Float'>
   readonly change: Prisma.FieldRef<"Sale", 'Float'>

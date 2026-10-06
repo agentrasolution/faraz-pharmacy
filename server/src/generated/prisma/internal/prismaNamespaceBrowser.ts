@@ -196,6 +196,7 @@ export const SaleScalarFieldEnum = {
   customerId: 'customerId',
   subtotal: 'subtotal',
   discount: 'discount',
+  tax: 'tax',
   total: 'total',
   amountPaid: 'amountPaid',
   change: 'change',

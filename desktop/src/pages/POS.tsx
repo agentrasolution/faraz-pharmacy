@@ -72,6 +72,11 @@ export default function POS() {
         document.getElementById("pos-discount")?.focus();
         return;
       }
+      if (e.ctrlKey && e.key.toLowerCase() === "t" && !e.altKey) {
+        e.preventDefault();
+        document.getElementById("pos-tax")?.focus();
+        return;
+      }
       if (typing || e.ctrlKey || e.altKey || e.metaKey) return;
 
       const last = cart.items[cart.items.length - 1];
@@ -213,6 +218,7 @@ export default function POS() {
         })),
         subtotal: cart.subtotal,
         discount,
+        tax: cart.tax,
         total: cart.total,
         amountPaid,
       });
@@ -232,6 +238,7 @@ export default function POS() {
 
       const printData = {
         ...sale,
+        tax: cart.tax,
         customer_name: cart.customerName,
         customer_total_arrears: customerTotalArrears,
         items: cart.items.map((item) => ({
@@ -363,6 +370,9 @@ export default function POS() {
               discount={cart.discount}
               discountValue={cart.discountValue}
               discountType={cart.discountType}
+              tax={cart.tax}
+              taxValue={cart.taxValue}
+              taxType={cart.taxType}
               subtotal={cart.subtotal}
               total={cart.total}
               profit={cart.profit}
@@ -375,6 +385,8 @@ export default function POS() {
               onRemoveItem={cart.removeItem}
               onDiscountChange={cart.setDiscountValue}
               onToggleDiscountType={cart.toggleDiscountType}
+              onTaxChange={cart.setTaxValue}
+              onToggleTaxType={cart.toggleTaxType}
               onClearCart={cart.clearCart}
               onCheckout={handleCheckout}
               onCustomerChange={cart.setCustomer}

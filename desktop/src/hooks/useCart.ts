@@ -9,6 +9,8 @@ export function useCart() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [discountValue, setDiscountValue] = useState(0);
   const [discountType, setDiscountType] = useState<DiscountType>("pkr");
+  const [taxValue, setTaxValue] = useState(0);
+  const [taxType, setTaxType] = useState<DiscountType>("pkr");
   const [customerId, setCustomerIdState] = useState<string | undefined>();
   const [customerName, setCustomerName] = useState<string | undefined>();
 
@@ -21,7 +23,16 @@ export function useCart() {
     return discountValue;
   }, [subtotal, discountValue, discountType]);
 
-  const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
+  const tax = useMemo(() => {
+    if (taxValue <= 0) return 0;
+    if (taxType === "percent") {
+      const taxableAmount = Math.max(0, subtotal - discount);
+      return Math.round((taxableAmount * taxValue) / 100);
+    }
+    return taxValue;
+  }, [subtotal, discount, taxValue, taxType]);
+
+  const total = useMemo(() => Math.max(0, subtotal - discount + tax), [subtotal, discount, tax]);
 
   function toggleDiscountType() {
     setDiscountType((prev) => {
@@ -31,6 +42,19 @@ export function useCart() {
         return "percent";
       }
       setDiscountValue(discount);
+      return "pkr";
+    });
+  }
+
+  function toggleTaxType() {
+    setTaxType((prev) => {
+      if (prev === "pkr") {
+        const taxable = Math.max(0, subtotal - discount);
+        const pct = taxable > 0 ? Math.round((taxValue * 100) / taxable) : 0;
+        setTaxValue(Math.min(pct, 100));
+        return "percent";
+      }
+      setTaxValue(tax);
       return "pkr";
     });
   }
@@ -92,6 +116,8 @@ export function useCart() {
     setItems([]);
     setDiscountValue(0);
     setDiscountType("pkr");
+    setTaxValue(0);
+    setTaxType("pkr");
     setCustomerIdState(undefined);
     setCustomerName(undefined);
   }
@@ -101,6 +127,9 @@ export function useCart() {
     discount,
     discountValue,
     discountType,
+    tax,
+    taxValue,
+    taxType,
     subtotal,
     total,
     customerId,
@@ -109,6 +138,9 @@ export function useCart() {
     setDiscountValue,
     setDiscountType,
     toggleDiscountType,
+    setTaxValue,
+    setTaxType,
+    toggleTaxType,
     addItem,
     incrementBy,
     updateQuantity,

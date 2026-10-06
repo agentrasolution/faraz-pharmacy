@@ -21,6 +21,9 @@ interface CheckoutPanelProps {
   discount: number;
   discountValue: number;
   discountType: DiscountType;
+  tax?: number;
+  taxValue?: number;
+  taxType?: DiscountType;
   subtotal: number;
   total: number;
   profit: number;
@@ -33,6 +36,8 @@ interface CheckoutPanelProps {
   onRemoveItem: (productId: string) => void;
   onDiscountChange: (discount: number) => void;
   onToggleDiscountType: () => void;
+  onTaxChange?: (tax: number) => void;
+  onToggleTaxType?: () => void;
   onClearCart: () => void;
   onCheckout: (amountPaid: number, discount: number) => Promise<void>;
   onCustomerChange: (customerId?: string, customerName?: string) => void;
@@ -47,6 +52,9 @@ export default function CheckoutPanel({
   discount,
   discountValue,
   discountType,
+  tax = 0,
+  taxValue = 0,
+  taxType = "pkr",
   subtotal,
   total,
   profit,
@@ -59,6 +67,8 @@ export default function CheckoutPanel({
   onRemoveItem,
   onDiscountChange,
   onToggleDiscountType,
+  onTaxChange,
+  onToggleTaxType,
   onClearCart,
   onCheckout,
   onCustomerChange,
@@ -327,30 +337,63 @@ export default function CheckoutPanel({
             />
           </div> */}
 
-          <div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onToggleDiscountType}
-                className="h-8 px-2.5 rounded-xl text-xs font-semibold border border-border/80 bg-surface-2 hover:bg-surface-2/80 text-text-primary transition-colors shrink-0"
-              >
-                {discountType === "pkr" ? "PKR" : "%"}
-              </button>
-              <Input
-                id="pos-discount"
-                type="number"
-                placeholder={`Discount (${discountType === "pkr" ? "PKR" : "%"})`}
-                value={discountValue || ""}
-                onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
-                className="h-8 rounded-xl text-xs font-mono"
-              />
+          {/* Discount & Optional Tax Row */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={onToggleDiscountType}
+                  className="h-8 px-2 rounded-xl text-xs font-semibold border border-border/80 bg-surface-2 hover:bg-surface-2/80 text-text-primary transition-colors shrink-0"
+                  title="Toggle PKR / %"
+                >
+                  {discountType === "pkr" ? "PKR" : "%"}
+                </button>
+                <Input
+                  id="pos-discount"
+                  type="number"
+                  placeholder={`Discount (${discountType === "pkr" ? "PKR" : "%"})`}
+                  value={discountValue || ""}
+                  onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
+                  className="h-8 rounded-xl text-xs font-mono"
+                />
+              </div>
+              {discountValue > 0 && (
+                <p className="text-[10px] text-text-secondary text-right mt-1 font-mono">
+                  {discountType === "percent"
+                    ? `= ${formatCurrency(discount)}`
+                    : `= ${subtotal > 0 ? Math.round((discountValue * 100) / subtotal) : 0}%`}
+                </p>
+              )}
             </div>
-            {discountValue > 0 && (
-              <p className="text-[10px] text-text-secondary text-right mt-1 font-mono">
-                {discountType === "percent"
-                  ? `= ${formatCurrency(discount)}`
-                  : `= ${Math.round((discountValue * 100) / subtotal)}%`}
-              </p>
-            )}
+
+            <div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={onToggleTaxType}
+                  className="h-8 px-2 rounded-xl text-xs font-semibold border border-border/80 bg-surface-2 hover:bg-surface-2/80 text-text-primary transition-colors shrink-0"
+                  title="Toggle PKR / %"
+                >
+                  {taxType === "pkr" ? "PKR" : "%"}
+                </button>
+                <Input
+                  id="pos-tax"
+                  type="number"
+                  placeholder={`Tax (${taxType === "pkr" ? "PKR" : "%"})`}
+                  value={taxValue || ""}
+                  onChange={(e) => onTaxChange?.(Number(e.target.value) || 0)}
+                  className="h-8 rounded-xl text-xs font-mono"
+                />
+              </div>
+              {taxValue > 0 && (
+                <p className="text-[10px] text-text-secondary text-right mt-1 font-mono">
+                  {taxType === "percent"
+                    ? `= +${formatCurrency(tax)}`
+                    : `= +${Math.max(0, subtotal - discount) > 0 ? Math.round((taxValue * 100) / Math.max(0, subtotal - discount)) : 0}%`}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5 text-xs">
@@ -362,6 +405,12 @@ export default function CheckoutPanel({
               <div className="flex justify-between text-success">
                 <span>Discount</span>
                 <span className="font-mono tabular-nums">-{formatCurrency(discount)}</span>
+              </div>
+            )}
+            {tax > 0 && (
+              <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                <span>Tax</span>
+                <span className="font-mono tabular-nums">+{formatCurrency(tax)}</span>
               </div>
             )}
             <Separator />

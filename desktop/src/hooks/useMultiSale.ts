@@ -14,6 +14,8 @@ export interface SaleState {
   items: CartItem[];
   discountValue: number;
   discountType: DiscountType;
+  taxValue: number;
+  taxType: DiscountType;
   customerId?: string;
   customerName?: string;
   notes: string;
@@ -31,6 +33,8 @@ function createSaleState(seq: number): SaleState {
     items: [],
     discountValue: 0,
     discountType: "pkr",
+    taxValue: 0,
+    taxType: "pkr",
     customerId: undefined,
     customerName: undefined,
     notes: "",
@@ -102,14 +106,23 @@ export function useMultiSale() {
     return activeSale.discountValue;
   }, [subtotal, activeSale.discountValue, activeSale.discountType]);
 
-  const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
+  const tax = useMemo(() => {
+    if (activeSale.taxValue <= 0) return 0;
+    if (activeSale.taxType === "percent") {
+      const taxableAmount = Math.max(0, subtotal - discount);
+      return Math.round((taxableAmount * activeSale.taxValue) / 100);
+    }
+    return activeSale.taxValue;
+  }, [subtotal, discount, activeSale.taxValue, activeSale.taxType]);
+
+  const total = useMemo(() => Math.max(0, subtotal - discount + tax), [subtotal, discount, tax]);
 
   const costOfGoods = useMemo(
     () => activeSale.items.reduce((s, i) => s + i.purchasePrice * i.quantity, 0),
     [activeSale.items]
   );
 
-  const profit = useMemo(() => Math.round(total - costOfGoods), [total, costOfGoods]);
+  const profit = useMemo(() => Math.round(total - tax - costOfGoods), [total, tax, costOfGoods]);
 
   const toggleDiscountType = useCallback(() => {
     updateActive((s) => {
@@ -126,6 +139,23 @@ export function useMultiSale() {
       return { ...s, discountValue: value, discountType: type };
     });
   }, [updateActive, subtotal, discount]);
+
+  const toggleTaxType = useCallback(() => {
+    updateActive((s) => {
+      let value = s.taxValue;
+      let type: DiscountType = s.taxType;
+      if (type === "pkr") {
+        const taxable = Math.max(0, subtotal - discount);
+        const pct = taxable > 0 ? Math.round((s.taxValue * 100) / taxable) : 0;
+        value = Math.min(pct, 100);
+        type = "percent";
+      } else {
+        value = tax;
+        type = "pkr";
+      }
+      return { ...s, taxValue: value, taxType: type };
+    });
+  }, [updateActive, subtotal, discount, tax]);
 
   const addItem = useCallback(
     (product: {
@@ -245,6 +275,16 @@ export function useMultiSale() {
     [updateActive]
   );
 
+  const setTaxValue = useCallback(
+    (value: number) => updateActive({ taxValue: value }),
+    [updateActive]
+  );
+
+  const setTaxType = useCallback(
+    (value: DiscountType) => updateActive({ taxType: value }),
+    [updateActive]
+  );
+
   const setNotes = useCallback((notes: string) => updateActive({ notes }), [updateActive]);
 
   const setAmountPaid = useCallback(
@@ -262,6 +302,8 @@ export function useMultiSale() {
       items: [],
       discountValue: 0,
       discountType: "pkr",
+      taxValue: 0,
+      taxType: "pkr",
       customerId: undefined,
       customerName: undefined,
       notes: "",
@@ -275,6 +317,9 @@ export function useMultiSale() {
     discount,
     discountValue: activeSale.discountValue,
     discountType: activeSale.discountType,
+    tax,
+    taxValue: activeSale.taxValue,
+    taxType: activeSale.taxType,
     subtotal,
     total,
     profit,
@@ -287,6 +332,9 @@ export function useMultiSale() {
     setDiscountValue,
     setDiscountType,
     toggleDiscountType,
+    setTaxValue,
+    setTaxType,
+    toggleTaxType,
     addItem,
     incrementBy,
     updateQuantity,

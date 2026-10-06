@@ -42,7 +42,7 @@ function generateSaleReceiptHTML(sale) {
   const subtotal = sale.subtotal || 0;
   const totalAmount = sale.total || 0;
   const discount = sale.discount || 0;
-  const gst = sale.gst || 0;
+  const gst = sale.tax || sale.gst || 0;
   const paid = sale.amount_paid || 0;
   const balance = Math.max(0, totalAmount - paid);
   const arrears = sale.arrears || 0;
@@ -253,7 +253,7 @@ ${itemsHTML}
 </div>
 
 <div class="calc-row">
-<span>GST (0%):</span>
+<span>${gst > 0 ? "Tax / GST:" : "GST (0%):"}</span>
 <span>${gst}</span>
 </div>
 
@@ -376,6 +376,7 @@ ${sale.customer_name ? `<span class="lbl">Customer:</span> ${sale.customer_name}
 <table class="totals">
 <tr><td>Subtotal</td><td>${(sale.subtotal || 0).toFixed(0)}</td></tr>
 ${sale.discount > 0 ? `<tr><td>Discount</td><td>-${sale.discount.toFixed(0)}</td></tr>` : ""}
+${(sale.tax || sale.gst) > 0 ? `<tr><td>Tax / GST</td><td>+${(sale.tax || sale.gst).toFixed(0)}</td></tr>` : ""}
 <tr class="big"><td>Total</td><td>${(sale.total || 0).toFixed(0)}</td></tr>
 <tr><td>Paid</td><td>${(sale.amount_paid || 0).toFixed(0)}</td></tr>
 <tr><td>Change</td><td>${Math.max(0, (sale.amount_paid || 0) - (sale.total || 0)).toFixed(0)}</td></tr>
@@ -537,6 +538,7 @@ table.items tbody tr:last-child td { border-bottom: none; }
     <table>
       <tr><td>Subtotal</td><td>${sale.subtotal ? sale.subtotal.toFixed(0) : "0"}</td></tr>
       ${sale.discount > 0 ? `<tr><td>Discount</td><td>-${sale.discount.toFixed(0)}</td></tr>` : ""}
+      ${(sale.tax || sale.gst) > 0 ? `<tr><td>Tax / GST</td><td>+${(sale.tax || sale.gst).toFixed(0)}</td></tr>` : ""}
       <tr class="total-row"><td>Total</td><td>${(sale.total || 0).toFixed(0)}</td></tr>
       <tr><td>Paid</td><td>${(sale.amount_paid || 0).toFixed(0)}</td></tr>
       <tr><td>Change</td><td>${Math.max(0, (sale.amount_paid || 0) - (sale.total || 0)).toFixed(0)}</td></tr>
@@ -1809,9 +1811,11 @@ function generateESCPOSReceipt(sale) {
   const items = sale.items || [];
   const now = new Date();
   const totalAmount = sale.total || 0;
+  const subtotal = sale.subtotal || 0;
   const paidAmount = sale.amount_paid || 0;
   const changeDue = sale.change || 0;
   const discount = sale.discount || 0;
+  const tax = sale.tax || sale.gst || 0;
   const balance = Math.max(0, totalAmount - paidAmount);
   const L = 48;
   const parts = [];
@@ -1873,8 +1877,9 @@ function generateESCPOSReceipt(sale) {
     if (isBold) parts.push(escposBold(0));
   }
 
-  addLine("Subtotal", totalAmount.toFixed(0));
+  addLine("Subtotal", (subtotal || totalAmount).toFixed(0));
   if (discount > 0) addLine("Discount", "-" + discount.toFixed(0));
+  if (tax > 0) addLine("Tax / GST", "+" + tax.toFixed(0));
   addLine("Total", totalAmount.toFixed(0), true);
   addLine("Paid", paidAmount.toFixed(0));
   if (balance > 0) addLine("Balance", balance.toFixed(0));

@@ -94,6 +94,7 @@ export interface Sale {
   customer_name?: string;
   subtotal: number;
   discount: number;
+  tax?: number;
   total: number;
   amount_paid: number;
   change: number;
@@ -123,6 +124,7 @@ export interface SaleInput {
   customerName?: string;
   subtotal: number;
   discount: number;
+  tax?: number;
   total: number;
   amountPaid: number;
   items: SaleItemInput[];
