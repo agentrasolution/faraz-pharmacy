@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { modKey } from "@/lib/os";
@@ -17,14 +17,12 @@ import {
   Barcode,
   Settings,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
   Building2,
   Tags,
-  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { toast } from "sonner";
 import logoSrc from "@/asset/image/logo.png";
 
@@ -70,11 +68,14 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const { collapsed } = useSidebar();
   const pathname = location.pathname;
-  const [collapsed, setCollapsed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [posWindowCount, setPosWindowCount] = useState(0);
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hoveredItem, setHoveredItem] = useState<{
+    label: string;
+    shortcut?: string;
+    top: number;
+  } | null>(null);
 
   const fetchWindowCount = useCallback(async () => {
     try {
@@ -102,36 +103,10 @@ export default function Sidebar() {
     }
   };
 
-  const handleMouseEnter = () => {
-    if (!collapsed) return;
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (!collapsed) return;
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 200);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const isExpanded = !collapsed || isHovered;
+  const isExpanded = !collapsed;
 
   return (
     <aside
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className={cn(
         "h-full bg-gradient-to-b from-[#3612B8] via-[#2A0E94] to-[#1F0875] dark:from-[#0F111E] dark:via-[#111322] dark:to-[#0A0C16] flex flex-col shrink-0 transition-all duration-300 ease-in-out relative select-none z-40 text-white shadow-2xl",
         isExpanded ? "w-[240px]" : "w-[72px]"
@@ -205,7 +180,19 @@ export default function Sidebar() {
         ) : (
           <button
             onClick={handleNewSale}
-            title="New Sale (F2)"
+            onMouseEnter={(e) => {
+              if (!isExpanded) {
+                const r = e.currentTarget.getBoundingClientRect();
+                setHoveredItem({
+                  label: "New Sale",
+                  shortcut: "F2",
+                  top: r.top + r.height / 2,
+                });
+              }
+            }}
+            onMouseLeave={() => {
+              if (!isExpanded) setHoveredItem(null);
+            }}
             className="w-10 h-10 rounded-xl bg-white hover:bg-white/95 text-[#3612B8] flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer relative group"
           >
             <ShoppingCart className="h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -242,6 +229,21 @@ export default function Sidebar() {
                   <div key={item.href} className="relative">
                     <button
                       onClick={() => navigate(item.href)}
+                      onMouseEnter={(e) => {
+                        if (!isExpanded) {
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setHoveredItem({
+                            label: item.label,
+                            shortcut: item.shortcut,
+                            top: r.top + r.height / 2,
+                          });
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        if (!isExpanded) {
+                          setHoveredItem(null);
+                        }
+                      }}
                       className={cn(
                         "group relative flex items-center w-full transition-all duration-150 cursor-pointer",
                         !isExpanded
@@ -336,10 +338,22 @@ export default function Sidebar() {
         ))}
       </nav>
 
-
       {/* User Section & Logout */}
       <div className={cn("border-t border-white/10 pt-3 pb-3 space-y-1", isExpanded ? "px-3" : "px-2")}>
         <div
+          onMouseEnter={(e) => {
+            if (!isExpanded) {
+              const r = e.currentTarget.getBoundingClientRect();
+              setHoveredItem({
+                label: user?.username || "Admin",
+                shortcut: "Profile",
+                top: r.top + r.height / 2,
+              });
+            }
+          }}
+          onMouseLeave={() => {
+            if (!isExpanded) setHoveredItem(null);
+          }}
           className={cn(
             "flex items-center rounded-xl px-2 py-1.5 hover:bg-white/10 transition-colors cursor-pointer",
             !isExpanded && "justify-center px-0"
@@ -377,17 +391,29 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Expand/Collapse Floating Toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className={cn(
-          "absolute -right-3 top-14 h-6 w-6 rounded-full border border-border bg-surface flex items-center justify-center text-text-secondary hover:text-text-primary transition-all duration-200 z-30 shadow-md",
-          "hover:scale-110 active:scale-95 cursor-pointer",
-          collapsed && "rotate-180"
+      {/* Sleek Tooltip when Collapsed */}
+      <AnimatePresence>
+        {!isExpanded && hoveredItem && (
+          <motion.div
+            initial={{ opacity: 0, x: -6, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -4, scale: 0.95 }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            style={{ top: hoveredItem.top }}
+            className="fixed left-[78px] -translate-y-1/2 z-[100] px-3 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#1A1D2E] text-white text-xs font-semibold shadow-2xl border border-white/15 flex items-center gap-2 pointer-events-none backdrop-blur-md whitespace-nowrap"
+          >
+            <span>{hoveredItem.label}</span>
+            {hoveredItem.shortcut && (
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/15 text-white/85 border border-white/10 font-bold">
+                {hoveredItem.shortcut.startsWith("Mod+")
+                  ? `${modKey()}+${hoveredItem.shortcut.slice(4)}`
+                  : hoveredItem.shortcut}
+              </span>
+            )}
+            <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 bg-slate-900/95 dark:bg-[#1A1D2E] border-l border-b border-white/15" />
+          </motion.div>
         )}
-      >
-        {collapsed ? <PanelLeftOpen className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
-      </button>
+      </AnimatePresence>
     </aside>
   );
 }

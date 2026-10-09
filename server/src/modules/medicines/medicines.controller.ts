@@ -45,6 +45,15 @@ export const medicinesController = {
     }
   },
 
+  async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const product = await medicinesService.getById(req.params.id);
+      res.json(normalizeProduct(product));
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const product = await medicinesService.create(req.body);

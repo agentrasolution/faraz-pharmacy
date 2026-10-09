@@ -119,6 +119,7 @@ const api = {
     },
     search: (q: string): Promise<Product[]> =>
       fetchJson("GET", `/api/products/search?q=${encodeURIComponent(q)}`),
+    getById: (id: string): Promise<Product> => fetchJson("GET", `/api/products/${id}`),
     getByBarcode: (b: string): Promise<Product | null> =>
       fetchJson("GET", `/api/products/barcode/${encodeURIComponent(b)}`),
     create: (p: ProductInput): Promise<Product> => fetchJson("POST", "/api/products", p),

@@ -39,28 +39,32 @@ function generateSaleReceiptHTML(sale) {
     hour12: true,
   });
 
-  const subtotal = sale.subtotal || 0;
-  const totalAmount = sale.total || 0;
-  const discount = sale.discount || 0;
-  const gst = sale.tax || sale.gst || 0;
-  const paid = sale.amount_paid || 0;
+  const subtotal = Number(sale.subtotal || 0);
+  const totalAmount = Number(sale.total || 0);
+  const discount = Number(sale.discount || 0);
+  const gst = Number(sale.tax || sale.gst || 0);
+  const paid = Number(sale.amount_paid ?? sale.amountPaid ?? 0);
   const balance = Math.max(0, totalAmount - paid);
-  const arrears = sale.arrears || 0;
+  const arrears = Number(sale.customer_total_arrears ?? sale.customerTotalArrears ?? sale.arrears ?? 0);
   const totalPayable = totalAmount + arrears;
 
   const itemsHTML = items
     .map((item) => {
-      const unitPrice = item.unit_price || item.subtotal / item.quantity;
+      const name = item.product_name ?? item.productName ?? "Item";
+      const batchNo = item.batch_number ?? item.batchNumber;
+      const expiry = item.expiry;
+      const unitPrice = Number(item.unit_price ?? item.unitPrice ?? (item.quantity > 0 ? item.subtotal / item.quantity : 0));
+      const subtotal = Number(item.subtotal || 0);
 
       return `
       <tr>
           <td>
-            ${item.product_name}
-            ${item.batch_number ? `<div style="font-size:8.5px;color:#555;">B:${item.batch_number}${item.expiry ? ` Exp:${item.expiry.slice(0, 7)}` : ""}</div>` : ""}
+            ${name}
+            ${batchNo ? `<div style="font-size:8.5px;color:#555;">B:${batchNo}${expiry ? ` Exp:${String(expiry).slice(0, 7)}` : ""}</div>` : ""}
           </td>
           <td>${item.quantity}</td>
-          <td>${unitPrice}</td>
-          <td class="right">${item.subtotal}</td>
+          <td>${Math.round(unitPrice)}</td>
+          <td class="right">${subtotal.toFixed(0)}</td>
       </tr>
       `;
     })
@@ -368,22 +372,30 @@ tbody tr:nth-child(even) { background: #fafafa; }
 <div class="info">
 <div><span class="lbl">Invoice:</span> ${sale.id || "N/A"}<br><span class="lbl">Date:</span> ${dateStr}</div>
 <div style="text-align:right">
-${sale.customer_name ? `<span class="lbl">Customer:</span> ${sale.customer_name}<br>` : ""}
+${(sale.customer_name ?? sale.customerName ?? sale.customer?.name) ? `<span class="lbl">Customer:</span> ${sale.customer_name ?? sale.customerName ?? sale.customer?.name}<br>` : ""}
 <span class="lbl">Items:</span> ${items.length} (${totalQty} units)
 </div>
 </div>
 <table>
 <thead><tr><th style="width:50%">Item</th><th style="width:12%;text-align:center">Qty</th><th style="width:16%;text-align:right">Price</th><th style="width:22%;text-align:right">Total</th></tr></thead>
-<tbody>${items.map((i) => `<tr><td>${i.product_name}${i.batch_number ? ` <div style="font-size:8.5px;color:#666;">Batch: ${i.batch_number}${i.expiry ? ` | Exp: ${i.expiry.slice(0, 7)}` : ""}</div>` : ""}</td><td style="text-align:center">${i.quantity}</td><td style="text-align:right">${(i.subtotal / i.quantity).toFixed(0)}</td><td style="text-align:right">${i.subtotal.toFixed(0)}</td></tr>`).join("")}</tbody>
+<tbody>${items.map((i) => {
+  const pName = i.product_name ?? i.productName ?? "Item";
+  const bNo = i.batch_number ?? i.batchNumber;
+  const exp = i.expiry;
+  const qty = Number(i.quantity || 1);
+  const uPrice = Number(i.unit_price ?? i.unitPrice ?? (qty > 0 ? (i.subtotal || 0) / qty : 0));
+  const sub = Number(i.subtotal ?? (uPrice * qty));
+  return `<tr><td>${pName}${bNo ? ` <div style="font-size:8.5px;color:#666;">Batch: ${bNo}${exp ? ` | Exp: ${String(exp).slice(0, 7)}` : ""}</div>` : ""}</td><td style="text-align:center">${qty}</td><td style="text-align:right">${uPrice.toFixed(0)}</td><td style="text-align:right">${sub.toFixed(0)}</td></tr>`;
+}).join("")}</tbody>
 </table>
 <table class="totals">
-<tr><td>Subtotal</td><td>${(sale.subtotal || 0).toFixed(0)}</td></tr>
-${sale.discount > 0 ? `<tr><td>Discount</td><td>-${sale.discount.toFixed(0)}</td></tr>` : ""}
-${(sale.tax || sale.gst) > 0 ? `<tr><td>Tax / GST</td><td>+${(sale.tax || sale.gst).toFixed(0)}</td></tr>` : ""}
-<tr class="big"><td>Total</td><td>${(sale.total || 0).toFixed(0)}</td></tr>
-<tr><td>Paid</td><td>${(sale.amount_paid || 0).toFixed(0)}</td></tr>
-<tr><td>Change</td><td>${Math.max(0, (sale.amount_paid || 0) - (sale.total || 0)).toFixed(0)}</td></tr>
-<tr><td>Arrears</td><td>${(sale.customer_total_arrears || 0).toFixed(0)}</td></tr>
+<tr><td>Subtotal</td><td>${Number(sale.subtotal || 0).toFixed(0)}</td></tr>
+${sale.discount > 0 ? `<tr><td>Discount</td><td>-${Number(sale.discount).toFixed(0)}</td></tr>` : ""}
+${(sale.tax || sale.gst) > 0 ? `<tr><td>Tax / GST</td><td>+${Number(sale.tax || sale.gst).toFixed(0)}</td></tr>` : ""}
+<tr class="big"><td>Total</td><td>${Number(sale.total || 0).toFixed(0)}</td></tr>
+<tr><td>Paid</td><td>${Number(sale.amount_paid ?? sale.amountPaid ?? 0).toFixed(0)}</td></tr>
+<tr><td>Change</td><td>${Math.max(0, Number(sale.amount_paid ?? sale.amountPaid ?? 0) - Number(sale.total || 0)).toFixed(0)}</td></tr>
+<tr><td>Arrears</td><td>${Number(sale.customer_total_arrears ?? sale.customerTotalArrears ?? sale.arrears ?? 0).toFixed(0)}</td></tr>
 </table>
 ${sale.status === "partial" ? '<div class="status-a4 partial">PARTIAL PAYMENT</div>' : ""}
 <div class="footer"><p>Thank you for your visit! &bull; Powered by Faraz Pharmacy</p></div>
@@ -517,15 +529,20 @@ table.items tbody tr:last-child td { border-bottom: none; }
   <tbody>
     ${items
       .map((item) => {
-        const unitPrice = item.unit_price || item.subtotal / item.quantity;
+        const pName = item.product_name ?? item.productName ?? "Item";
+        const bNo = item.batch_number ?? item.batchNumber;
+        const exp = item.expiry;
+        const qty = Number(item.quantity || 1);
+        const unitPrice = Number(item.unit_price ?? item.unitPrice ?? (qty > 0 ? (item.subtotal || 0) / qty : 0));
+        const sub = Number(item.subtotal ?? (unitPrice * qty));
         return `<tr>
         <td>
-          ${item.product_name}
-          ${item.batch_number ? `<div style="font-size:8px;color:#666;">Batch: ${item.batch_number}${item.expiry ? ` | Exp: ${item.expiry.slice(0, 7)}` : ""}</div>` : ""}
+          ${pName}
+          ${bNo ? `<div style="font-size:8px;color:#666;">Batch: ${bNo}${exp ? ` | Exp: ${String(exp).slice(0, 7)}` : ""}</div>` : ""}
         </td>
-        <td style="text-align:center">${item.quantity}</td>
+        <td style="text-align:center">${qty}</td>
         <td style="text-align:right">${Math.round(unitPrice)}</td>
-        <td style="text-align:right">${item.subtotal.toFixed(0)}</td>
+        <td style="text-align:right">${sub.toFixed(0)}</td>
       </tr>`;
       })
       .join("")}
@@ -542,13 +559,13 @@ table.items tbody tr:last-child td { border-bottom: none; }
   </div>
   <div class="totals">
     <table>
-      <tr><td>Subtotal</td><td>${sale.subtotal ? sale.subtotal.toFixed(0) : "0"}</td></tr>
-      ${sale.discount > 0 ? `<tr><td>Discount</td><td>-${sale.discount.toFixed(0)}</td></tr>` : ""}
-      ${(sale.tax || sale.gst) > 0 ? `<tr><td>Tax / GST</td><td>+${(sale.tax || sale.gst).toFixed(0)}</td></tr>` : ""}
-      <tr class="total-row"><td>Total</td><td>${(sale.total || 0).toFixed(0)}</td></tr>
-      <tr><td>Paid</td><td>${(sale.amount_paid || 0).toFixed(0)}</td></tr>
-      <tr><td>Change</td><td>${Math.max(0, (sale.amount_paid || 0) - (sale.total || 0)).toFixed(0)}</td></tr>
-      <tr><td>Arrears</td><td>${(sale.customer_total_arrears || 0).toFixed(0)}</td></tr>
+      <tr><td>Subtotal</td><td>${Number(sale.subtotal || 0).toFixed(0)}</td></tr>
+      ${sale.discount > 0 ? `<tr><td>Discount</td><td>-${Number(sale.discount).toFixed(0)}</td></tr>` : ""}
+      ${(sale.tax || sale.gst) > 0 ? `<tr><td>Tax / GST</td><td>+${Number(sale.tax || sale.gst).toFixed(0)}</td></tr>` : ""}
+      <tr class="total-row"><td>Total</td><td>${Number(sale.total || 0).toFixed(0)}</td></tr>
+      <tr><td>Paid</td><td>${Number(sale.amount_paid ?? sale.amountPaid ?? 0).toFixed(0)}</td></tr>
+      <tr><td>Change</td><td>${Math.max(0, Number(sale.amount_paid ?? sale.amountPaid ?? 0) - Number(sale.total || 0)).toFixed(0)}</td></tr>
+      <tr><td>Arrears</td><td>${Number(sale.customer_total_arrears ?? sale.customerTotalArrears ?? sale.arrears ?? 0).toFixed(0)}</td></tr>
     </table>
     ${
       sale.status === "partial"
@@ -582,24 +599,26 @@ function generateReturnReceiptHTML(returnData, sale) {
     hour12: true,
   });
 
-  const totalRefund = Number(returnData.refund_amount || 0);
+  const totalRefund = Number(returnData.refund_amount ?? returnData.refundAmount ?? 0);
 
-  const invoiceNo = sale?.id || "N/A";
+  const invoiceNo = sale?.id || returnData.sale_id || returnData.saleId || "N/A";
 
-  const customerName = sale?.customer_name || "Walk-in Customer";
+  const customerName = sale?.customer_name ?? sale?.customerName ?? sale?.customer?.name ?? "Walk-in Customer";
 
   const itemsHTML = items
     .map((item) => {
       const quantity = Number(item.quantity || 0);
 
-      const refund = Number(item.refund_amount ?? item.subtotal ?? 0);
+      const refund = Number(item.refund_amount ?? item.refundAmount ?? item.subtotal ?? 0);
 
-      const price = Number(item.price ?? item.unit_price ?? (quantity > 0 ? refund / quantity : 0));
+      const price = Number(item.price ?? item.unit_price ?? item.unitPrice ?? (quantity > 0 ? refund / quantity : 0));
+
+      const name = item.product_name ?? item.productName ?? "Unknown Item";
 
       return `
         <tr>
           <td class="item-name">
-            ${item.product_name || "Unknown Item"}
+            ${name}
             ${item.reason ? `<div class="item-reason">${item.reason}</div>` : ""}
           </td>
 
@@ -1949,18 +1968,21 @@ function generateESCPOSReturnReceipt(returnData, sale) {
 
   items.forEach((i) => {
     const reasonStr = i.reason ? " (" + i.reason + ")" : "";
-    const name = (i.product_name + " x" + i.quantity + reasonStr).padEnd(colName).slice(0, colName);
-    const amt = String((i.refund_amount ?? i.subtotal ?? 0).toFixed(0)).padStart(colAmt);
+    const pName = i.product_name ?? i.productName ?? "Item";
+    const name = (pName + " x" + i.quantity + reasonStr).padEnd(colName).slice(0, colName);
+    const refundVal = Number(i.refund_amount ?? i.refundAmount ?? i.subtotal ?? 0);
+    const amt = String(refundVal.toFixed(0)).padStart(colAmt);
     parts.push(escposText(name + amt));
   });
 
   parts.push(escposLine("-", L));
   parts.push(escposBold(1));
   const totalLabel = "Total Refund".padEnd(colName);
-  const totalVal = returnData.refund_amount.toFixed(0).padStart(colAmt);
+  const totalRefund = Number(returnData.refund_amount ?? returnData.refundAmount ?? 0);
+  const totalVal = totalRefund.toFixed(0).padStart(colAmt);
   parts.push(escposText(totalLabel + totalVal));
   parts.push(escposBold(0));
-  parts.push(escposText("Reason: " + returnData.reason));
+  parts.push(escposText("Reason: " + (returnData.reason || "N/A")));
   parts.push(escposLine("=", L));
   parts.push(escposAlign(1));
   parts.push(escposText("Return processed successfully"));
@@ -1978,7 +2000,7 @@ function generateBarcodeLabelHTML(
   labelWidth = 30,
   labelHeight = 20
 ) {
-  const count = Math.max(1, copies || 1);
+  const count = Math.max(1, parseInt(copies, 10) || 1);
   const w = Number(labelWidth) || 30;
   const h = Number(labelHeight) || 20;
 
@@ -2057,10 +2079,9 @@ try {
 html, body {
   margin: 0;
   padding: 0;
-  width: ${w}mm;
-  height: ${h}mm;
   background: #fff;
-  overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .label {
   position: relative;
@@ -2069,13 +2090,17 @@ html, body {
   max-height: ${h}mm;
   overflow: hidden;
   page-break-inside: avoid;
+  break-inside: avoid;
   page-break-after: always;
+  break-after: page;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 .label:last-child {
   page-break-after: auto;
+  break-after: auto;
 }
 .label .barcode-container {
   width: 96%;

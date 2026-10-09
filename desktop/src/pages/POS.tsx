@@ -1,213 +1,353 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import BarcodeInput from "@/components/pos/BarcodeInput";
-import ProductCard from "@/components/pos/ProductCard";
-import CheckoutPanel from "@/components/pos/CheckoutPanel";
+import {
+  Search,
+  Barcode,
+  AlertCircle,
+  ShoppingCart,
+  Trash2,
+  Eye,
+  EyeOff,
+  CornerDownLeft,
+  Keyboard,
+} from "lucide-react";
+import CartTable from "@/components/pos/CartTable";
+import CustomerSelector from "@/components/pos/CustomerSelector";
+import ProductSearchDropdown from "@/components/pos/ProductSearchDropdown";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
 import { useMultiSale } from "@/hooks/useMultiSale";
 import { useDebounce } from "@/hooks/useDebounce";
 import { api } from "@/lib/api";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
 import { setLastReceipt } from "@/lib/receiptStore";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { Product, PrinterConfig, ProductPrice } from "@/types";
+import type { Product, PrinterConfig, ProductPrice, Customer } from "@/types";
 
 export default function POS() {
   const location = useLocation();
   const isPosWindow = new URLSearchParams(location.search).has("pos");
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState("");
-  const [showPrintDialog, setShowPrintDialog] = useState(false);
-  const debouncedSearch = useDebounce(search, 200);
-  const cart = useMultiSale();
   const queryClient = useQueryClient();
+  const cart = useMultiSale();
 
+  // Search & Barcode scanning states
+  const [search, setSearch] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const debouncedSearch = useDebounce(search, 100);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const customerTriggerRef = useRef<HTMLButtonElement>(null);
+  const amountPaidInputRef = useRef<HTMLInputElement>(null);
+  const searchErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Price tier modal
   const [pricePickerOpen, setPricePickerOpen] = useState(false);
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const pendingPrices = pendingProduct
     ? ((pendingProduct as any).prices as ProductPrice[] | undefined)
     : undefined;
 
+  // Print states
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [lastSaleData, setLastSaleData] = useState<Record<string, unknown> | null>(null);
   const [pendingPrintData, setPendingPrintData] = useState<Record<string, unknown> | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [showProfit, setShowProfit] = useState(false);
 
+  // Track arrears options
+  const [isCustomAmountPaid, setIsCustomAmountPaid] = useState(false);
+  const [isFullArrears, setIsFullArrears] = useState(false);
+
+  // Focus Search helper (single most important UX rule)
+  const focusSearch = useCallback(() => {
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    });
+  }, []);
+
+  // Autofocus Search on page load
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const typing =
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+    focusSearch();
+  }, [focusSearch]);
 
-      if ((e.ctrlKey && e.key.toLowerCase() === "p") || (e.altKey && e.key.toLowerCase() === "t")) {
-        e.preventDefault();
-        if (lastSaleData) {
-          setPendingPrintData(lastSaleData);
-          setShowPrintDialog(true);
-        } else {
-          toast.error("No recent sale to reprint");
+  // Show inline error near search input
+  const showInlineError = useCallback((msg: string) => {
+    if (searchErrorTimerRef.current) clearTimeout(searchErrorTimerRef.current);
+    setSearchError(msg);
+    searchErrorTimerRef.current = setTimeout(() => {
+      setSearchError("");
+    }, 3500);
+  }, []);
+
+  // Fetch customers for selector & arrears
+  const { data: customers = [] } = useQuery<Customer[]>({
+    queryKey: ["customers"],
+    queryFn: api.customers.list,
+  });
+
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id === cart.customerId),
+    [customers, cart.customerId]
+  );
+  const customerPreviousArrears = Number(selectedCustomer?.outstanding_arrear || 0);
+
+  // Typed search query for products (starts on the very first character)
+  const { data: searchResults } = useQuery({
+    queryKey: ["products-search", debouncedSearch],
+    queryFn: () => api.products.listPaginated({ search: debouncedSearch.trim(), limit: 12 }),
+    enabled: debouncedSearch.trim().length >= 1,
+  });
+
+  const matchingProducts = useMemo(() => {
+    const query = debouncedSearch.trim().toLowerCase();
+    if (!query) return [];
+    const list = searchResults?.data ?? [];
+
+    // Case-insensitive sorting: exact matches or prefixes come first
+    return [...list].sort((a, b) => {
+      const aName = (a.name || "").toLowerCase();
+      const bName = (b.name || "").toLowerCase();
+      const aBarcode = (a.barcode || "").toLowerCase();
+      const bBarcode = (b.barcode || "").toLowerCase();
+
+      const aExact = aName === query || aBarcode === query;
+      const bExact = bName === query || bBarcode === query;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+
+      const aStarts = aName.startsWith(query) || aBarcode.startsWith(query);
+      const bStarts = bName.startsWith(query) || bBarcode.startsWith(query);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+
+      return aName.localeCompare(bName);
+    });
+  }, [debouncedSearch, searchResults?.data]);
+
+  // Handle dropdown visibility based on query (appears automatically on the first letter)
+  useEffect(() => {
+    if (matchingProducts.length > 0 && search.trim().length >= 1) {
+      setDropdownOpen(true);
+      setHighlightedIndex(0);
+    } else {
+      setDropdownOpen(false);
+    }
+  }, [matchingProducts, search]);
+
+  // Amount Paid behavior:
+  // - Defaults to Total once customer is selected
+  // - Capped at cart.total (cannot exceed total amount)
+  // - Keeps synced with Total unless cashier entered custom partial amount or 100% credit
+  useEffect(() => {
+    if (!cart.customerId) {
+      cart.setAmountPaid("");
+      setIsCustomAmountPaid(false);
+      setIsFullArrears(false);
+    } else {
+      if (isFullArrears) {
+        cart.setAmountPaid("0");
+      } else if (!isCustomAmountPaid) {
+        cart.setAmountPaid(cart.total > 0 ? String(cart.total) : "0");
+      } else {
+        const currentVal = Number(cart.amountPaid) || 0;
+        if (currentVal > cart.total) {
+          cart.setAmountPaid(String(cart.total));
         }
+      }
+    }
+  }, [cart.customerId, cart.total, isCustomAmountPaid, isFullArrears]);
+
+  const numAmountPaid = isFullArrears
+    ? 0
+    : Math.min(cart.total, Math.max(0, Number(cart.amountPaid) || 0));
+  const arrearsShortfall =
+    cart.customerId && numAmountPaid < cart.total ? cart.total - numAmountPaid : 0;
+  const changeDue = 0;
+
+  // Add product to cart helper
+  const addProductToCart = useCallback(
+    (product: Product, salePrice: number, purchasePrice?: number) => {
+      if (product.stock_qty <= 0) {
+        showInlineError("Out of stock");
         return;
       }
-      if ((e.ctrlKey && e.key === "Enter") || (e.ctrlKey && e.key.toLowerCase() === "s")) {
+
+      // Check if existing item in cart already reached stock ceiling
+      const existing = cart.items.find((i) => i.productId === product.id);
+      if (existing && existing.quantity + 1 > existing.stockQty) {
+        showInlineError(`Cannot add more. Max stock reached (${existing.stockQty})`);
+        return;
+      }
+
+      cart.addItem({
+        ...product,
+        sale_price: salePrice,
+        purchase_price: purchasePrice ?? product.purchase_price,
+      });
+
+      setSearch("");
+      setDropdownOpen(false);
+      setSearchError("");
+      focusSearch();
+    },
+    [cart, focusSearch, showInlineError]
+  );
+
+  const promptPriceTier = useCallback(
+    (product: Product) => {
+      const tiers = (product as any).prices as ProductPrice[] | undefined;
+      if (tiers && tiers.length > 0) {
+        setPendingProduct(product);
+        setPricePickerOpen(true);
+      } else {
+        addProductToCart(product, product.sale_price);
+      }
+    },
+    [addProductToCart]
+  );
+
+  const handleTierSelect = useCallback(
+    (tierSalePrice: number, tierPurchasePrice?: number) => {
+      if (!pendingProduct) return;
+      addProductToCart(pendingProduct, tierSalePrice, tierPurchasePrice);
+      setPendingProduct(null);
+      setPricePickerOpen(false);
+      focusSearch();
+    },
+    [pendingProduct, addProductToCart, focusSearch]
+  );
+
+  // Barcode Scan (Enter key) vs. Typed Search Enter
+  const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const trimmed = search.trim();
+
+    if (e.key === "ArrowDown") {
+      if (dropdownOpen && matchingProducts.length > 0) {
         e.preventDefault();
-        window.dispatchEvent(new CustomEvent("faraz:pos-checkout"));
-        return;
+        setHighlightedIndex((prev) => Math.min(prev + 1, matchingProducts.length - 1));
       }
-      if (e.ctrlKey && e.key.toLowerCase() === "d") {
-        e.preventDefault();
-        document.getElementById("pos-discount")?.focus();
-        return;
-      }
-      if (e.ctrlKey && e.key.toLowerCase() === "t" && !e.altKey) {
-        e.preventDefault();
-        document.getElementById("pos-tax")?.focus();
-        return;
-      }
-      if (typing || e.ctrlKey || e.altKey || e.metaKey) return;
-
-      const last = cart.items[cart.items.length - 1];
-      if (e.key === "Delete") {
-        if (last) cart.removeItem(last.productId);
-        return;
-      }
-      if (e.key === "+" || e.key === "=") {
-        if (last) cart.incrementBy(last.productId, 1);
-        return;
-      }
-      if (e.key === "-") {
-        if (last) cart.updateQuantity(last.productId, last.quantity - 1);
-        return;
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [cart, lastSaleData]);
-
-  const [page, setPage] = useState(1);
-  
-  // Reset page when search changes
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
-
-  const { data: searchResults, isLoading: searchLoading } = useQuery({
-    queryKey: ["products", debouncedSearch, page],
-    queryFn: () => api.products.listPaginated({ search: debouncedSearch, limit: 50, page }),
-    enabled: debouncedSearch.length > 0,
-  });
-
-  const allProducts = useQuery({
-    queryKey: ["products", "all", page],
-    queryFn: () => api.products.listPaginated({ limit: 50, page }),
-    enabled: debouncedSearch.length === 0,
-  });
-
-  const displayProducts = useMemo(() => {
-    if (debouncedSearch.length > 0) return searchResults?.data ?? [];
-    return allProducts.data?.data ?? [];
-  }, [debouncedSearch, searchResults?.data, allProducts.data?.data]);
-
-  const currentMeta = useMemo(() => {
-    if (debouncedSearch.length > 0) return searchResults?.meta;
-    return allProducts.data?.meta;
-  }, [debouncedSearch, searchResults?.meta, allProducts.data?.meta]);
-
-  function addProductToCart(product: Product, salePrice: number, purchasePrice?: number) {
-    if (product.stock_qty === 0) {
-      setError(`${product.name} is out of stock`);
       return;
     }
-    cart.addItem({
-      ...product,
-      sale_price: salePrice,
-      purchase_price: purchasePrice ?? product.purchase_price,
-    });
-  }
 
-  function promptPriceTier(product: Product) {
-    const tiers = (product as any).prices as ProductPrice[] | undefined;
-    if (tiers && tiers.length > 0) {
-      setPendingProduct(product);
-      setPricePickerOpen(true);
-    } else {
-      addProductToCart(product, product.sale_price);
-    }
-  }
-
-  function handleTierSelect(tierSalePrice: number, tierPurchasePrice?: number) {
-    if (!pendingProduct) return;
-    addProductToCart(pendingProduct, tierSalePrice, tierPurchasePrice);
-    setPendingProduct(null);
-    setPricePickerOpen(false);
-  }
-
-  const handleBarcodeSubmit = async (value: string) => {
-    const product = await api.products.getByBarcode(value);
-    if (product) {
-      const existing = cart.items.find((i) => i.productId === product.id);
-      if (existing) {
-        cart.incrementBy(product.id, 1);
-        return;
+    if (e.key === "ArrowUp") {
+      if (dropdownOpen && matchingProducts.length > 0) {
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.max(prev - 1, 0));
       }
-      promptPriceTier(product);
-    } else {
-      const found = displayProducts.find(
-        (p: Product) => p.barcode === value || p.name.toLowerCase() === value.toLowerCase()
+      return;
+    }
+
+    if (e.key === "Escape") {
+      if (dropdownOpen) {
+        e.preventDefault();
+        setDropdownOpen(false);
+      }
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!trimmed) return;
+
+      // 1. Check if exact barcode match (case-insensitive)
+      const lower = trimmed.toLowerCase();
+      const localBarcodeMatch = matchingProducts.find(
+        (p) => (p.barcode || "").toLowerCase() === lower
       );
-      if (found) {
-        const existing = cart.items.find((i) => i.productId === found.id);
-        if (existing) {
-          cart.incrementBy(found.id, 1);
+      if (localBarcodeMatch) {
+        if (localBarcodeMatch.stock_qty <= 0) {
+          showInlineError("Out of stock");
+          setSearch("");
+          focusSearch();
           return;
         }
-        promptPriceTier(found);
+        promptPriceTier(localBarcodeMatch);
+        return;
       }
-    }
-  };
 
-  const handleAddProduct = (product: Product) => {
-    if (product.stock_qty === 0) {
-      setError(`${product.name} is out of stock`);
-      return;
-    }
-    const existing = cart.items.find((i) => i.productId === product.id);
-    if (existing) {
-      cart.incrementBy(product.id, 1);
-      return;
-    }
-    promptPriceTier(product);
-  };
-
-  const handleNewSale = async () => {
-    if (typeof window.openPosWindow === "function") {
-      const result = await window.openPosWindow();
-      if (!result.success) {
-        toast.error(result.error || "Could not open new sale window");
+      try {
+        const barcodeProduct = await api.products.getByBarcode(trimmed);
+        if (barcodeProduct) {
+          if (barcodeProduct.stock_qty <= 0) {
+            showInlineError("Out of stock");
+            setSearch("");
+            focusSearch();
+            return;
+          }
+          promptPriceTier(barcodeProduct);
+          return;
+        }
+      } catch {
+        // Not a barcode match, fall through to search results
       }
-      return;
+
+      // 2. If dropdown is open and user navigates or selects
+      if (dropdownOpen && matchingProducts.length > 0) {
+        const selected = matchingProducts[highlightedIndex] || matchingProducts[0];
+        if (selected) {
+          if (selected.stock_qty <= 0) {
+            showInlineError("Out of stock");
+            setSearch("");
+            focusSearch();
+            return;
+          }
+          promptPriceTier(selected);
+          return;
+        }
+      }
+
+      // 3. Exact single match or fallback
+      if (matchingProducts.length === 1) {
+        const single = matchingProducts[0];
+        if (single.stock_qty <= 0) {
+          showInlineError("Out of stock");
+        } else {
+          promptPriceTier(single);
+        }
+        setSearch("");
+        focusSearch();
+        return;
+      }
+
+      showInlineError("Product not found");
+      focusSearch();
     }
-    window.open(`${window.location.origin}${window.location.pathname}#/pos?pos=1`, "_blank");
   };
 
-  const handleCheckout = async (amountPaid: number, discount: number) => {
-    setError("");
+  // Checkout execution
+  const handleCheckout = async () => {
+    if (cart.items.length === 0) {
+      toast.error("Cart is empty");
+      focusSearch();
+      return;
+    }
+
+    if (!cart.customerId) {
+      toast.error("Please select a customer to enable payment");
+      customerTriggerRef.current?.focus();
+      return;
+    }
+
+    setProcessing(true);
     try {
       const sale = await api.sales.create({
         customerId: cart.customerId,
+        customerName: cart.customerName,
         items: cart.items.map((item) => ({
           productId: item.productId,
           productName: item.productName,
@@ -220,12 +360,13 @@ export default function POS() {
           expiry: item.expiry,
         })),
         subtotal: cart.subtotal,
-        discount,
+        discount: cart.discount,
         tax: cart.tax,
         total: cart.total,
-        amountPaid,
+        amountPaid: numAmountPaid,
       });
 
+      // Query cache invalidations
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
@@ -245,34 +386,92 @@ export default function POS() {
         tax: cart.tax,
         customer_name: cart.customerName || sale.customer_name,
         customer_total_arrears: customerTotalArrears,
-        items: (sale.items && sale.items.length > 0)
-          ? sale.items.map((item: any) => ({
-              product_name: item.product_name,
-              batch_number: item.batch_number,
-              expiry: item.expiry,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              subtotal: item.subtotal,
-            }))
-          : cart.items.map((item) => ({
-              product_name: item.productName,
-              batch_number: item.batchNumber,
-              expiry: item.expiry,
-              quantity: item.quantity,
-              unit_price: item.unitPrice,
-              subtotal: item.subtotal,
-            })),
+        items:
+          sale.items && sale.items.length > 0
+            ? sale.items.map((item: any) => ({
+                product_name: item.product_name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                subtotal: item.subtotal,
+              }))
+            : cart.items.map((item) => ({
+                product_name: item.productName,
+                quantity: item.quantity,
+                unit_price: item.unitPrice,
+                subtotal: item.subtotal,
+              })),
       };
-      setPendingPrintData(printData);
+
+      setLastSaleData(printData);
       setLastReceipt(printData);
-      setShowPrintDialog(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Checkout failed");
-      throw e;
+
+      const cfg = window.appConfig?.printer;
+      if (cfg?.autoPrint) {
+        window.printReceipt(printData, cfg).catch(() => {});
+      } else {
+        setPendingPrintData(printData);
+        setShowPrintDialog(true);
+      }
+
+      cart.clearCart();
+      setIsCustomAmountPaid(false);
+      setIsFullArrears(false);
+      toast.success("Sale completed successfully");
+      focusSearch();
+    } catch (err: any) {
+      toast.error(err.message || "Checkout failed");
+    } finally {
+      setProcessing(false);
     }
   };
 
-  const generateReceiptHtml = useCallback(
+  // Keyboard Shortcuts (Ctrl+Enter to Pay, Ctrl+P to reprint)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Reprint: Ctrl+P or Alt+T
+      if ((e.ctrlKey && e.key.toLowerCase() === "p") || (e.altKey && e.key.toLowerCase() === "t")) {
+        e.preventDefault();
+        if (lastSaleData) {
+          setPendingPrintData(lastSaleData);
+          setShowPrintDialog(true);
+        } else {
+          toast.error("No recent sale to reprint");
+        }
+        return;
+      }
+
+      // Quick Pay: Ctrl+Enter or Ctrl+S
+      if ((e.ctrlKey && e.key === "Enter") || (e.ctrlKey && e.key.toLowerCase() === "s")) {
+        e.preventDefault();
+        if (cart.items.length > 0 && cart.customerId) {
+          handleCheckout();
+        } else if (!cart.customerId) {
+          toast.error("Please select a customer to enable payment");
+          customerTriggerRef.current?.focus();
+        }
+        return;
+      }
+
+      // Focus Discount: Ctrl+D
+      if (e.ctrlKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        document.getElementById("pos-discount")?.focus();
+        return;
+      }
+
+      // Focus Tax: Ctrl+T (without alt)
+      if (e.ctrlKey && e.key.toLowerCase() === "t" && !e.altKey) {
+        e.preventDefault();
+        document.getElementById("pos-tax")?.focus();
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const generateHtml = useCallback(
     async (paperSize: string): Promise<string> => {
       if (!pendingPrintData) return "";
       const result = await window.generateReceiptHTML(pendingPrintData, paperSize);
@@ -281,203 +480,489 @@ export default function POS() {
     [pendingPrintData]
   );
 
-  async function handlePrintReceipt(config: PrinterConfig) {
+  const handlePrint = async (config: PrinterConfig) => {
     if (!pendingPrintData) return;
     const result = await window.printReceipt(pendingPrintData, config);
     if (!result.success) {
-      toast.error(result.error || "Print failed");
-    } else {
-      toast.success("Receipt printed");
+      throw new Error(result.error || "Print failed");
     }
-    setPendingPrintData(null);
-  }
+  };
+
+  const canPay = cart.items.length > 0 && !!cart.customerId && !processing;
 
   return (
-    <div
-      className={`flex flex-col gap-3 ${isPosWindow ? "h-[calc(100vh-2.5rem)]" : "h-[calc(100vh-6.5rem)]"}`}
-    >
+    <div className="flex flex-col h-[calc(100vh-5rem)] max-w-[1600px] mx-auto px-4 py-2 select-none gap-3">
+      {/* Multi-window drag handle */}
       {isPosWindow && (
-        <div className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-3 -mx-5 lg:-mx-6 px-5 lg:px-6 select-none">
+        <div className="drag-region h-6 w-full shrink-0 cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 bg-surface border-b border-border/50 rounded-t-lg -mt-2 -mx-4 px-4 select-none">
           <div className="flex gap-1 no-drag">
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-text-secondary/30" />
           </div>
           <span className="no-drag text-[9px] text-text-secondary/50 font-medium tracking-wider uppercase">
-            Drag to move
+            Sale Window — Drag to move
           </span>
         </div>
       )}
-      <div className="flex justify-end shrink-0">
-        {/* <button
-          onClick={handleNewSale}
-          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium bg-accent text-accent-foreground hover:bg-accent-hover transition-colors shrink-0"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          New Sale
-        </button> */}
+
+      {/* TOP: Full-width Search & Barcode Bar */}
+      <div className="shrink-0 space-y-1.5">
+        <div className="relative">
+          <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-secondary/70 pointer-events-none" />
+          <Input
+            id="pos-search-input"
+            ref={searchInputRef}
+            tabIndex={1}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Scan barcode or search medicine name..."
+            className="h-12 pl-12 pr-12 text-sm font-medium rounded-2xl border-2 border-border/80 focus-visible:border-accent bg-surface shadow-xs tracking-wide"
+          />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-text-secondary/60 bg-surface-2 border border-border/60 rounded">
+              <CornerDownLeft className="h-3 w-3" />
+            </kbd>
+            <Search className="h-4 w-4 text-text-secondary/50" />
+          </div>
+
+          {/* Typed Search Autocomplete Dropdown */}
+          <ProductSearchDropdown
+            isOpen={dropdownOpen}
+            products={matchingProducts}
+            highlightedIndex={highlightedIndex}
+            onSelect={(product) => {
+              if (product.stock_qty <= 0) {
+                showInlineError("Out of stock");
+              } else {
+                promptPriceTier(product);
+              }
+              setSearch("");
+              focusSearch();
+            }}
+            onClose={() => setDropdownOpen(false)}
+            triggerRef={searchInputRef}
+          />
+        </div>
+
+        {/* Inline error indicator near search bar */}
+        {searchError && (
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-semibold animate-in fade-in slide-in-from-top-1">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>{searchError}</span>
+          </div>
+        )}
       </div>
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0">
-        <div className="flex-1 flex flex-col min-h-0">
-          <BarcodeInput value={search} onChange={setSearch} onSubmit={handleBarcodeSubmit} />
-          <div className="flex-1 overflow-y-auto mt-3">
-            {displayProducts.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-xs text-text-secondary">
-                {search ? "No products found" : "Search or scan a product to begin"}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
-                <AnimatePresence mode="popLayout">
-                  {displayProducts.slice(0, 50).map((product: Product) => (
-                    <motion.div
-                      key={product.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.12 }}
-                    >
-                      <ProductCard product={product} onAdd={handleAddProduct} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            )}
-            
-            {currentMeta && currentMeta.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-                <span className="text-sm text-text-secondary">
-                  Showing {(currentMeta.page - 1) * currentMeta.limit + 1} to {Math.min(currentMeta.page * currentMeta.limit, currentMeta.total)} of {currentMeta.total}
+
+      {/* MAIN TWO-COLUMN SPLIT COCKPIT */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 overflow-hidden">
+        {/* LEFT COLUMN: 65% Cart Ledger Table */}
+        <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
+          {/* Header row */}
+          <div className="flex items-center justify-between pb-2 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+                <ShoppingCart className="h-3.5 w-3.5 text-accent" />
+                Scanned Items
+              </span>
+              {cart.items.length > 0 && (
+                <span className="px-2 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-accent/10 text-accent">
+                  {cart.items.reduce((acc, i) => acc + i.quantity, 0)} units ({cart.items.length}{" "}
+                  items)
                 </span>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={currentMeta.page <= 1}
-                    onClick={() => setPage(p => p - 1)}
-                  >
-                    Prev
-                  </Button>
-                  <div className="text-sm font-medium">
-                    {currentMeta.page} / {currentMeta.totalPages}
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={currentMeta.page >= currentMeta.totalPages}
-                    onClick={() => setPage(p => p + 1)}
-                  >
-                    Next
-                  </Button>
+              )}
+            </div>
+
+            {cart.items.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                tabIndex={-1}
+                onClick={cart.clearCart}
+                className="h-7 px-2 text-xs text-text-secondary hover:text-danger hover:bg-danger/10 gap-1 cursor-pointer"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>Clear Cart</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Cart Table or Empty State */}
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            {cart.items.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border/70 rounded-3xl p-8 text-center text-text-secondary bg-surface/30">
+                <div className="h-14 w-14 rounded-2xl bg-surface-2 flex items-center justify-center mb-3">
+                  <ShoppingCart className="h-7 w-7 text-text-secondary/50" />
+                </div>
+                <p className="text-sm font-semibold text-text-primary">Cart is empty</p>
+                <p className="text-xs text-text-secondary/80 mt-1 max-w-sm">
+                  Scan a medicine barcode or start typing its name in the search bar above to ring
+                  up a sale.
+                </p>
+
+                {/* Keyboard hints pill */}
+                <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border/40 text-[11px] text-text-secondary/60">
+                  <span className="flex items-center gap-1">
+                    <Keyboard className="h-3.5 w-3.5" />
+                    <strong>Tab:</strong> Navigate fields
+                  </span>
+                  <span>•</span>
+                  <span>
+                    <strong>+ / -:</strong> Adjust quantity
+                  </span>
+                  <span>•</span>
+                  <span>
+                    <strong>Delete:</strong> Remove row
+                  </span>
+                  <span>•</span>
+                  <span>
+                    <strong>Ctrl + Enter:</strong> Pay
+                  </span>
                 </div>
               </div>
+            ) : (
+              <CartTable
+                items={cart.items}
+                onUpdateQuantity={cart.updateQuantity}
+                onRemoveItem={cart.removeItem}
+              />
             )}
-
           </div>
         </div>
 
-        <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0">
-          <div
-            className={`lg:sticky bg-surface border border-border/80 rounded-3xl p-5 h-full flex flex-col shadow-xs ${isPosWindow ? "lg:top-5 max-h-[calc(100vh-4rem)]" : "lg:top-0 max-h-[calc(100vh-7rem)]"}`}
-          >
-            <CheckoutPanel
-              items={cart.items}
-              discount={cart.discount}
-              discountValue={cart.discountValue}
-              discountType={cart.discountType}
-              tax={cart.tax}
-              taxValue={cart.taxValue}
-              taxType={cart.taxType}
-              subtotal={cart.subtotal}
-              total={cart.total}
-              profit={cart.profit}
-              customerId={cart.customerId}
-              notes={cart.notes}
-              amountPaid={cart.amountPaid}
-              addToArrears={cart.addToArrears}
-              onUpdateQuantity={cart.updateQuantity}
-              onIncrementBy={cart.incrementBy}
-              onRemoveItem={cart.removeItem}
-              onDiscountChange={cart.setDiscountValue}
-              onToggleDiscountType={cart.toggleDiscountType}
-              onTaxChange={cart.setTaxValue}
-              onToggleTaxType={cart.toggleTaxType}
-              onClearCart={cart.clearCart}
-              onCheckout={handleCheckout}
-              onCustomerChange={cart.setCustomer}
-              onNotesChange={cart.setNotes}
-              onAmountPaidChange={cart.setAmountPaid}
-              onAddToArrearsChange={cart.setAddToArrears}
-              error={error}
-            />
+        {/* RIGHT COLUMN: 35% Sticky Transaction & Payment Panel */}
+        <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 flex flex-col h-full min-h-0">
+          <div className="flex-1 overflow-y-auto bg-surface border border-border/80 rounded-3xl p-4.5 flex flex-col gap-3.5 shadow-xs">
+            {/* 1. Customer Section */}
+            <div className="space-y-1.5 shrink-0">
+              <Label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                Customer & Account
+              </Label>
+              <CustomerSelector
+                customerId={cart.customerId}
+                customerName={cart.customerName}
+                onCustomerChange={cart.setCustomer}
+                customers={customers}
+                outstandingArrears={customerPreviousArrears}
+                onModalCloseFocusSearch={focusSearch}
+                triggerRef={customerTriggerRef}
+              />
+            </div>
+
+            <Separator />
+
+            {/* 2. Discount & Tax Row */}
+            <div className="space-y-1.5 shrink-0">
+              <Label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                Discount & Tax
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Discount */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      tabIndex={4}
+                      onClick={cart.toggleDiscountType}
+                      className="h-8 px-2 rounded-xl text-xs font-bold border border-border/80 bg-surface-2 hover:bg-surface-2/80 text-text-primary transition-colors shrink-0 cursor-pointer"
+                      title="Toggle PKR / %"
+                    >
+                      {cart.discountType === "pkr" ? "PKR" : "%"}
+                    </button>
+                    <Input
+                      id="pos-discount"
+                      tabIndex={4}
+                      type="number"
+                      placeholder={`Discount (${cart.discountType === "pkr" ? "PKR" : "%"})`}
+                      value={cart.discountValue || ""}
+                      onChange={(e) => cart.setDiscountValue(Number(e.target.value) || 0)}
+                      className="h-8 rounded-xl text-xs font-mono font-medium"
+                    />
+                  </div>
+                  {cart.discountValue > 0 && (
+                    <p className="text-[10px] text-text-secondary text-right font-mono">
+                      {cart.discountType === "percent"
+                        ? `= -${formatCurrency(cart.discount)}`
+                        : `= -${cart.subtotal > 0 ? Math.round((cart.discountValue * 100) / cart.subtotal) : 0}%`}
+                    </p>
+                  )}
+                </div>
+
+                {/* Tax */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      tabIndex={5}
+                      onClick={cart.toggleTaxType}
+                      className="h-8 px-2 rounded-xl text-xs font-bold border border-border/80 bg-surface-2 hover:bg-surface-2/80 text-text-primary transition-colors shrink-0 cursor-pointer"
+                      title="Toggle PKR / %"
+                    >
+                      {cart.taxType === "pkr" ? "PKR" : "%"}
+                    </button>
+                    <Input
+                      id="pos-tax"
+                      tabIndex={5}
+                      type="number"
+                      placeholder={`Tax (${cart.taxType === "pkr" ? "PKR" : "%"})`}
+                      value={cart.taxValue || ""}
+                      onChange={(e) => cart.setTaxValue(Number(e.target.value) || 0)}
+                      className="h-8 rounded-xl text-xs font-mono font-medium"
+                    />
+                  </div>
+                  {cart.taxValue > 0 && (
+                    <p className="text-[10px] text-text-secondary text-right font-mono">
+                      {cart.taxType === "percent"
+                        ? `= +${formatCurrency(cart.tax)}`
+                        : `= +${Math.max(0, cart.subtotal - cart.discount) > 0 ? Math.round((cart.taxValue * 100) / Math.max(0, cart.subtotal - cart.discount)) : 0}%`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* 3. Totals Breakdown */}
+            <div className="space-y-2 shrink-0">
+              <div className="flex justify-between items-center text-xs text-text-secondary">
+                <span>Subtotal</span>
+                <span className="font-mono font-medium tabular-nums">
+                  {formatCurrency(cart.subtotal)}
+                </span>
+              </div>
+
+              {cart.discount > 0 && (
+                <div className="flex justify-between items-center text-xs text-success">
+                  <span>Discount</span>
+                  <span className="font-mono font-medium tabular-nums">
+                    -{formatCurrency(cart.discount)}
+                  </span>
+                </div>
+              )}
+
+              {cart.tax > 0 && (
+                <div className="flex justify-between items-center text-xs text-amber-600 dark:text-amber-400">
+                  <span>Tax</span>
+                  <span className="font-mono font-medium tabular-nums">
+                    +{formatCurrency(cart.tax)}
+                  </span>
+                </div>
+              )}
+
+              <Separator className="my-1" />
+
+              <div className="flex justify-between items-baseline pt-0.5">
+                <span className="text-sm font-bold text-text-primary">Total Due</span>
+                <span className="font-mono text-2xl font-bold text-brand tabular-nums">
+                  {formatCurrency(cart.total)}
+                </span>
+              </div>
+
+              {/* Profit reveal toggle */}
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowProfit((v) => !v)}
+                className="flex items-center justify-between w-full pt-1 text-[10px] text-text-secondary/60 hover:text-text-primary transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-1 font-medium uppercase tracking-wider">
+                  {showProfit ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  Profit
+                </span>
+                <span
+                  className={`font-mono font-semibold tabular-nums transition-all ${showProfit ? (cart.profit >= 0 ? "text-success" : "text-danger") : "blur-[4px] select-none text-text-secondary/30"}`}
+                >
+                  {showProfit ? formatCurrency(cart.profit) : "••••••"}
+                </span>
+              </button>
+            </div>
+
+            <Separator />
+
+            {/* 4. Amount Paid & Arrears Options */}
+            <div className="space-y-2.5 shrink-0">
+              <Label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                Payment & Arrears
+              </Label>
+
+              <Input
+                id="pos-amount-paid"
+                ref={amountPaidInputRef}
+                tabIndex={6}
+                type="number"
+                disabled={!cart.customerId || isFullArrears}
+                placeholder={
+                  !cart.customerId
+                    ? "Select customer to enable payment"
+                    : isFullArrears
+                      ? "100% Credit (Rs 0 Paid)"
+                      : "Amount Paid"
+                }
+                value={!cart.customerId ? "" : isFullArrears ? "" : cart.amountPaid}
+                min="0"
+                max={cart.total}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setIsCustomAmountPaid(true);
+                    cart.setAmountPaid("");
+                    return;
+                  }
+                  const num = Number(raw);
+                  if (!isNaN(num) && num > cart.total) {
+                    setIsCustomAmountPaid(true);
+                    cart.setAmountPaid(String(cart.total));
+                    toast.info(`Amount paid cannot exceed total (${formatCurrency(cart.total)})`);
+                    return;
+                  }
+                  setIsCustomAmountPaid(true);
+                  cart.setAmountPaid(raw);
+                }}
+                className={`h-11 text-base font-mono font-bold text-center rounded-2xl border-2 transition-all ${
+                  !cart.customerId || isFullArrears
+                    ? "bg-surface-2/70 text-text-secondary border-dashed border-border/80 cursor-not-allowed"
+                    : "border-border/90 focus-visible:border-brand bg-surface shadow-xs"
+                }`}
+              />
+
+              {/* Helper text when locked */}
+              {!cart.customerId && (
+                <p className="text-[11px] text-center text-text-secondary/70">
+                  Select a customer above to unlock payment
+                </p>
+              )}
+
+              {/* Checkbox option: 100% Credit / Add all amount to arrears */}
+              {cart.customerId && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-surface-2/60 border border-border/70">
+                    <Checkbox
+                      id="pos-full-arrears"
+                      checked={isFullArrears}
+                      onCheckedChange={(checked) => {
+                        const val = checked === true;
+                        setIsFullArrears(val);
+                        if (val) {
+                          cart.setAmountPaid("0");
+                          cart.setAddToArrears(true);
+                        } else {
+                          cart.setAmountPaid(String(cart.total));
+                          setIsCustomAmountPaid(false);
+                          cart.setAddToArrears(false);
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor="pos-full-arrears"
+                      className="text-xs font-semibold text-text-primary cursor-pointer flex-1"
+                    >
+                      100% Credit (Add all {formatCurrency(cart.total)} to arrears)
+                    </Label>
+                  </div>
+
+                  {/* Arrears difference callout for partial payments */}
+                  {!isFullArrears && arrearsShortfall > 0 && (
+                    <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-between">
+                      <span>Remaining to arrears:</span>
+                      <span className="font-mono text-sm font-bold">
+                        Rs {arrearsShortfall.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 5. Pay Button */}
+            <div className="pt-2 shrink-0">
+              <Button
+                id="pos-pay-button"
+                tabIndex={7}
+                variant="brand"
+                disabled={!canPay}
+                onClick={handleCheckout}
+                className="w-full h-12 text-sm font-bold rounded-2xl shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <span>
+                  {processing
+                    ? "Processing Sale..."
+                    : !cart.customerId
+                      ? "Select a Customer to Pay"
+                      : isFullArrears
+                        ? `Record to Arrears: ${formatCurrency(cart.total)}`
+                        : `Pay ${formatCurrency(cart.total)}`}
+                </span>
+                <kbd className="hidden sm:inline-flex px-1.5 py-0.5 text-[10px] font-mono font-medium bg-white/20 text-white rounded">
+                  Ctrl + Enter
+                </kbd>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Price Tier Selection Dialog (Preserved existing feature) */}
       <AlertDialog
         open={pricePickerOpen}
         onOpenChange={(v) => {
           if (!v) {
             setPendingProduct(null);
             setPricePickerOpen(false);
+            focusSearch();
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Select Price Tier</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingProduct?.name ?? "Product"} has multiple price tiers. Choose one to add to
-              cart.
+            <AlertDialogTitle className="text-sm font-bold">Select Price Tier</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              {pendingProduct?.name ?? "Product"} has multiple prices configured. Choose a tier:
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2 py-3 px-5">
+          <div className="space-y-2 py-2">
             <button
+              type="button"
               onClick={() => pendingProduct && handleTierSelect(pendingProduct.sale_price ?? 0)}
-              className="w-full text-left p-2.5 rounded-lg border border-border hover:border-accent/50 transition-colors flex items-center justify-between"
+              className="w-full p-2.5 rounded-xl border border-border hover:border-brand bg-surface flex items-center justify-between text-left text-xs transition-colors cursor-pointer"
             >
-              <span className="text-xs font-medium">Standard</span>
-              <span className="font-mono font-bold text-accent text-xs">
+              <span className="font-semibold text-text-primary">Standard</span>
+              <span className="font-mono font-bold text-brand">
                 {formatCurrency(pendingProduct?.sale_price ?? 0)}
               </span>
             </button>
             {pendingPrices?.map((tier) => (
               <button
                 key={tier.id}
+                type="button"
                 onClick={() => handleTierSelect(tier.salePrice, tier.purchasePrice)}
-                className="w-full text-left p-2.5 rounded-lg border border-border hover:border-accent/50 transition-colors flex items-center justify-between"
+                className="w-full p-2.5 rounded-xl border border-border hover:border-brand bg-surface flex items-center justify-between text-left text-xs transition-colors cursor-pointer"
               >
-                <span className="text-xs font-medium">{tier.label || "Untitled"}</span>
-                <span className="font-mono font-bold text-accent text-xs">
+                <span className="font-semibold text-text-primary">
+                  {tier.label || "Custom Tier"}
+                </span>
+                <span className="font-mono font-bold text-brand">
                   {formatCurrency(tier.salePrice)}
                 </span>
               </button>
             ))}
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setPendingProduct(null);
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {showPrintDialog && pendingPrintData && (
-        <PrintPreviewDialog
-          open={showPrintDialog}
-          onOpenChange={(v) => {
-            setShowPrintDialog(v);
-            if (!v) setPendingPrintData(null);
-          }}
-          title="Receipt Preview"
-          htmlGenerator={generateReceiptHtml}
-          onPrint={handlePrintReceipt}
-        />
-      )}
+      {/* Receipt Print Preview Dialog */}
+      <PrintPreviewDialog
+        isOpen={showPrintDialog}
+        onClose={() => {
+          setShowPrintDialog(false);
+          setPendingPrintData(null);
+          focusSearch();
+        }}
+        generateHtml={generateHtml}
+        onPrint={handlePrint}
+        saleData={pendingPrintData}
+      />
     </div>
   );
 }

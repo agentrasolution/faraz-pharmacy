@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Toaster, toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ServerConnectionProvider } from "@/contexts/ServerConnectionContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 import PrintPreviewDialog from "@/components/shared/PrintPreviewDialog";
 import { getLastReceipt } from "@/lib/receiptStore";
 import type { PrinterConfig } from "@/types";
@@ -351,8 +352,10 @@ export default function App() {
   return (
     <ServerConnectionProvider>
       <AuthProvider>
-        <AppShell />
-        <Toaster richColors position="top-right" closeButton />
+        <SidebarProvider>
+          <AppShell />
+          <Toaster richColors position="top-right" closeButton />
+        </SidebarProvider>
       </AuthProvider>
     </ServerConnectionProvider>
   );

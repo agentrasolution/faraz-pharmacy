@@ -23,6 +23,15 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+function isInsideSearchablePanel(e: { detail?: { originalEvent?: Event }; target?: EventTarget | null }) {
+  const originalTarget = e.detail?.originalEvent?.target as HTMLElement | null;
+  const currentTarget = e.target as HTMLElement | null;
+  return Boolean(
+    originalTarget?.closest?.("[data-searchable-select-panel]") ||
+    currentTarget?.closest?.("[data-searchable-select-panel]")
+  );
+}
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -32,18 +41,25 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       onPointerDownOutside={(e) => {
-        const target = e.target as HTMLElement | null;
-        if (target?.closest?.("[data-searchable-select-panel]")) {
+        if (isInsideSearchablePanel(e)) {
           e.preventDefault();
+        } else {
+          props.onPointerDownOutside?.(e);
         }
-        props.onPointerDownOutside?.(e);
       }}
       onInteractOutside={(e) => {
-        const target = e.target as HTMLElement | null;
-        if (target?.closest?.("[data-searchable-select-panel]")) {
+        if (isInsideSearchablePanel(e)) {
           e.preventDefault();
+        } else {
+          props.onInteractOutside?.(e);
         }
-        props.onInteractOutside?.(e);
+      }}
+      onFocusOutside={(e) => {
+        if (isInsideSearchablePanel(e)) {
+          e.preventDefault();
+        } else {
+          props.onFocusOutside?.(e);
+        }
       }}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-0 border border-border/80 bg-surface p-0 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in data-[state=closed]:animate-zoom-out-95 data-[state=open]:animate-zoom-in-95 sm:rounded-2xl overflow-hidden",

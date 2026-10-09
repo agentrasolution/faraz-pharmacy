@@ -1,297 +1,130 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Search,
   Package,
-  User,
-  Boxes,
   Loader2,
   ArrowRight,
-  ShoppingCart,
-  Plus,
-  Warehouse,
-  CreditCard,
-  FileText,
-  BarChart3,
-  Settings,
-  TrendingUp,
-  Undo2,
+  Sparkles,
+  MapPin,
   Building2,
-  Wallet,
-  Receipt,
-  Tag,
+  X,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatCurrency } from "@/lib/utils";
-import { modKey } from "@/lib/os";
+import ProductDetailDrawer from "@/components/shared/ProductDetailDrawer";
+import type { Product } from "@/types";
 
-interface SearchItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  meta?: string;
-  shortcut?: string;
-  onClick: () => void;
+function normalizeProduct(p: any): Product {
+  const stock = Number(p.stock_qty ?? p.stockQty ?? 0);
+  const price = Number(p.sale_price ?? p.salePrice ?? 0);
+  return {
+    id: p.id,
+    barcode: p.barcode || "",
+    name: p.name,
+    company: p.company || "",
+    category: p.category || "",
+    location: p.location || "",
+    sale_price: price,
+    purchase_price: Number(p.purchase_price ?? p.purchasePrice ?? 0),
+    markup_percent: Number(p.markup_percent ?? p.markupPercent ?? 20),
+    stock_qty: stock,
+    expiry: p.expiry || "",
+    active: p.active ?? 1,
+    created_at: p.created_at || "",
+    prices: p.prices || [],
+  };
 }
 
-const quickActions: SearchItem[] = [
-  { id: "new-sale", title: "New Sale", icon: ShoppingCart, shortcut: "F2", onClick: () => {} },
-  {
-    id: "add-product",
-    title: "Add Product",
-    icon: Plus,
-    shortcut: `${modKey()}+N`,
-    onClick: () => {},
-  },
-  {
-    id: "stock-adjustment",
-    title: "Stock Adjustment",
-    icon: Warehouse,
-    shortcut: `${modKey()}+K`,
-    onClick: () => {},
-  },
-  {
-    id: "add-customer",
-    title: "Add Customer",
-    icon: User,
-    shortcut: `${modKey()}+U`,
-    onClick: () => {},
-  },
-];
-
-const navigationItems: Omit<SearchItem, "onClick">[] = [
-  { id: "nav-products", title: "Products", icon: Package },
-  { id: "nav-stock", title: "Stock", icon: Boxes },
-  { id: "nav-purchases", title: "Purchases", icon: Receipt },
-  { id: "nav-reports", title: "Reports", icon: BarChart3 },
-  { id: "nav-customers", title: "Customers", icon: User },
-  { id: "nav-invoices", title: "Invoices", icon: FileText },
-  { id: "nav-returns", title: "Returns", icon: Undo2 },
-  { id: "nav-distributors", title: "Distributors", icon: Building2 },
-  { id: "nav-expenses", title: "Expenses", icon: Wallet },
-  { id: "nav-arrears", title: "Arrears", icon: CreditCard },
-  { id: "nav-settings", title: "Settings", icon: Settings },
-];
-
 export default function GlobalSearch() {
-  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const debouncedQuery = useDebounce(query, 200);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const debouncedQuery = useDebounce(query.trim(), 150);
 
-  const { data: products = [], isLoading: loadingProducts } = useQuery({
+  // Fetch initial pool of products for random suggestions
+  const { data: initialProductsData, isLoading: loadingInitial } = useQuery({
+    queryKey: ["global-search-catalog-sample"],
+    queryFn: () => api.products.listPaginated({ page: 1, limit: 50 }),
+    staleTime: 60_000,
+  });
+
+  // Pick 5 random products from the catalog to show on focus when query is empty
+  const randomProducts = useMemo(() => {
+    const list = initialProductsData?.data || [];
+    if (list.length === 0) return [];
+    // Deterministic shuffle per dataset load
+    const shuffled = [...list].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5).map(normalizeProduct);
+  }, [initialProductsData]);
+
+  // Search products when user types (triggers on 1st character)
+  const isSearching = debouncedQuery.length >= 1;
+  const { data: searchResults = [], isLoading: loadingSearch } = useQuery({
     queryKey: ["global-search-products", debouncedQuery],
-    queryFn: () => api.products.search(debouncedQuery),
-    enabled: debouncedQuery.length >= 2,
-  });
-
-  const { data: customers = [], isLoading: loadingCustomers } = useQuery({
-    queryKey: ["global-search-customers", debouncedQuery],
-    queryFn: () => api.customers.search(debouncedQuery),
-    enabled: debouncedQuery.length >= 2,
-  });
-
-  const isLoading = loadingProducts || loadingCustomers;
-
-  const navigationWithClick = useMemo(() => {
-    const routeMap: Record<string, string> = {
-      "nav-products": "/products",
-      "nav-stock": "/stock",
-      "nav-purchases": "/stock",
-      "nav-reports": "/reports",
-      "nav-customers": "/customers",
-      "nav-invoices": "/invoices",
-      "nav-returns": "/returns",
-      "nav-distributors": "/distributors",
-      "nav-expenses": "/expenses",
-      "nav-arrears": "/arrears",
-      "nav-settings": "/settings",
-    };
-    return navigationItems.map((item) => ({
-      ...item,
-      onClick: () => {
-        navigate(routeMap[item.id] || "/");
-        setIsOpen(false);
-        setQuery("");
-      },
-    }));
-  }, [navigate]);
-
-  const productResults: SearchItem[] = useMemo(() => {
-    return products.slice(0, 5).map((p) => ({
-      id: `product-${p.id}`,
-      title: p.name,
-      subtitle: p.barcode,
-      icon: Package,
-      meta: `Stock: ${p.stock_qty} | ${formatCurrency(p.sale_price)}`,
-      onClick: () => {
-        navigate("/products");
-        setIsOpen(false);
-        setQuery("");
-      },
-    }));
-  }, [products, navigate]);
-
-  const customerResults: SearchItem[] = useMemo(() => {
-    return customers.slice(0, 3).map((c) => ({
-      id: `customer-${c.id}`,
-      title: c.name,
-      subtitle: c.phone || "No phone",
-      icon: User,
-      meta: c.outstanding_arrear ? `Arrear: ${formatCurrency(c.outstanding_arrear)}` : undefined,
-      onClick: () => {
-        navigate(`/customers/${c.id}`);
-        setIsOpen(false);
-        setQuery("");
-      },
-    }));
-  }, [customers, navigate]);
-
-  const searchResults = useMemo(() => {
-    if (debouncedQuery.length < 2) return [];
-    const allResults: SearchItem[] = [];
-
-    const filteredNav = navigationWithClick.filter((item) =>
-      item.title.toLowerCase().includes(debouncedQuery.toLowerCase())
-    );
-    allResults.push(...filteredNav);
-
-    const filteredQuick = quickActions
-      .map((item) => ({
-        ...item,
-        onClick: () => {
-          if (item.id === "new-sale") {
-            try {
-              window.openPosWindow();
-            } catch {
-              navigate("/pos");
-            }
-          } else if (item.id === "add-product") {
-            navigate("/products");
-          } else if (item.id === "add-customer") {
-            navigate("/customers");
-          } else if (item.id === "stock-adjustment") {
-            navigate("/stock");
-          }
-          setIsOpen(false);
-          setQuery("");
-        },
-      }))
-      .filter((item) => item.title.toLowerCase().includes(debouncedQuery.toLowerCase()));
-    allResults.push(...filteredQuick);
-
-    allResults.push(...productResults);
-    allResults.push(...customerResults);
-
-    return allResults;
-  }, [debouncedQuery, navigationWithClick, productResults, customerResults, navigate]);
-
-  const allItems = useMemo(() => {
-    if (debouncedQuery.length < 2) {
-      const items: { section: string; items: SearchItem[] }[] = [
-        {
-          section: "QUICK ACTIONS",
-          items: quickActions.map((item) => ({
-            ...item,
-            onClick: () => {
-              if (item.id === "new-sale") {
-                try {
-                  window.openPosWindow();
-                } catch {
-                  navigate("/pos");
-                }
-              } else if (item.id === "add-product") {
-                navigate("/products");
-              } else if (item.id === "add-customer") {
-                navigate("/customers");
-              } else if (item.id === "stock-adjustment") {
-                navigate("/stock");
-              }
-              setIsOpen(false);
-              setQuery("");
-            },
-          })),
-        },
-        { section: "NAVIGATION", items: navigationWithClick },
-      ];
-      return items;
-    }
-    const grouped: Record<string, SearchItem[]> = {};
-    searchResults.forEach((item) => {
-      if (item.id.startsWith("product-")) {
-        if (!grouped["Products"]) grouped["Products"] = [];
-        grouped["Products"].push(item);
-      } else if (item.id.startsWith("customer-")) {
-        if (!grouped["Customers"]) grouped["Customers"] = [];
-        grouped["Customers"].push(item);
-      } else if (item.id.startsWith("nav-")) {
-        if (!grouped["Pages"]) grouped["Pages"] = [];
-        grouped["Pages"].push(item);
-      } else {
-        if (!grouped["Actions"]) grouped["Actions"] = [];
-        grouped["Actions"].push(item);
-      }
-    });
-    return Object.entries(grouped).map(([section, items]) => ({ section, items }));
-  }, [debouncedQuery, searchResults, navigationWithClick, navigate]);
-
-  const totalItems = allItems.reduce((sum, section) => sum + section.items.length, 0);
-
-  const handleSelect = useCallback(
-    (index: number) => {
-      let currentIndex = 0;
-      for (const section of allItems) {
-        for (const item of section.items) {
-          if (currentIndex === index) {
-            item.onClick();
-            return;
-          }
-          currentIndex++;
-        }
-      }
+    queryFn: async () => {
+      if (!isSearching) return [];
+      const res = await api.products.search(debouncedQuery);
+      return (res || []).map(normalizeProduct);
     },
-    [allItems]
-  );
+    enabled: isSearching,
+  });
 
+  const isLoading = isSearching ? loadingSearch : loadingInitial;
+
+  // The active list of products to display: either live search results or 5 random picks
+  const activeProducts = useMemo(() => {
+    if (isSearching) {
+      return searchResults;
+    }
+    return randomProducts;
+  }, [isSearching, searchResults, randomProducts]);
+
+  // Handle opening product drawer
+  const handleOpenProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setDrawerOpen(true);
+    setIsOpen(false);
+    setQuery("");
+  };
+
+  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isOpen) {
       if (e.key === "ArrowDown" || e.key === "Enter") {
         setIsOpen(true);
+        return;
       }
-      return;
     }
 
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : totalItems - 1));
-        break;
-      case "Enter":
-        e.preventDefault();
-        handleSelect(selectedIndex);
-        break;
-      case "Escape":
-        setIsOpen(false);
-        setQuery("");
-        inputRef.current?.blur();
-        break;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < activeProducts.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : activeProducts.length - 1));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeProducts.length > 0 && selectedIndex >= 0 && selectedIndex < activeProducts.length) {
+        handleOpenProduct(activeProducts[selectedIndex]);
+      }
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+      inputRef.current?.blur();
     }
   };
 
+  // Reset selected index when results change
   useEffect(() => {
-    setSelectedIndex(-1);
-  }, [debouncedQuery]);
+    setSelectedIndex(0);
+  }, [activeProducts]);
 
+  // Click outside listener
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -302,6 +135,7 @@ export default function GlobalSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Global Cmd+K / Ctrl+K shortcut
   useEffect(() => {
     const handleShortcut = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -314,111 +148,182 @@ export default function GlobalSearch() {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
-  const showDropdown = isOpen;
-
   return (
-    <div ref={containerRef} className="relative">
-      <div className="relative flex items-center">
-        <Search className="absolute left-3 h-4 w-4 text-text-secondary pointer-events-none" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(true);
-          }}
-          onFocus={() => setIsOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search products, customers, invoices..."
-          className="h-10 w-80 pl-10 pr-14 rounded-full border border-border bg-surface text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand shadow-xs transition-all"
-        />
-        <kbd className="absolute right-3 pointer-events-none h-5 px-1.5 rounded-full border border-border bg-surface-2 text-[10px] text-text-secondary font-mono font-medium">
-          ⌘K
-        </kbd>
-      </div>
-
-      {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 max-h-[420px] overflow-y-auto">
-          {isLoading && (
-            <div className="flex items-center justify-center gap-2 py-8 text-text-secondary">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-xs">Searching...</span>
-            </div>
-          )}
-
-          {!isLoading && totalItems === 0 && debouncedQuery.length >= 2 && (
-            <div className="py-8 text-center">
-              <p className="text-xs text-text-secondary">No results found for "{debouncedQuery}"</p>
-            </div>
-          )}
-
-          {!isLoading && (
-            <div className="py-2">
-              {allItems.map((section) => {
-                if (section.items.length === 0) return null;
-                return (
-                  <div key={section.section}>
-                    <div className="px-4 py-2">
-                      <span className="text-[10px] font-semibold text-text-secondary/50 uppercase tracking-wider">
-                        {section.section}
-                      </span>
-                    </div>
-                    {section.items.map((item) => {
-                      const globalIndex =
-                        allItems
-                          .slice(0, allItems.indexOf(section))
-                          .reduce((sum, s) => sum + s.items.length, 0) +
-                        section.items.indexOf(item);
-                      const Icon = item.icon;
-                      const isSelected = selectedIndex === globalIndex;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={item.onClick}
-                          onMouseEnter={() => setSelectedIndex(globalIndex)}
-                          className={`w-full px-4 py-2.5 flex items-center gap-3 text-left transition-colors ${
-                            isSelected ? "bg-accent/10 text-accent" : "hover:bg-muted/50"
-                          }`}
-                        >
-                          <div
-                            className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                              isSelected ? "bg-accent/20" : "bg-muted"
-                            }`}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium truncate">{item.title}</p>
-                            {item.subtitle && (
-                              <p className="text-[11px] text-text-secondary truncate">
-                                {item.subtitle}
-                              </p>
-                            )}
-                          </div>
-                          {item.meta && (
-                            <span className="text-[10px] text-text-secondary tabular-nums shrink-0">
-                              {item.meta}
-                            </span>
-                          )}
-                          {item.shortcut && (
-                            <kbd className="h-5 px-1.5 rounded border border-border bg-muted text-[9px] text-text-secondary font-medium shrink-0">
-                              {item.shortcut}
-                            </kbd>
-                          )}
-                          {!item.shortcut && (
-                            <ArrowRight className="h-3.5 w-3.5 text-text-secondary/40 shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
+    <>
+      <div ref={containerRef} className="relative">
+        <div className="relative flex items-center">
+          <Search className="absolute left-3.5 h-4 w-4 text-text-secondary pointer-events-none" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            onKeyDown={handleKeyDown}
+            placeholder="Search medicine by name or barcode... (⌘K)"
+            className="h-10 w-80 sm:w-96 pl-10 pr-14 rounded-full border border-border bg-surface text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand shadow-xs transition-all"
+          />
+          {query ? (
+            <button
+              onClick={() => {
+                setQuery("");
+                inputRef.current?.focus();
+              }}
+              className="absolute right-3 h-5 w-5 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          ) : (
+            <kbd className="absolute right-3 pointer-events-none h-5 px-1.5 rounded-full border border-border bg-surface-2 text-[10px] text-text-secondary font-mono font-medium">
+              ⌘K
+            </kbd>
           )}
         </div>
-      )}
-    </div>
+
+        {isOpen && (
+          <div className="absolute top-full left-0 mt-2 w-full min-w-[340px] sm:min-w-[480px] bg-surface border border-border/80 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-[440px] overflow-y-auto backdrop-blur-xl">
+            {isLoading && (
+              <div className="flex items-center justify-center gap-2 py-8 text-text-secondary">
+                <Loader2 className="h-4 w-4 animate-spin text-brand" />
+                <span className="text-xs font-medium">
+                  {isSearching ? "Searching medicines..." : "Loading products..."}
+                </span>
+              </div>
+            )}
+
+            {!isLoading && isSearching && activeProducts.length === 0 && (
+              <div className="py-9 text-center space-y-1">
+                <p className="text-xs font-semibold text-text-primary">
+                  No medicine found for "{debouncedQuery}"
+                </p>
+                <p className="text-[11px] text-text-secondary">
+                  Check the spelling or try searching by barcode
+                </p>
+              </div>
+            )}
+
+            {!isLoading && activeProducts.length > 0 && (
+              <div className="py-2">
+                <div className="px-4 py-1.5 flex items-center justify-between border-b border-border/40 pb-2">
+                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider font-display flex items-center gap-1.5">
+                    {isSearching ? (
+                      <>
+                        <Package className="h-3.5 w-3.5 text-brand" />
+                        Search Results ({activeProducts.length})
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                        Suggested Medicines (Quick Picks)
+                      </>
+                    )}
+                  </span>
+                  <span className="text-[10px] text-text-secondary font-medium">
+                    Click or press Enter to inspect
+                  </span>
+                </div>
+
+                <div className="divide-y divide-border/30 pt-1">
+                  {activeProducts.map((product, idx) => {
+                    const isSelected = selectedIndex === idx;
+                    const stockQty = Number(product.stock_qty ?? 0);
+                    const isOutOfStock = stockQty <= 0;
+                    const isLowStock = stockQty > 0 && stockQty < 10;
+                    const company = product.company?.trim();
+                    const location = product.location?.trim();
+
+                    return (
+                      <button
+                        key={product.id}
+                        onClick={() => handleOpenProduct(product)}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                        className={`w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-brand/10 text-brand border-l-2 border-brand"
+                            : "hover:bg-surface-2/70 border-l-2 border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div
+                            className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isOutOfStock
+                                ? "bg-danger/10 border-danger/30 text-danger"
+                                : isLowStock
+                                ? "bg-warning/10 border-warning/30 text-warning"
+                                : "bg-success/10 border-success/30 text-success"
+                            }`}
+                          >
+                            <Package className="h-4 w-4" />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-text-primary truncate">
+                              {product.name}
+                            </p>
+                            <div className="text-[11px] text-text-secondary truncate mt-0.5 flex items-center gap-2">
+                              {company && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <Building2 className="h-3 w-3 text-text-secondary/70 shrink-0" />
+                                  {company}
+                                </span>
+                              )}
+                              {location && (
+                                <span className="flex items-center gap-1 shrink-0 text-text-secondary/80 font-medium">
+                                  <MapPin className="h-3 w-3 text-brand/80 shrink-0" />
+                                  Rack {location}
+                                </span>
+                              )}
+                              {!company && !location && (
+                                <span className="font-mono text-[10px]">
+                                  {product.barcode || "No barcode"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <span className="text-xs font-bold text-text-primary font-display block">
+                              {formatCurrency(product.sale_price)}
+                            </span>
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5 ${
+                                isOutOfStock
+                                  ? "bg-danger/10 text-danger font-bold"
+                                  : isLowStock
+                                  ? "bg-warning/10 text-warning font-semibold"
+                                  : "bg-success/10 text-success font-semibold"
+                              }`}
+                            >
+                              {isOutOfStock
+                                ? "Out of Stock"
+                                : isLowStock
+                                ? `Low (${stockQty})`
+                                : `Stock: ${stockQty}`}
+                            </span>
+                          </div>
+                          <ArrowRight className="h-3.5 w-3.5 text-text-secondary/40 shrink-0" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Slide-over Inspector Drawer */}
+      <ProductDetailDrawer
+        product={selectedProduct}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
+    </>
   );
 }

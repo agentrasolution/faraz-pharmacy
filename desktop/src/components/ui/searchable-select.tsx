@@ -119,20 +119,37 @@ export function SearchableSelect({
     };
   }, [open, reposition, close]);
 
+  React.useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   const panel = (
     <div
       ref={panelRef}
       data-searchable-select-panel="true"
       style={panelStyle ?? undefined}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
       className="fixed z-[99999] pointer-events-auto flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-2xl animate-in fade-in zoom-in-95"
     >
       <div className="border-b border-border/60 p-1.5">
         <input
           ref={searchInputRef}
-          autoFocus
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            searchInputRef.current?.focus();
+          }}
           onKeyDown={(e) => {
+            e.stopPropagation();
             if (e.key === "ArrowDown") {
               e.preventDefault();
               setHighlightedIndex((prev) =>
@@ -153,8 +170,8 @@ export function SearchableSelect({
               close();
             }
           }}
-          placeholder="Search..."
-          className="w-full rounded-xl border border-border/60 bg-surface-2/60 px-3 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-brand/60"
+          placeholder={placeholder ? `Search ${placeholder.toLowerCase()}...` : "Search..."}
+          className="w-full rounded-xl border border-border/60 bg-surface-2/60 px-3 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/30"
         />
       </div>
       <div className="overflow-y-auto p-1" style={{ maxHeight: maxListHeight }}>

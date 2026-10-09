@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Server, Monitor, Sun, Moon, RefreshCw, Database, Wifi, Clock, Activity } from "lucide-react";
+import { Server, Monitor, Sun, Moon, RefreshCw, Database, Wifi, Clock, Activity, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useServerConnection } from "@/contexts/ServerConnectionContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import GlobalSearch from "@/components/shared/GlobalSearch";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
@@ -69,6 +70,7 @@ export default function Topbar() {
   }
 
   const { isOnline, isInitialCheck, connectionInfo, reconnect } = useServerConnection();
+  const { collapsed, toggleSidebar } = useSidebar();
   const page = pageLabels[location.pathname] || {
     title: "Faraz Pharmacy",
     subtitle: "Management System",
@@ -88,7 +90,20 @@ export default function Topbar() {
     <header className="h-16 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-30 select-none">
       <div className="flex items-center justify-between h-full px-6 gap-4">
         {/* Page Title & Breadcrumb */}
-        <div className="flex items-center gap-6 min-w-0">
+        <div className="flex items-center gap-4 min-w-0">
+          {/* Sidebar Open/Close Toggle */}
+          <button
+            onClick={toggleSidebar}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="h-9 w-9 rounded-xl border border-border/80 bg-surface flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-brand/40 hover:bg-surface-2 transition-all shadow-xs cursor-pointer shrink-0"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </button>
+
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: -4 }}

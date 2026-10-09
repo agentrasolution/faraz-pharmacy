@@ -39,13 +39,8 @@ export const medicinesService = {
     includeArchived?: boolean;
     archivedOnly?: boolean;
   }) {
-    const where: any = archivedOnly
-      ? { active: 0 }
-      : includeArchived
-      ? {}
-      : { active: 1 };
+    const where: any = archivedOnly ? { active: 0 } : includeArchived ? {} : { active: 1 };
 
-    
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
@@ -65,7 +60,7 @@ export const medicinesService = {
         take: limit,
         orderBy: { name: "asc" },
         include: { prices: true, company: true },
-      })
+      }),
     ]);
 
     return {
@@ -74,23 +69,27 @@ export const medicinesService = {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     };
   },
 
   async search(query: string) {
     const q = `%${query}%`;
     const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-      `SELECT products.*, companies.name as company FROM products LEFT JOIN companies ON products.company_id = companies.id WHERE active = 1 AND (barcode ILIKE $1 OR name ILIKE $1) ORDER BY name LIMIT 50`,
+      `SELECT products.*, companies.name as company FROM products LEFT JOIN companies ON products.company_id = companies.id WHERE products.active = 1 AND (products.barcode ILIKE $1 OR products.name ILIKE $1 OR companies.name ILIKE $1) ORDER BY products.name ASC LIMIT 50`,
       q
     );
     return rows;
   },
 
   async getByBarcode(barcode: string) {
-    const product = await prisma.product.findUnique({
-      where: { barcode },
+    const trimmed = barcode.trim();
+    const product = await prisma.product.findFirst({
+      where: {
+        active: 1,
+        barcode: { equals: trimmed, mode: "insensitive" },
+      },
       include: { prices: true },
     });
     return formatProduct(product);
