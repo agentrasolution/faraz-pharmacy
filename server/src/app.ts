@@ -39,6 +39,7 @@ app.use("/api/distributors", suppliersRoutes);
 app.use("/api/returns", returnsRoutes);
 app.use("/api/expenses", expensesRoutes);
 app.use("/api/dashboard", reportsRoutes);
+app.use("/api/reports", reportsRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/companies", companiesRoutes);
 app.use("/api/barcodes", barcodesRoutes);

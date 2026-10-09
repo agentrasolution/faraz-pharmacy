@@ -473,3 +473,74 @@ export interface BarcodeEntry {
   product: { name: string; active: number } | null;
   createdAt: string;
 }
+
+export interface ProductReportData {
+  product: {
+    id: string;
+    name: string;
+    barcode: string;
+    category: string;
+    company: string;
+    location: string;
+    stockQty: number;
+    purchasePrice: number;
+    salePrice: number;
+    markupPercent: number;
+    expiry: string | null;
+    active: number;
+  };
+  summary: {
+    totalUnitsSold: number;
+    totalRevenue: number;
+    totalProfit: number;
+    totalUnitsReturned: number;
+    totalRefundAmount: number;
+    netUnitsSold: number;
+    netRevenue: number;
+    averageUnitPrice: number;
+    stockValuation: number;
+    marginPercent: number;
+  };
+  salesHistory: Array<{
+    id: string;
+    saleId: string;
+    createdAt: string;
+    customerName: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+    discountApplied: number;
+    profit: number;
+    batchNumber: string;
+    expiry: string;
+  }>;
+  returnItems: Array<{
+    id: string;
+    returnId: string;
+    saleId?: string;
+    createdAt?: string;
+    quantity: number;
+    refundAmount: number;
+    reason: string;
+  }>;
+  batches: Array<{
+    id: string;
+    batchNumber: string;
+    expiryDate: string;
+    quantity: number;
+    initialQty: number;
+    purchasePrice: number;
+    salePrice: number;
+    distributorName: string;
+    active: number;
+  }>;
+  stockPurchases: Array<{
+    id: string;
+    invoiceNumber: string;
+    createdAt: string;
+    quantity: number;
+    purchasePrice: number;
+    batchNumber: string;
+    distributorName: string;
+  }>;
+}

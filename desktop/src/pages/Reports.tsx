@@ -3,6 +3,7 @@ import {
   BarChart3,
   Building2,
   Package,
+  Boxes,
   ShoppingCart,
   Wallet,
   AlertTriangle,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SalesReport from "./reports/SalesReport";
+import ProductReport from "./reports/ProductReport";
 import StockReport from "./reports/StockReport";
 import CompanyReport from "./reports/CompanyReport";
 import ExpensesReport from "./reports/ExpensesReport";
@@ -25,6 +27,7 @@ import PageHeader from "@/components/shared/PageHeader";
 
 type ReportType =
   | "sales"
+  | "product"
   | "stock"
   | "company"
   | "purchases"
@@ -43,7 +46,8 @@ interface ReportTab {
 
 const reportTabs: ReportTab[] = [
   { id: "sales", label: "Sales & Turnover", icon: <BarChart3 className="h-4 w-4" /> },
-  { id: "stock", label: "Inventory Stock", icon: <Package className="h-4 w-4" /> },
+  { id: "product", label: "Product Report", icon: <Package className="h-4 w-4" /> },
+  { id: "stock", label: "Inventory Stock", icon: <Boxes className="h-4 w-4" /> },
   { id: "company", label: "Companies", icon: <Building2 className="h-4 w-4" /> },
   { id: "purchases", label: "Purchases", icon: <ShoppingCart className="h-4 w-4" /> },
   { id: "expenses", label: "Expenses", icon: <Wallet className="h-4 w-4" /> },
@@ -69,6 +73,8 @@ export default function Reports() {
     switch (activeReport) {
       case "sales":
         return <SalesReport />;
+      case "product":
+        return <ProductReport />;
       case "stock":
         return <StockReport />;
       case "company":

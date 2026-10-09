@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Wallet, CheckCircle, Clock, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wallet, DollarSign, Receipt, TrendingDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import DateRangePicker, { type DateRange } from "@/components/reports/DateRangePicker";
 import KPICard from "@/components/reports/KPICard";
 import ExportButtons from "@/components/reports/ExportButtons";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { generatePDF } from "@/lib/pdfExport";
@@ -27,7 +28,6 @@ export default function ExpensesReport() {
     to: new Date().toISOString().split("T")[0],
   });
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [paymentFilter, setPaymentFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [search, setSearch] = useState("");
@@ -36,46 +36,57 @@ export default function ExpensesReport() {
 
   // Paginated table data
   const { data: expensesData, isLoading } = useQuery({
-    queryKey: ["expenses", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to, categoryFilter, paymentFilter],
-    queryFn: () => api.expenses.listPaginated({
-      page,
-      limit,
-      search: debouncedSearch || undefined,
-      dateFrom: dateRange.from,
-      dateTo: dateRange.to,
-    }),
+    queryKey: ["expenses", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to],
+    queryFn: () =>
+      api.expenses.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch || undefined,
+        dateFrom: dateRange.from,
+        dateTo: dateRange.to,
+      }),
   });
 
-  const expenses = expensesData?.data ?? [];
+  const expenses = (expensesData?.data ?? []).filter((e: Expense) => {
+    if (categoryFilter === "all") return true;
+    return e.category?.toLowerCase() === categoryFilter.toLowerCase();
+  });
   const meta = expensesData?.meta;
 
-  // Summary data (load all for KPIs - could be optimized with separate summary endpoint later)
+  // Summary data for KPIs and exports
   const { data: allExpenses = [] } = useQuery({
-    queryKey: ["expenses", "summary", dateRange.from, dateRange.to, categoryFilter, paymentFilter],
+    queryKey: ["expenses", "summary", dateRange.from, dateRange.to],
     queryFn: () => api.expenses.list(),
   });
 
   const filteredExpenses = useMemo(() => {
     return allExpenses.filter((e: Expense) => {
       const inDateRange = e.date >= dateRange.from && e.date <= dateRange.to;
-      const matchesCategory = categoryFilter === "all" || e.category === categoryFilter;
-      const matchesPayment = paymentFilter === "all" || e.payment_method === paymentFilter;
-      return inDateRange && matchesCategory && matchesPayment;
+      const matchesCategory =
+        categoryFilter === "all" ||
+        e.category?.toLowerCase() === categoryFilter.toLowerCase();
+      return inDateRange && matchesCategory;
     });
-  }, [allExpenses, dateRange, categoryFilter, paymentFilter]);
+  }, [allExpenses, dateRange, categoryFilter]);
 
   const totalExpenses = filteredExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0);
-  const paidExpenses = filteredExpenses
-    .filter((e: Expense) => e.status === "paid")
-    .reduce((sum: number, e: Expense) => sum + e.amount, 0);
-  const pendingExpenses = filteredExpenses
-    .filter((e: Expense) => e.status !== "paid")
-    .reduce((sum: number, e: Expense) => sum + e.amount, 0);
+  const totalEntries = filteredExpenses.length;
+  const avgExpense = totalEntries > 0 ? totalExpenses / totalEntries : 0;
+  const maxExpense = filteredExpenses.reduce((max: number, e: Expense) => Math.max(max, e.amount), 0);
+
+  // Dynamically extract categories from allExpenses
+  const existingCategories = useMemo(() => {
+    const set = new Set<string>();
+    allExpenses.forEach((e: Expense) => {
+      if (e.category) set.add(e.category);
+    });
+    return Array.from(set);
+  }, [allExpenses]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [dateRange, categoryFilter, paymentFilter, debouncedSearch]);
+  }, [dateRange, categoryFilter, debouncedSearch]);
 
   function handleReset() {
     setDateRange({
@@ -83,44 +94,42 @@ export default function ExpensesReport() {
       to: new Date().toISOString().split("T")[0],
     });
     setCategoryFilter("all");
-    setPaymentFilter("all");
     setSearch("");
     setPage(1);
   }
 
   function handlePDF() {
     generatePDF({
-      title: "Expense Report",
+      title: "Operating Expenses Report",
       dateRange,
       summary: [
         { label: "Total Expenses", value: formatCurrency(totalExpenses) },
-        { label: "Paid", value: formatCurrency(paidExpenses) },
-        { label: "Pending", value: formatCurrency(pendingExpenses) },
+        { label: "Total Entries", value: String(totalEntries) },
+        { label: "Average Entry", value: formatCurrency(avgExpense) },
+        { label: "Largest Single Expense", value: formatCurrency(maxExpense) },
       ],
-      headers: ["Date", "Expense", "Category", "Amount", "Payment", "Status"],
+      headers: ["Date", "Expense Title", "Category", "Amount", "Notes"],
       rows: filteredExpenses.map((e: Expense) => [
         formatDate(e.date),
         e.title,
-        e.category || "\u2014",
+        e.category || "General",
         formatCurrency(e.amount),
-        e.payment_method || "\u2014",
-        e.status || "paid",
+        e.notes || "\u2014",
       ]),
-      filename: `expense_report_${dateRange.from}_${dateRange.to}.pdf`,
+      filename: `expenses_report_${dateRange.from}_${dateRange.to}.pdf`,
     });
   }
 
   function handleExcel() {
     downloadExcelFile(
-      `expense_report_${dateRange.from}_${dateRange.to}.xlsx`,
-      ["Date", "Expense", "Category", "Amount", "Payment", "Status"],
+      `expenses_report_${dateRange.from}_${dateRange.to}.xlsx`,
+      ["Date", "Expense Title", "Category", "Amount", "Notes"],
       filteredExpenses.map((e: Expense) => [
         formatDate(e.date),
         e.title,
-        e.category || "\u2014",
+        e.category || "General",
         e.amount,
-        e.payment_method || "\u2014",
-        e.status || "paid",
+        e.notes || "\u2014",
       ])
     );
   }
@@ -129,45 +138,41 @@ export default function ExpensesReport() {
     {
       key: "date",
       header: "Date",
-      cell: (e: Expense) => <span className="font-mono text-xs">{formatDate(e.date)}</span>,
+      cell: (e: Expense) => (
+        <span className="font-mono text-xs text-text-secondary">{formatDate(e.date)}</span>
+      ),
     },
     {
       key: "title",
-      header: "Expense",
-      cell: (e: Expense) => <span className="font-medium text-text-primary">{e.title}</span>,
+      header: "Expense Title",
+      cell: (e: Expense) => (
+        <span className="font-medium text-text-primary text-xs">{e.title}</span>
+      ),
     },
     {
       key: "category",
       header: "Category",
       cell: (e: Expense) => (
-        <span className="text-text-secondary text-sm">{e.category || "\u2014"}</span>
+        <Badge variant="outline" className="text-xs bg-surface-2 text-text-secondary font-medium">
+          {e.category || "General"}
+        </Badge>
+      ),
+    },
+    {
+      key: "notes",
+      header: "Notes",
+      cell: (e: Expense) => (
+        <span className="text-xs text-text-secondary line-clamp-1 max-w-[200px]">
+          {e.notes || "\u2014"}
+        </span>
       ),
     },
     {
       key: "amount",
       header: "Amount",
       cell: (e: Expense) => (
-        <span className="font-mono font-semibold text-danger">{formatCurrency(e.amount)}</span>
-      ),
-    },
-    {
-      key: "payment_method",
-      header: "Payment",
-      cell: (e: Expense) => (
-        <span className="text-text-secondary text-sm">{e.payment_method || "\u2014"}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (e: Expense) => (
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${e.status === "paid" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${e.status === "paid" ? "bg-success" : "bg-warning"}`}
-          />
-          {e.status || "paid"}
+        <span className="font-mono text-xs font-bold text-danger">
+          {formatCurrency(e.amount)}
         </span>
       ),
     },
@@ -177,8 +182,10 @@ export default function ExpensesReport() {
     <div>
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h2 className="text-lg font-semibold text-text-primary">Expense Report</h2>
-          <p className="text-sm text-text-secondary mt-0.5">Track and analyze business expenses</p>
+          <h2 className="text-lg font-semibold text-text-primary">Operating Expenses Report</h2>
+          <p className="text-sm text-text-secondary mt-0.5">
+            Track business expenditures, operational overhead, and utility outlays
+          </p>
         </div>
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
       </div>
@@ -186,44 +193,48 @@ export default function ExpensesReport() {
       <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-40 h-9 rounded-xl bg-surface border-border/80 text-xs">
+          <SelectTrigger className="w-44 h-9 rounded-xl bg-surface border-border/80 text-xs shadow-xs">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="rent">Rent</SelectItem>
-            <SelectItem value="utilities">Utilities</SelectItem>
-            <SelectItem value="salaries">Salaries</SelectItem>
-            <SelectItem value="supplies">Supplies</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger className="w-36 h-9">
-            <SelectValue placeholder="Payment" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="card">Card</SelectItem>
-            <SelectItem value="transfer">Transfer</SelectItem>
+            {existingCategories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+            {!existingCategories.includes("Utilities") && (
+              <SelectItem value="Utilities">Utilities</SelectItem>
+            )}
+            {!existingCategories.includes("Rent") && <SelectItem value="Rent">Rent</SelectItem>}
+            {!existingCategories.includes("Salaries") && (
+              <SelectItem value="Salaries">Salaries</SelectItem>
+            )}
+            {!existingCategories.includes("Supplies") && (
+              <SelectItem value="Supplies">Supplies</SelectItem>
+            )}
           </SelectContent>
         </Select>
         <div className="relative flex-1 max-w-sm min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
-            placeholder="Search expenses..."
+            placeholder="Search expenses by title or notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-9 rounded-xl bg-surface border-border/80 text-xs shadow-xs"
           />
         </div>
-        <Button variant="ghost" size="sm" className="h-9 text-text-secondary" onClick={handleReset}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 rounded-xl text-text-secondary hover:text-text-primary cursor-pointer"
+          onClick={handleReset}
+        >
           Reset
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KPICard
           title="Total Expenses"
           value={formatCurrency(totalExpenses)}
@@ -231,33 +242,37 @@ export default function ExpensesReport() {
           valueClassName="text-danger"
         />
         <KPICard
-          title="Paid"
-          value={formatCurrency(paidExpenses)}
-          icon={<CheckCircle className="h-4 w-4" />}
-          valueClassName="text-success"
+          title="Expense Entries"
+          value={totalEntries}
+          icon={<Receipt className="h-4 w-4" />}
         />
         <KPICard
-          title="Pending"
-          value={formatCurrency(pendingExpenses)}
-          icon={<Clock className="h-4 w-4" />}
+          title="Avg Per Entry"
+          value={formatCurrency(avgExpense)}
+          icon={<TrendingDown className="h-4 w-4" />}
+        />
+        <KPICard
+          title="Largest Outlay"
+          value={formatCurrency(maxExpense)}
+          icon={<DollarSign className="h-4 w-4" />}
           valueClassName="text-warning"
         />
       </div>
 
-      <div className="rounded-xl border border-border/50 overflow-hidden">
+      <div className="rounded-2xl border border-border/80 bg-surface overflow-hidden shadow-xs">
         <DataTable
           columns={columns}
           data={expenses}
           loading={isLoading}
           keyExtractor={(e: Expense) => e.id}
-          emptyMessage="No expenses found"
+          emptyMessage="No expenses recorded in this period"
         />
       </div>
 
       {meta && meta.totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 px-1">
-          <p className="text-sm text-text-secondary">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          <p className="text-xs text-text-secondary">
+            Showing {(page - 1) * limit + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -265,10 +280,11 @@ export default function ExpensesReport() {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
+              className="h-8 rounded-lg cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-text-secondary px-2">
+            <span className="text-xs text-text-secondary px-2">
               Page {page} of {meta.totalPages}
             </span>
             <Button
@@ -276,6 +292,7 @@ export default function ExpensesReport() {
               size="sm"
               disabled={page >= meta.totalPages}
               onClick={() => setPage(page + 1)}
+              className="h-8 rounded-lg cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

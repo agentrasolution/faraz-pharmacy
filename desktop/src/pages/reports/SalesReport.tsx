@@ -5,13 +5,6 @@ import DateRangePicker, { type DateRange } from "@/components/reports/DateRangeP
 import KPICard from "@/components/reports/KPICard";
 import ExportButtons from "@/components/reports/ExportButtons";
 import DataTable from "@/components/shared/DataTable";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,7 +20,6 @@ export default function SalesReport() {
     from: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
     to: new Date().toISOString().split("T")[0],
   });
-  const [paymentFilter, setPaymentFilter] = useState("all");
   const [chartPeriod, setChartPeriod] = useState<"week" | "month">("week");
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
@@ -37,7 +29,7 @@ export default function SalesReport() {
 
   // Paginated table data
   const { data: salesData, isLoading } = useQuery({
-    queryKey: ["sales", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to, paymentFilter],
+    queryKey: ["sales", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to],
     queryFn: () => api.sales.listPaginated({
       page,
       limit,
@@ -52,7 +44,7 @@ export default function SalesReport() {
 
   // Summary data (load all for KPIs/charts - could be optimized with separate summary endpoint later)
   const { data: allSales = [] } = useQuery({
-    queryKey: ["sales", "summary", dateRange.from, dateRange.to, paymentFilter],
+    queryKey: ["sales", "summary", dateRange.from, dateRange.to],
     queryFn: () => api.sales.listAll({ dateFrom: dateRange.from, dateTo: dateRange.to }),
   });
 
@@ -60,10 +52,9 @@ export default function SalesReport() {
     return allSales.filter((s: Sale) => {
       const inDateRange =
         s.created_at >= dateRange.from && s.created_at <= dateRange.to + "T23:59:59";
-      const matchesPayment = paymentFilter === "all" || s.payment_method === paymentFilter;
-      return inDateRange && matchesPayment;
+      return inDateRange;
     });
-  }, [allSales, dateRange, paymentFilter]);
+  }, [allSales, dateRange]);
 
   const totalRevenue = filteredSales.reduce((sum: number, s: Sale) => sum + s.total, 0);
   const totalPaid = filteredSales.reduce((sum: number, s: Sale) => sum + s.amount_paid, 0);
@@ -92,14 +83,13 @@ export default function SalesReport() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [dateRange, paymentFilter, debouncedSearch]);
+  }, [dateRange, debouncedSearch]);
 
   function handleReset() {
     setDateRange({
       from: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
       to: new Date().toISOString().split("T")[0],
     });
-    setPaymentFilter("all");
     setSearch("");
     setPage(1);
   }
@@ -234,17 +224,6 @@ export default function SalesReport() {
 
 <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger className="w-40 h-9 rounded-xl bg-surface border-border/80 text-xs">
-            <SelectValue placeholder="Payment Method" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="card">Card</SelectItem>
-            <SelectItem value="transfer">Transfer</SelectItem>
-          </SelectContent>
-        </Select>
         <div className="relative flex-1 max-w-sm min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input

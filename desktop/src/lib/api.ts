@@ -28,6 +28,7 @@ import type {
   CustomerLedgerDetail,
   CustomerPaymentReceipt,
   ProductBatch,
+  ProductReportData,
 } from "@/types";
 import type { BackupResult, BackupEntry, GDriveConfig, AutoBackupConfig } from "@/types/electron";
 
@@ -443,6 +444,21 @@ const api = {
   },
   dashboard: {
     stats: (): Promise<DashboardStats> => fetchJson("GET", "/api/dashboard/stats"),
+  },
+  reports: {
+    stats: (): Promise<DashboardStats> => fetchJson("GET", "/api/reports/stats"),
+    productReport: (opts: {
+      productId: string;
+      dateFrom?: string;
+      dateTo?: string;
+    }): Promise<ProductReportData> => {
+      const params = new URLSearchParams();
+      params.set("productId", opts.productId);
+      if (opts.dateFrom) params.set("dateFrom", opts.dateFrom);
+      if (opts.dateTo) params.set("dateTo", opts.dateTo);
+      params.set("tzOffset", String(-new Date().getTimezoneOffset()));
+      return fetchJson("GET", `/api/reports/product?${params.toString()}`);
+    },
   },
   settings: {
     backupCreate: (): Promise<BackupResult> => fetchJson("POST", "/api/settings/backup"),

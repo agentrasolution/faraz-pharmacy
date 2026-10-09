@@ -1,17 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart, Truck, DollarSign, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, Truck, Boxes, DollarSign, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import DateRangePicker, { type DateRange } from "@/components/reports/DateRangePicker";
 import KPICard from "@/components/reports/KPICard";
 import ExportButtons from "@/components/reports/ExportButtons";
 import DataTable from "@/components/shared/DataTable";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -26,7 +19,6 @@ export default function PurchaseReport() {
     from: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
     to: new Date().toISOString().split("T")[0],
   });
-  const [paymentFilter, setPaymentFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [search, setSearch] = useState("");
@@ -35,79 +27,92 @@ export default function PurchaseReport() {
 
   // Paginated table data
   const { data: purchaseData, isLoading } = useQuery({
-    queryKey: ["stock", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to, paymentFilter],
-    queryFn: () => api.stock.listPaginated({
-      page,
-      limit,
-      search: debouncedSearch || undefined,
-      dateFrom: dateRange.from,
-      dateTo: dateRange.to,
-    }),
+    queryKey: ["stock", "report", page, limit, debouncedSearch, dateRange.from, dateRange.to],
+    queryFn: () =>
+      api.stock.listPaginated({
+        page,
+        limit,
+        search: debouncedSearch || undefined,
+        dateFrom: dateRange.from,
+        dateTo: dateRange.to,
+      }),
   });
 
   const purchases = purchaseData?.data ?? [];
   const meta = purchaseData?.meta;
 
-  // Summary data (load all for KPIs - could be optimized with separate summary endpoint later)
+  // Summary data for KPIs and exports
   const { data: allPurchases = [] } = useQuery({
-    queryKey: ["stock", "summary", dateRange.from, dateRange.to, paymentFilter],
+    queryKey: ["stock", "summary", dateRange.from, dateRange.to],
     queryFn: () => api.stock.list(),
   });
 
   const filteredPurchases = useMemo(() => {
     return allPurchases.filter((p: StockPurchase) => {
-      const inDateRange = p.date >= dateRange.from && p.date <= dateRange.to;
-      const matchesPayment = paymentFilter === "all" || p.payment_status === paymentFilter;
-      return inDateRange && matchesPayment;
+      const pDate = p.created_at ? p.created_at.slice(0, 10) : "";
+      const inDateRange = pDate >= dateRange.from && pDate <= dateRange.to;
+      return inDateRange;
     });
-  }, [allPurchases, dateRange, paymentFilter]);
+  }, [allPurchases, dateRange]);
 
   const totalPurchases = filteredPurchases.reduce(
-    (sum: number, p: StockPurchase) => sum + p.total_amount,
+    (sum: number, p: StockPurchase) => sum + (p.total_value ?? p.quantity * p.purchase_price),
     0
   );
-  const totalPending = filteredPurchases.reduce(
-    (sum: number, p: StockPurchase) => sum + (p.total_amount - p.amount_paid),
+  const totalUnits = filteredPurchases.reduce(
+    (sum: number, p: StockPurchase) => sum + (p.quantity || 0),
     0
   );
   const uniqueSuppliers = new Set(
     filteredPurchases.map((p: StockPurchase) => p.distributor_name).filter(Boolean)
   ).size;
+  const avgCostPerEntry = filteredPurchases.length > 0 ? totalPurchases / filteredPurchases.length : 0;
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [dateRange, paymentFilter, debouncedSearch]);
+  }, [dateRange, debouncedSearch]);
 
   function handleReset() {
     setDateRange({
       from: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
       to: new Date().toISOString().split("T")[0],
     });
-    setPaymentFilter("all");
     setSearch("");
     setPage(1);
   }
 
   function handlePDF() {
     generatePDF({
-      title: "Purchase Report",
+      title: "Stock Purchase Report",
       dateRange,
       summary: [
         { label: "Total Purchases", value: formatCurrency(totalPurchases) },
-        { label: "Orders", value: String(filteredPurchases.length) },
+        { label: "Total Inward Units", value: `${totalUnits} units` },
+        { label: "Entries", value: String(filteredPurchases.length) },
         { label: "Suppliers", value: String(uniqueSuppliers) },
-        { label: "Pending", value: formatCurrency(totalPending) },
       ],
-      headers: ["Invoice", "Date", "Supplier", "Total", "Paid", "Balance", "Status"],
+      headers: [
+        "Invoice #",
+        "Date",
+        "Medicine",
+        "Supplier",
+        "Batch #",
+        "Qty",
+        "Unit Cost",
+        "Total Value",
+        "Expiry",
+      ],
       rows: filteredPurchases.map((p: StockPurchase) => [
-        p.invoice_no || "\u2014",
-        formatDate(p.date),
+        p.invoice_number || "\u2014",
+        formatDate(p.created_at),
+        p.product_name || "\u2014",
         p.distributor_name || "\u2014",
-        formatCurrency(p.total_amount),
-        formatCurrency(p.amount_paid),
-        formatCurrency(p.total_amount - p.amount_paid),
-        p.payment_status || "pending",
+        p.batch_number || "\u2014",
+        p.quantity,
+        formatCurrency(p.purchase_price),
+        formatCurrency(p.total_value ?? p.quantity * p.purchase_price),
+        p.expiry ? formatDate(p.expiry) : "\u2014",
       ]),
       filename: `purchase_report_${dateRange.from}_${dateRange.to}.pdf`,
     });
@@ -116,75 +121,100 @@ export default function PurchaseReport() {
   function handleExcel() {
     downloadExcelFile(
       `purchase_report_${dateRange.from}_${dateRange.to}.xlsx`,
-      ["Invoice", "Date", "Supplier", "Total", "Paid", "Balance", "Status"],
+      [
+        "Invoice #",
+        "Date",
+        "Medicine",
+        "Supplier",
+        "Batch #",
+        "Qty",
+        "Unit Cost",
+        "Total Value",
+        "Expiry",
+      ],
       filteredPurchases.map((p: StockPurchase) => [
-        p.invoice_no || "\u2014",
-        formatDate(p.date),
+        p.invoice_number || "\u2014",
+        formatDate(p.created_at),
+        p.product_name || "\u2014",
         p.distributor_name || "\u2014",
-        p.total_amount,
-        p.amount_paid,
-        p.total_amount - p.amount_paid,
-        p.payment_status || "pending",
+        p.batch_number || "\u2014",
+        p.quantity,
+        p.purchase_price,
+        p.total_value ?? p.quantity * p.purchase_price,
+        p.expiry ? formatDate(p.expiry) : "\u2014",
       ])
     );
   }
 
   const columns = [
     {
-      key: "invoice_no",
-      header: "Invoice",
+      key: "invoice_number",
+      header: "Invoice #",
       cell: (p: StockPurchase) => (
-        <span className="font-mono text-xs text-text-secondary">{p.invoice_no || "\u2014"}</span>
+        <span className="font-mono text-xs font-semibold text-text-primary">
+          {p.invoice_number || "\u2014"}
+        </span>
       ),
     },
     {
-      key: "date",
+      key: "created_at",
       header: "Date",
-      cell: (p: StockPurchase) => <span className="font-mono text-xs">{formatDate(p.date)}</span>,
+      cell: (p: StockPurchase) => (
+        <span className="font-mono text-xs text-text-secondary">{formatDate(p.created_at)}</span>
+      ),
+    },
+    {
+      key: "product_name",
+      header: "Medicine / Product",
+      cell: (p: StockPurchase) => (
+        <span className="font-medium text-text-primary">{p.product_name || "\u2014"}</span>
+      ),
     },
     {
       key: "distributor_name",
       header: "Supplier",
       cell: (p: StockPurchase) => (
-        <span className="font-medium text-text-primary">{p.distributor_name || "\u2014"}</span>
+        <span className="text-xs text-text-secondary">{p.distributor_name || "\u2014"}</span>
       ),
     },
     {
-      key: "total_amount",
-      header: "Total",
+      key: "batch_number",
+      header: "Batch #",
       cell: (p: StockPurchase) => (
-        <span className="font-mono font-semibold">{formatCurrency(p.total_amount)}</span>
+        <span className="font-mono text-xs text-text-secondary">{p.batch_number || "\u2014"}</span>
       ),
     },
     {
-      key: "amount_paid",
-      header: "Paid",
+      key: "quantity",
+      header: "Qty",
       cell: (p: StockPurchase) => (
-        <span className="font-mono">{formatCurrency(p.amount_paid)}</span>
+        <span className="font-mono text-xs font-bold text-brand">{p.quantity}</span>
       ),
     },
     {
-      key: "balance",
-      header: "Balance",
+      key: "purchase_price",
+      header: "Unit Cost",
       cell: (p: StockPurchase) => (
-        <span
-          className={`font-mono font-medium ${p.total_amount - p.amount_paid > 0 ? "text-danger" : ""}`}
-        >
-          {formatCurrency(p.total_amount - p.amount_paid)}
+        <span className="font-mono text-xs text-text-secondary">
+          {formatCurrency(p.purchase_price)}
         </span>
       ),
     },
     {
-      key: "payment_status",
-      header: "Status",
+      key: "total_value",
+      header: "Total Value",
       cell: (p: StockPurchase) => (
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${p.payment_status === "paid" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${p.payment_status === "paid" ? "bg-success" : "bg-warning"}`}
-          />
-          {p.payment_status || "pending"}
+        <span className="font-mono text-xs font-bold text-text-primary">
+          {formatCurrency(p.total_value ?? p.quantity * p.purchase_price)}
+        </span>
+      ),
+    },
+    {
+      key: "expiry",
+      header: "Expiry",
+      cell: (p: StockPurchase) => (
+        <span className="font-mono text-xs text-text-secondary">
+          {p.expiry ? formatDate(p.expiry) : "\u2014"}
         </span>
       ),
     },
@@ -196,7 +226,7 @@ export default function PurchaseReport() {
         <div>
           <h2 className="text-lg font-semibold text-text-primary">Purchase Report</h2>
           <p className="text-sm text-text-secondary mt-0.5">
-            Track stock purchases and supplier payments
+            Audit inventory purchase orders, supplier stock receipts, and inward shipments
           </p>
         </div>
         <ExportButtons onPDF={handlePDF} onExcel={handleExcel} />
@@ -204,26 +234,21 @@ export default function PurchaseReport() {
 
       <div className="relative z-20 flex items-center gap-3 mb-6 p-4 bg-surface rounded-2xl border border-border/80 shadow-xs flex-wrap">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger className="w-40 h-9 rounded-xl bg-surface border-border/80 text-xs">
-            <SelectValue placeholder="Payment Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
         <div className="relative flex-1 max-w-sm min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
           <Input
-            placeholder="Search invoices, suppliers..."
+            placeholder="Search invoice #, medicine, supplier..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-9 rounded-xl bg-surface border-border/80 text-xs shadow-xs"
           />
         </div>
-        <Button variant="ghost" size="sm" className="h-9 text-text-secondary" onClick={handleReset}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 rounded-xl text-text-secondary hover:text-text-primary cursor-pointer"
+          onClick={handleReset}
+        >
           Reset
         </Button>
       </div>
@@ -235,33 +260,36 @@ export default function PurchaseReport() {
           icon={<ShoppingCart className="h-4 w-4" />}
         />
         <KPICard
-          title="Orders"
-          value={filteredPurchases.length}
-          icon={<ShoppingCart className="h-4 w-4" />}
+          title="Inward Units"
+          value={`${totalUnits} units`}
+          icon={<Boxes className="h-4 w-4" />}
         />
-        <KPICard title="Suppliers" value={uniqueSuppliers} icon={<Truck className="h-4 w-4" />} />
         <KPICard
-          title="Pending Payments"
-          value={formatCurrency(totalPending)}
+          title="Suppliers"
+          value={uniqueSuppliers}
+          icon={<Truck className="h-4 w-4" />}
+        />
+        <KPICard
+          title="Avg Order Cost"
+          value={formatCurrency(avgCostPerEntry)}
           icon={<DollarSign className="h-4 w-4" />}
-          valueClassName="text-warning"
         />
       </div>
 
-      <div className="rounded-xl border border-border/50 overflow-hidden">
+      <div className="rounded-2xl border border-border/80 bg-surface overflow-hidden shadow-xs">
         <DataTable
           columns={columns}
           data={purchases}
           loading={isLoading}
           keyExtractor={(p: StockPurchase) => p.id}
-          emptyMessage="No purchases found"
+          emptyMessage="No purchases found in this period"
         />
       </div>
 
       {meta && meta.totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 px-1">
-          <p className="text-sm text-text-secondary">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
+          <p className="text-xs text-text-secondary">
+            Showing {(page - 1) * limit + 1} to {Math.min(page * limit, meta.total)} of {meta.total}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -269,10 +297,11 @@ export default function PurchaseReport() {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
+              className="h-8 rounded-lg cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-text-secondary px-2">
+            <span className="text-xs text-text-secondary px-2">
               Page {page} of {meta.totalPages}
             </span>
             <Button
@@ -280,6 +309,7 @@ export default function PurchaseReport() {
               size="sm"
               disabled={page >= meta.totalPages}
               onClick={() => setPage(page + 1)}
+              className="h-8 rounded-lg cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

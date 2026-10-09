@@ -150,8 +150,8 @@ export default function GlobalSearch() {
 
   return (
     <>
-      <div ref={containerRef} className="relative">
-        <div className="relative flex items-center">
+      <div ref={containerRef} className="relative z-50">
+        <div className="relative flex items-center z-50">
           <Search className="absolute left-3.5 h-4 w-4 text-text-secondary pointer-events-none" />
           <input
             ref={inputRef}
@@ -206,7 +206,7 @@ export default function GlobalSearch() {
             )}
 
             {!isLoading && activeProducts.length > 0 && (
-              <div className="py-2">
+              <div className="py-2 z-40">
                 <div className="px-4 py-1.5 flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider font-display flex items-center gap-1.5">
                     {isSearching ? (
