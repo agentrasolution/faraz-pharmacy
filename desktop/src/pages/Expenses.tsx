@@ -25,7 +25,19 @@ import ExportButton from "@/components/shared/ExportButton";
 import PasswordConfirmDialog from "@/components/shared/PasswordConfirmDialog";
 import type { Expense } from "@/types";
 
-const categories = ["All", "Utilities", "Salaries", "Supplies", "Rent"];
+export const EXPENSE_CATEGORIES = [
+  "Electricity Bill",
+  "Rent",
+  "Food",
+  "Salaries",
+  "Supplies",
+  "Computer Hardwares",
+  "Computer Cables",
+  "Maintainence",
+  "Other",
+] as const;
+
+const filterCategories = ["All", ...EXPENSE_CATEGORIES];
 
 export default function Expenses() {
   const queryClient = useQueryClient();
@@ -42,7 +54,7 @@ export default function Expenses() {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     title: "",
-    category: "Utilities",
+    category: EXPENSE_CATEGORIES[0],
     amount: "",
     notes: "",
     date: new Date().toISOString().split("T")[0],
@@ -77,7 +89,7 @@ export default function Expenses() {
     setEditingId(null);
     setForm({
       title: "",
-      category: "Utilities",
+      category: EXPENSE_CATEGORIES[0],
       amount: "",
       notes: "",
       date: new Date().toISOString().split("T")[0],
@@ -133,7 +145,7 @@ export default function Expenses() {
       setEditingId(null);
       setForm({
         title: "",
-        category: "Utilities",
+        category: EXPENSE_CATEGORIES[0],
         amount: "",
         notes: "",
         date: new Date().toISOString().split("T")[0],
@@ -158,7 +170,7 @@ export default function Expenses() {
       setEditingId(null);
       setForm({
         title: "",
-        category: "Utilities",
+        category: EXPENSE_CATEGORIES[0],
         amount: "",
         notes: "",
         date: new Date().toISOString().split("T")[0],
@@ -333,7 +345,7 @@ export default function Expenses() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-surface border border-border/80 shadow-xs overflow-x-auto">
-          {categories.map((cat) => (
+          {filterCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => {
@@ -472,16 +484,14 @@ export default function Expenses() {
                 onValueChange={(v) => setForm({ ...form, category: v })}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories
-                    .filter((c) => c !== "All")
-                    .map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
+                  {EXPENSE_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

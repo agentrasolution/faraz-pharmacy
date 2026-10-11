@@ -158,7 +158,6 @@ export default function Categories() {
         action={{
           label: (
             <span className="flex items-center gap-1.5">
-              <Plus className="h-4 w-4" />
               Add Category
             </span>
           ),
@@ -338,7 +337,7 @@ export default function Categories() {
               {editingId ? "Edit Category" : "Add Category"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 p-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-text-primary">Category Name</Label>
               <Input
