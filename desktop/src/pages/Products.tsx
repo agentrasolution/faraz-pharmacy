@@ -247,6 +247,19 @@ export default function Products() {
     return [{ value: "", label: "No company" }, ...options];
   }, [companies, form.company]);
 
+  const categoryOptions = useMemo(() => {
+    const options = (categories ?? []).map((cat: Category) => ({
+      value: cat.name,
+      label: cat.name,
+    }));
+
+    if (form.category && !options.some((option) => option.value === form.category)) {
+      options.unshift({ value: form.category, label: `${form.category} (not in list)` });
+    }
+
+    return [{ value: "", label: "No category" }, ...options];
+  }, [categories, form.category]);
+
   const knownCompanyNames = useMemo(
     () => new Set((companies ?? []).map((company: Company) => company.name.toLowerCase())),
     [companies]
@@ -1304,21 +1317,13 @@ export default function Products() {
               </div>
               <div className="space-y-1">
                 <Label>Category</Label>
-                <Select
+                <SearchableSelect
+                  options={categoryOptions}
                   value={form.category}
-                  onValueChange={(v) => setForm({ ...form, category: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat: Category) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(v) => setForm({ ...form, category: v })}
+                  placeholder="Search categories"
+                  clearable
+                />
               </div>
             </div>
             <div className="space-y-1">

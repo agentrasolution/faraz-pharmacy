@@ -26,6 +26,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -57,6 +65,9 @@ export default function POS() {
   // Price tier modal
   const [pricePickerOpen, setPricePickerOpen] = useState(false);
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
+
+  // Arrears confirmation modal
+  const [arrearsConfirmOpen, setArrearsConfirmOpen] = useState(false);
   const pendingPrices = pendingProduct
     ? ((pendingProduct as any).prices as ProductPrice[] | undefined)
     : undefined;
@@ -150,33 +161,28 @@ export default function POS() {
   }, [matchingProducts, search]);
 
   // Amount Paid behavior:
-  // - Defaults to Total once customer is selected
+  // - Defaults to Total (customer selection is optional for full payments)
   // - Capped at cart.total (cannot exceed total amount)
   // - Keeps synced with Total unless cashier entered custom partial amount or 100% credit
   useEffect(() => {
-    if (!cart.customerId) {
-      cart.setAmountPaid("");
-      setIsCustomAmountPaid(false);
-      setIsFullArrears(false);
+    if (isFullArrears) {
+      cart.setAmountPaid("0");
+    } else if (!isCustomAmountPaid) {
+      cart.setAmountPaid(cart.total > 0 ? String(cart.total) : "0");
     } else {
-      if (isFullArrears) {
-        cart.setAmountPaid("0");
-      } else if (!isCustomAmountPaid) {
-        cart.setAmountPaid(cart.total > 0 ? String(cart.total) : "0");
-      } else {
-        const currentVal = Number(cart.amountPaid) || 0;
-        if (currentVal > cart.total) {
-          cart.setAmountPaid(String(cart.total));
-        }
+      const currentVal = Number(cart.amountPaid) || 0;
+      if (currentVal > cart.total) {
+        cart.setAmountPaid(String(cart.total));
       }
     }
-  }, [cart.customerId, cart.total, isCustomAmountPaid, isFullArrears]);
+  }, [cart.total, isCustomAmountPaid, isFullArrears]);
 
   const numAmountPaid = isFullArrears
     ? 0
     : Math.min(cart.total, Math.max(0, Number(cart.amountPaid) || 0));
   const arrearsShortfall =
-    cart.customerId && numAmountPaid < cart.total ? cart.total - numAmountPaid : 0;
+    numAmountPaid < cart.total ? cart.total - numAmountPaid : 0;
+  const isPartialOrCredit = isFullArrears || arrearsShortfall > 0;
   const changeDue = 0;
 
   // Add product to cart helper
@@ -329,25 +335,13 @@ export default function POS() {
     }
   };
 
-  // Checkout execution
-  const handleCheckout = async () => {
-    if (cart.items.length === 0) {
-      toast.error("Cart is empty");
-      focusSearch();
-      return;
-    }
-
-    if (!cart.customerId) {
-      toast.error("Please select a customer to enable payment");
-      customerTriggerRef.current?.focus();
-      return;
-    }
-
+  // Core Sale Execution
+  const executeSale = async () => {
     setProcessing(true);
     try {
       const sale = await api.sales.create({
-        customerId: cart.customerId,
-        customerName: cart.customerName,
+        customerId: cart.customerId || undefined,
+        customerName: cart.customerName || "Walk-in Customer",
         items: cart.items.map((item) => ({
           productId: item.productId,
           productName: item.productName,
@@ -384,7 +378,7 @@ export default function POS() {
       const printData = {
         ...sale,
         tax: cart.tax,
-        customer_name: cart.customerName || sale.customer_name,
+        customer_name: cart.customerName || sale.customer_name || "Walk-in Customer",
         customer_total_arrears: customerTotalArrears,
         items:
           sale.items && sale.items.length > 0
@@ -405,7 +399,7 @@ export default function POS() {
       setLastSaleData(printData);
       setLastReceipt(printData);
 
-      const cfg = window.appConfig?.printer;
+      const cfg = window.appConfig?.printer as any;
       if (cfg?.autoPrint) {
         window.printReceipt(printData, cfg).catch(() => {});
       } else {
@@ -423,6 +417,31 @@ export default function POS() {
     } finally {
       setProcessing(false);
     }
+  };
+
+  // Checkout execution / confirmation validation
+  const handleCheckout = async () => {
+    if (cart.items.length === 0) {
+      toast.error("Cart is empty");
+      focusSearch();
+      return;
+    }
+
+    // If there is any remaining amount going into arrears:
+    if (arrearsShortfall > 0) {
+      if (!cart.customerId) {
+        toast.error("Please select a customer to add remaining balance to arrears");
+        customerTriggerRef.current?.focus();
+        return;
+      }
+
+      // Customer is selected and amount is going to arrears -> Require Confirmation Modal
+      setArrearsConfirmOpen(true);
+      return;
+    }
+
+    // Full payment sale: complete immediately
+    await executeSale();
   };
 
   // Keyboard Shortcuts (Ctrl+Enter to Pay, Ctrl+P to reprint)
@@ -443,11 +462,8 @@ export default function POS() {
       // Quick Pay: Ctrl+Enter or Ctrl+S
       if ((e.ctrlKey && e.key === "Enter") || (e.ctrlKey && e.key.toLowerCase() === "s")) {
         e.preventDefault();
-        if (cart.items.length > 0 && cart.customerId) {
+        if (cart.items.length > 0) {
           handleCheckout();
-        } else if (!cart.customerId) {
-          toast.error("Please select a customer to enable payment");
-          customerTriggerRef.current?.focus();
         }
         return;
       }
@@ -488,7 +504,10 @@ export default function POS() {
     }
   };
 
-  const canPay = cart.items.length > 0 && !!cart.customerId && !processing;
+  const canPay =
+    cart.items.length > 0 &&
+    !processing &&
+    (!isPartialOrCredit || !!cart.customerId);
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] max-w-[1600px] mx-auto px-4 py-2 select-none gap-3">
@@ -792,15 +811,13 @@ export default function POS() {
                 ref={amountPaidInputRef}
                 tabIndex={6}
                 type="number"
-                disabled={!cart.customerId || isFullArrears}
+                disabled={isFullArrears}
                 placeholder={
-                  !cart.customerId
-                    ? "Select customer to enable payment"
-                    : isFullArrears
-                      ? "100% Credit (Rs 0 Paid)"
-                      : "Amount Paid"
+                  isFullArrears
+                    ? "100% Credit (Rs 0 Paid)"
+                    : "Amount Paid"
                 }
-                value={!cart.customerId ? "" : isFullArrears ? "" : cart.amountPaid}
+                value={isFullArrears ? "" : cart.amountPaid}
                 min="0"
                 max={cart.total}
                 onChange={(e) => {
@@ -819,60 +836,66 @@ export default function POS() {
                   }
                   setIsCustomAmountPaid(true);
                   cart.setAmountPaid(raw);
+                  if (num < cart.total && !cart.customerId) {
+                    toast.info("Please select a customer to record remaining balance to arrears");
+                  }
                 }}
                 className={`h-11 text-base font-mono font-bold text-center rounded-2xl border-2 transition-all ${
-                  !cart.customerId || isFullArrears
+                  isFullArrears
                     ? "bg-surface-2/70 text-text-secondary border-dashed border-border/80 cursor-not-allowed"
                     : "border-border/90 focus-visible:border-brand bg-surface shadow-xs"
                 }`}
               />
 
-              {/* Helper text when locked */}
-              {!cart.customerId && (
-                <p className="text-[11px] text-center text-text-secondary/70">
-                  Select a customer above to unlock payment
+              {/* Helper text when customer is needed for arrears */}
+              {!cart.customerId && arrearsShortfall > 0 && (
+                <p className="text-[11px] text-center text-amber-600 dark:text-amber-400 font-medium">
+                  Select a customer above to record remaining {formatCurrency(arrearsShortfall)} to arrears
                 </p>
               )}
 
               {/* Checkbox option: 100% Credit / Add all amount to arrears */}
-              {cart.customerId && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-surface-2/60 border border-border/70">
-                    <Checkbox
-                      id="pos-full-arrears"
-                      checked={isFullArrears}
-                      onCheckedChange={(checked) => {
-                        const val = checked === true;
-                        setIsFullArrears(val);
-                        if (val) {
-                          cart.setAmountPaid("0");
-                          cart.setAddToArrears(true);
-                        } else {
-                          cart.setAmountPaid(String(cart.total));
-                          setIsCustomAmountPaid(false);
-                          cart.setAddToArrears(false);
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor="pos-full-arrears"
-                      className="text-xs font-semibold text-text-primary cursor-pointer flex-1"
-                    >
-                      100% Credit (Add all {formatCurrency(cart.total)} to arrears)
-                    </Label>
-                  </div>
-
-                  {/* Arrears difference callout for partial payments */}
-                  {!isFullArrears && arrearsShortfall > 0 && (
-                    <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-between">
-                      <span>Remaining to arrears:</span>
-                      <span className="font-mono text-sm font-bold">
-                        Rs {arrearsShortfall.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-surface-2/60 border border-border/70">
+                  <Checkbox
+                    id="pos-full-arrears"
+                    checked={isFullArrears}
+                    onCheckedChange={(checked) => {
+                      const val = checked === true;
+                      if (val && !cart.customerId) {
+                        toast.error("Please select a customer first to add amount to arrears");
+                        customerTriggerRef.current?.focus();
+                        return;
+                      }
+                      setIsFullArrears(val);
+                      if (val) {
+                        cart.setAmountPaid("0");
+                        cart.setAddToArrears(true);
+                      } else {
+                        cart.setAmountPaid(String(cart.total));
+                        setIsCustomAmountPaid(false);
+                        cart.setAddToArrears(false);
+                      }
+                    }}
+                  />
+                  <Label
+                    htmlFor="pos-full-arrears"
+                    className="text-xs font-semibold text-text-primary cursor-pointer flex-1"
+                  >
+                    100% Credit (Add all {formatCurrency(cart.total)} to arrears)
+                  </Label>
                 </div>
-              )}
+
+                {/* Arrears difference callout for partial payments */}
+                {!isFullArrears && arrearsShortfall > 0 && (
+                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-between">
+                    <span>Remaining to arrears:</span>
+                    <span className="font-mono text-sm font-bold">
+                      {formatCurrency(arrearsShortfall)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 5. Pay Button */}
@@ -888,10 +911,12 @@ export default function POS() {
                 <span>
                   {processing
                     ? "Processing Sale..."
-                    : !cart.customerId
-                      ? "Select a Customer to Pay"
-                      : isFullArrears
-                        ? `Record to Arrears: ${formatCurrency(cart.total)}`
+                    : isFullArrears
+                      ? `Record to Arrears: ${formatCurrency(cart.total)}`
+                      : arrearsShortfall > 0
+                        ? !cart.customerId
+                          ? "Select Customer for Arrears"
+                          : `Pay ${formatCurrency(numAmountPaid)} + Arrears ${formatCurrency(arrearsShortfall)}`
                         : `Pay ${formatCurrency(cart.total)}`}
                 </span>
                 <kbd className="hidden sm:inline-flex px-1.5 py-0.5 text-[10px] font-mono font-medium bg-white/20 text-white rounded">
@@ -902,6 +927,102 @@ export default function POS() {
           </div>
         </div>
       </div>
+
+      {/* Arrears Confirmation Dialog */}
+      <Dialog open={arrearsConfirmOpen} onOpenChange={setArrearsConfirmOpen}>
+        <DialogContent className="max-w-md p-6 rounded-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-warning mb-1">
+              <AlertCircle className="h-5 w-5" />
+              <DialogTitle className="text-base font-bold text-text-primary">
+                Confirm Arrears Addition
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-text-secondary">
+              The remaining balance from this transaction will be recorded to the customer's arrears / khata account.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-3">
+            {/* Customer Details */}
+            <div className="p-3 rounded-xl bg-surface-2 border border-border/80 space-y-1.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-secondary font-medium">Customer:</span>
+                <span className="font-bold text-text-primary">
+                  {selectedCustomer?.name || cart.customerName || "Selected Customer"}
+                </span>
+              </div>
+              {selectedCustomer?.phone && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-text-secondary font-medium">Phone:</span>
+                  <span className="font-mono text-text-primary">{selectedCustomer.phone}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-xs pt-1.5 border-t border-border/60">
+                <span className="text-text-secondary font-medium">Current Arrears:</span>
+                <span className="font-mono font-semibold text-text-primary">
+                  {formatCurrency(customerPreviousArrears)}
+                </span>
+              </div>
+            </div>
+
+            {/* Arrears Summary Card */}
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-secondary font-medium">Total Bill:</span>
+                <span className="font-mono font-bold text-text-primary">
+                  {formatCurrency(cart.total)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-secondary font-medium">Amount Paid Now:</span>
+                <span className="font-mono font-semibold text-success">
+                  {formatCurrency(numAmountPaid)}
+                </span>
+              </div>
+              <Separator className="bg-amber-500/20 my-1" />
+              <div className="flex justify-between items-center text-sm font-bold text-amber-600 dark:text-amber-400">
+                <span>Adding to Arrears:</span>
+                <span className="font-mono text-base tabular-nums">
+                  +{formatCurrency(arrearsShortfall)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs pt-1 text-text-secondary">
+                <span>New Total Outstanding:</span>
+                <span className="font-mono font-bold text-danger">
+                  {formatCurrency(customerPreviousArrears + arrearsShortfall)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setArrearsConfirmOpen(false);
+                toast.info("Sale was not processed");
+              }}
+              className="rounded-xl text-xs font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="brand"
+              disabled={processing}
+              onClick={async () => {
+                setArrearsConfirmOpen(false);
+                await executeSale();
+              }}
+              className="rounded-xl text-xs font-bold gap-1.5"
+            >
+              {processing ? "Processing..." : "Confirm & Complete Sale"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Price Tier Selection Dialog (Preserved existing feature) */}
       <AlertDialog
@@ -953,12 +1074,15 @@ export default function POS() {
 
       {/* Receipt Print Preview Dialog */}
       <PrintPreviewDialog
-        isOpen={showPrintDialog}
-        onClose={() => {
-          setShowPrintDialog(false);
-          setPendingPrintData(null);
-          focusSearch();
+        open={showPrintDialog}
+        onOpenChange={(open) => {
+          setShowPrintDialog(open);
+          if (!open) {
+            setPendingPrintData(null);
+            focusSearch();
+          }
         }}
+        title="Sale Receipt"
         generateHtml={generateHtml}
         onPrint={handlePrint}
         saleData={pendingPrintData}

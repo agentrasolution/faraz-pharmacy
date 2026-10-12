@@ -33,17 +33,20 @@ const A5_MARGINS: PrintMargins = { top: 8, bottom: 8, left: 8, right: 8 };
 interface PrintPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  htmlGenerator: (paperSize: string) => Promise<string>;
-  onPrint: (config: PrinterConfig) => Promise<void>;
+  title?: string;
+  htmlGenerator?: (paperSize: string) => Promise<string>;
+  generateHtml?: (paperSize: string) => Promise<string>;
+  onPrint?: (config: PrinterConfig) => Promise<void>;
   initialPaperSize?: "thermal" | "a4" | "a5";
+  saleData?: unknown;
 }
 
 export default function PrintPreviewDialog({
   open,
   onOpenChange,
-  title,
+  title = "Receipt Preview",
   htmlGenerator,
+  generateHtml,
   onPrint,
   initialPaperSize = "thermal",
 }: PrintPreviewDialogProps) {
@@ -84,16 +87,22 @@ export default function PrintPreviewDialog({
     }
   }, []);
 
+  const generator = htmlGenerator || generateHtml;
+
   useEffect(() => {
     if (!open) return;
+    if (!generator) {
+      setLoadingHtml(false);
+      return;
+    }
     setLoadingHtml(true);
-    htmlGenerator(paperSize)
+    generator(paperSize)
       .then((h) => {
-        setHtml(h);
+        setHtml(h || "");
         setLoadingHtml(false);
       })
       .catch(() => setLoadingHtml(false));
-  }, [open, paperSize, htmlGenerator]);
+  }, [open, paperSize, generator]);
 
   useEffect(() => {
     if (!open) return;
