@@ -51,7 +51,10 @@ function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isPosWindow = new URLSearchParams(location.search).has("pos");
+  const searchParams = new URLSearchParams(location.search);
+  const isPosWindow = searchParams.has("pos");
+  const isStandaloneWindow =
+    isPosWindow || searchParams.has("standalone") || location.pathname === "/returns/terminal";
 
   const [reprintOpen, setReprintOpen] = useState(false);
   const [reprintData, setReprintData] = useState<unknown>(null);
@@ -262,6 +265,14 @@ function AppShell() {
           }
         />
         <Route
+          path="/returns/terminal"
+          element={
+            <AnimatedPage>
+              <Returns defaultMode="terminal" isStandaloneWindow={isStandaloneWindow} />
+            </AnimatedPage>
+          }
+        />
+        <Route
           path="/expenses"
           element={
             <AnimatedPage>
@@ -305,12 +316,12 @@ function AppShell() {
     </AnimatePresence>
   );
 
-  if (isPosWindow) {
+  if (isStandaloneWindow) {
     return (
       <div className="flex h-screen overflow-hidden">
         <div className="flex flex-1 flex-col overflow-hidden">
           <OfflineBanner />
-          <main className="flex-1 overflow-y-auto p-5 lg:p-6">{routes}</main>
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6">{routes}</main>
         </div>
         <PrintPreviewDialog
           open={reprintOpen}

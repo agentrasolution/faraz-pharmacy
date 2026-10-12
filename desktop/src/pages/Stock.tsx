@@ -81,7 +81,7 @@ export default function Stock() {
       s.product_name,
       s.quantity,
       formatCurrency(s.purchase_price),
-      s.stax ? `${s.stax}%` : "—",
+      s.stax ? formatCurrency(s.stax) : "—",
       formatCurrency(s.total_value),
       s.active !== 0 ? "Active" : "Archived",
     ]);
@@ -540,10 +540,10 @@ export default function Stock() {
     },
     {
       key: "stax",
-      header: "STAX",
+      header: "STAX (PKR)",
       cell: (s: StockPurchase) => (
         <span className="font-mono text-xs text-text-secondary">
-          {s.stax ? `${s.stax}%` : "—"}
+          {s.stax ? formatCurrency(s.stax) : "—"}
         </span>
       ),
     },
@@ -878,7 +878,7 @@ export default function Stock() {
                     <Sparkles className="h-3 w-3 text-amber-500" />
                     <span>Latest: <strong>{recentInvoices[0].invoiceNumber}</strong></span>
                     <span className="text-[10px] opacity-75">
-                      ({recentInvoices[0].distributorName || "Supplier"}{recentInvoices[0].stax ? ` • ${recentInvoices[0].stax}% STAX` : ""})
+                      ({recentInvoices[0].distributorName || "Supplier"}{recentInvoices[0].stax ? ` • ${formatCurrency(recentInvoices[0].stax)} STAX` : ""})
                     </span>
                   </button>
                 </div>
@@ -892,7 +892,7 @@ export default function Stock() {
                     <SearchableSelect
                       options={recentInvoices.map((inv) => ({
                         value: inv.invoiceNumber,
-                        label: `${inv.invoiceNumber} — ${inv.distributorName || "Supplier"} (${inv.stax ?? 0}% STAX)`,
+                        label: `${inv.invoiceNumber} — ${inv.distributorName || "Supplier"} (${formatCurrency(inv.stax ?? 0)} STAX)`,
                       }))}
                       value={form.invoiceNumber}
                       onChange={(invNum) => {
@@ -950,12 +950,12 @@ export default function Stock() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">STAX (%)</Label>
+                <Label className="text-xs">STAX (PKR)</Label>
                 <Input
                   type="number"
                   min="0"
                   step="any"
-                  placeholder="e.g. 18 (applies to this invoice purchase)"
+                  placeholder="e.g. 150 (sales tax in PKR for this invoice)"
                   value={form.stax}
                   onChange={(e) => setForm({ ...form, stax: e.target.value })}
                 />

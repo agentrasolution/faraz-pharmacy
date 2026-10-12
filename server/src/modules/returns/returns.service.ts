@@ -13,7 +13,9 @@ export const returnsService = {
       where.OR = [
         { id: { contains: q, mode: "insensitive" } },
         { saleId: { contains: q, mode: "insensitive" } },
+        { reason: { contains: q, mode: "insensitive" } },
         { sale: { is: { customer: { is: { name: { contains: q, mode: "insensitive" } } } } } },
+        { items: { some: { productName: { contains: q, mode: "insensitive" } } } },
       ];
     }
 

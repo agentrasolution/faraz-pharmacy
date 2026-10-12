@@ -162,12 +162,16 @@ export const salesService = {
           { id: { contains: query, mode: "insensitive" } },
           { customer: { is: { name: { contains: query, mode: "insensitive" } } } },
           { items: { some: { productName: { contains: query, mode: "insensitive" } } } },
+          { items: { some: { barcode: { contains: query, mode: "insensitive" } } } },
+          { items: { some: { product: { is: { barcode: { contains: query, mode: "insensitive" } } } } } },
         ],
       },
       orderBy: { createdAt: "desc" },
       take: limit,
       include: {
         customer: { select: { name: true } },
+        items: true,
+        returns: { include: { items: true } },
         _count: { select: { items: true, returns: true } },
       },
     });
@@ -204,6 +208,8 @@ export const salesService = {
         { id: { contains: search, mode: "insensitive" } },
         { customer: { is: { name: { contains: search, mode: "insensitive" } } } },
         { items: { some: { productName: { contains: search, mode: "insensitive" } } } },
+        { items: { some: { barcode: { contains: search, mode: "insensitive" } } } },
+        { items: { some: { product: { is: { barcode: { contains: search, mode: "insensitive" } } } } } },
       ];
     }
 
