@@ -134,7 +134,7 @@ export default function PrintPreviewDialog({
         ...(paperSize !== "thermal" ? { margins } : {}),
       };
       window.electronAPI?.printers?.saveConfig(config);
-      await onPrint(config);
+      if (onPrint) await onPrint(config);
       onOpenChange(false);
     } catch (e) {
       toast.error((e as Error).message || "Print failed");
