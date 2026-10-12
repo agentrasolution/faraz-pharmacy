@@ -195,6 +195,7 @@ model StockPurchase {
   quantity      Int          @default(0)
   purchasePrice Float        @default(0) @map("purchase_price")
   salePrice     Float        @default(0) @map("sale_price")
+  stax          Float        @default(0) @map("stax")
   expiry        String?
   totalValue    Float         @default(0) @map("total_value")
   active        Int           @default(1)

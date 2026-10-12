@@ -137,6 +137,7 @@ export const purchasesService = {
           quantity: data.quantity,
           purchasePrice: price,
           salePrice,
+          stax: data.stax ?? 0,
           expiry,
           totalValue,
         },
@@ -181,6 +182,7 @@ export const purchasesService = {
           totalValue,
           invoiceNumber: data.invoiceNumber ?? old.invoiceNumber,
           distributorId: data.distributorId ?? old.distributorId,
+          stax: data.stax !== undefined ? data.stax : (old as any).stax ?? 0,
         },
         include: {
           product: { select: { name: true } },
