@@ -51,6 +51,7 @@ export default function Stock() {
     invoiceNumber: "",
     batchNumber: "",
     quantity: "",
+    stax: "",
     expiry: "",
   });
 
@@ -62,6 +63,7 @@ export default function Stock() {
     "Product",
     "Qty",
     "Purchase Price",
+    "STAX",
     "Total",
     "Status",
   ];
@@ -74,6 +76,7 @@ export default function Stock() {
       s.product_name,
       s.quantity,
       formatCurrency(s.purchase_price),
+      s.stax ? `${s.stax}%` : "—",
       formatCurrency(s.total_value),
       s.active !== 0 ? "Active" : "Archived",
     ]);
@@ -144,13 +147,22 @@ export default function Stock() {
         invoiceNumber: form.invoiceNumber,
         batchNumber: form.batchNumber || undefined,
         quantity: Number(form.quantity),
+        stax: form.stax ? Number(form.stax) : 0,
         expiry: form.expiry || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setOpen(false);
-      setForm({ productId: "", distributorId: "", invoiceNumber: "", batchNumber: "", quantity: "", expiry: "" });
+      setForm({
+        productId: "",
+        distributorId: "",
+        invoiceNumber: "",
+        batchNumber: "",
+        quantity: "",
+        stax: "",
+        expiry: "",
+      });
       toast.success("Stock purchase recorded");
     },
     onError: (err) => {
@@ -217,6 +229,7 @@ export default function Stock() {
         invoiceNumber: form.invoiceNumber,
         batchNumber: form.batchNumber || undefined,
         quantity: Number(form.quantity),
+        stax: form.stax ? Number(form.stax) : 0,
         expiry: form.expiry || undefined,
       }),
     onSuccess: () => {
@@ -230,6 +243,7 @@ export default function Stock() {
         invoiceNumber: "",
         batchNumber: "",
         quantity: "",
+        stax: "",
         expiry: "",
       });
       toast.success("Stock purchase updated");
@@ -265,6 +279,7 @@ export default function Stock() {
       invoiceNumber: "",
       batchNumber: "",
       quantity: "",
+      stax: "",
       expiry: "",
     });
     setScanValue("");
@@ -279,6 +294,7 @@ export default function Stock() {
       invoiceNumber: entry.invoice_number || "",
       batchNumber: entry.batch_number || "",
       quantity: String(entry.quantity),
+      stax: entry.stax !== undefined && entry.stax !== null ? String(entry.stax) : "",
       expiry: entry.expiry || "",
     });
     setOpen(true);
@@ -353,6 +369,15 @@ export default function Stock() {
       header: "Cost",
       cell: (s: StockPurchase) => (
         <span className="font-mono text-xs">{formatCurrency(s.purchase_price)}</span>
+      ),
+    },
+    {
+      key: "stax",
+      header: "STAX",
+      cell: (s: StockPurchase) => (
+        <span className="font-mono text-xs text-text-secondary">
+          {s.stax ? `${s.stax}%` : "—"}
+        </span>
       ),
     },
     {
@@ -648,14 +673,27 @@ export default function Stock() {
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label>Quantity</Label>
-              <Input
-                type="number"
-                min="1"
-                value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Quantity</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.quantity}
+                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>STAX (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="e.g. 18"
+                  value={form.stax}
+                  onChange={(e) => setForm({ ...form, stax: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Expiry (optional)</Label>

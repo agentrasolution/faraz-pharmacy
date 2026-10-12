@@ -280,6 +280,7 @@ export interface StockPurchase {
   quantity: number;
   purchase_price: number;
   sale_price: number;
+  stax?: number;
   expiry?: string;
   total_value: number;
   subtotal?: number;
@@ -302,6 +303,7 @@ export interface StockInput {
   purchasePrice?: number;
   salePrice?: number;
   quantity: number;
+  stax?: number;
   expiry?: string;
 }
 
