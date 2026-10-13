@@ -21,12 +21,16 @@ export const customersService = {
     search,
     includeArchived = false,
     archivedOnly = false,
+    sortBy,
+    sortOrder = "desc",
   }: {
     page?: number;
     limit?: number;
     search?: string;
     includeArchived?: boolean;
     archivedOnly?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   } = {}) {
     const skip = (page - 1) * limit;
 
@@ -52,12 +56,20 @@ export const customersService = {
     const countResult = await prisma.$queryRawUnsafe<{ total: number }[]>(countQuery, ...params);
     const total = Number(countResult[0]?.total || 0);
 
+    const dir = sortOrder === "asc" ? "ASC" : "DESC";
+    let orderSql = `ORDER BY c.created_at DESC`;
+    if (sortBy === "name") {
+      orderSql = `ORDER BY c.name ${dir}`;
+    } else if (sortBy === "created_at" || sortBy === "createdAt") {
+      orderSql = `ORDER BY c.created_at ${dir}`;
+    }
+
     const dataQuery = `
       SELECT c.id, c.name, c.phone, c.address, c.father_name, c.father_phone, c.active, c.created_at,
         ${customerStatsSelect}
       FROM customers c
       ${whereClause}
-      ORDER BY c.name ASC
+      ${orderSql}
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
 

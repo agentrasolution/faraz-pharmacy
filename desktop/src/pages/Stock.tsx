@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Sparkles,
   FileText,
+  ArrowUpDown,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
@@ -25,6 +26,13 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { downloadCSV, downloadPDF, downloadExcel } from "@/lib/export";
@@ -112,20 +120,34 @@ export default function Stock() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const debouncedSearch = useDebounce(search, 300);
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(key);
+      setSortOrder(key === "productName" ? "asc" : "desc");
+    }
+    setPage(1);
+  };
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, showArchived, limit]);
+  }, [debouncedSearch, showArchived, limit, sortBy, sortOrder]);
 
   const { data: paginatedData, isLoading } = useQuery({
-    queryKey: ["stock", page, limit, debouncedSearch, showArchived],
+    queryKey: ["stock", page, limit, debouncedSearch, showArchived, sortBy, sortOrder],
     queryFn: () =>
       api.stock.listPaginated({
         page,
         limit,
         search: debouncedSearch,
         archived: showArchived,
+        sortBy,
+        sortOrder,
       }),
   });
 
@@ -471,6 +493,8 @@ export default function Stock() {
     {
       key: "created_at",
       header: "Date",
+      sortable: true,
+      sortKey: "createdAt",
       cell: (s: StockPurchase) => (
         <span className="font-mono text-[11px] text-text-secondary">
           {formatDate(s.created_at)}
@@ -480,6 +504,8 @@ export default function Stock() {
     {
       key: "product_name",
       header: "Product",
+      sortable: true,
+      sortKey: "productName",
       cell: (s: StockPurchase) => (
         <span className="text-xs font-medium text-text-primary">{s.product_name}</span>
       ),
@@ -494,6 +520,8 @@ export default function Stock() {
     {
       key: "invoice_number",
       header: "Invoice",
+      sortable: true,
+      sortKey: "invoiceNumber",
       cell: (s: StockPurchase) => (
         <span className="font-mono text-[11px] text-text-secondary">
           {s.invoice_number || "\u2014"}
@@ -503,6 +531,8 @@ export default function Stock() {
     {
       key: "batch_number",
       header: "Batch #",
+      sortable: true,
+      sortKey: "batchNumber",
       cell: (s: StockPurchase) => (
         <button
           onClick={() => {
@@ -527,6 +557,8 @@ export default function Stock() {
     {
       key: "quantity",
       header: "Qty",
+      sortable: true,
+      sortKey: "quantity",
       cell: (s: StockPurchase) => (
         <span className="font-mono text-xs font-semibold">{s.quantity}</span>
       ),
@@ -693,6 +725,30 @@ export default function Stock() {
               className="pl-10 h-10 rounded-full border border-border/80 bg-surface shadow-xs text-xs focus-visible:ring-2 focus-visible:ring-[#4A25E1]/25"
             />
           </div>
+          <Select
+            value={sortBy === "createdAt" ? (sortOrder === "desc" ? "recent" : "oldest") : (sortBy === "productName" ? (sortOrder === "asc" ? "name_asc" : "name_desc") : "custom")}
+            onValueChange={(val) => {
+              if (val === "recent") { setSortBy("createdAt"); setSortOrder("desc"); }
+              else if (val === "oldest") { setSortBy("createdAt"); setSortOrder("asc"); }
+              else if (val === "name_asc") { setSortBy("productName"); setSortOrder("asc"); }
+              else if (val === "name_desc") { setSortBy("productName"); setSortOrder("desc"); }
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-10 w-[140px] rounded-full border border-border/80 bg-surface shadow-xs text-xs shrink-0">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1 text-text-secondary shrink-0" />
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Recent first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="name_asc">Product (A-Z)</SelectItem>
+              <SelectItem value="name_desc">Product (Z-A)</SelectItem>
+              {sortBy !== "createdAt" && sortBy !== "productName" && (
+                <SelectItem value="custom">Sort: {sortBy} ({sortOrder})</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -732,6 +788,9 @@ export default function Stock() {
           data={stockEntries}
           loading={isLoading}
           keyExtractor={(s: StockPurchase) => s.id}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
         />
 
         {/* Pagination Bar */}

@@ -32,12 +32,16 @@ export const medicinesService = {
     search,
     includeArchived = false,
     archivedOnly = false,
+    sortBy,
+    sortOrder,
   }: {
     page?: number;
     limit?: number;
     search?: string;
     includeArchived?: boolean;
     archivedOnly?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) {
     const where: any = archivedOnly ? { active: 0 } : includeArchived ? {} : { active: 1 };
 
@@ -52,13 +56,26 @@ export const medicinesService = {
 
     const skip = (page - 1) * limit;
 
+    let orderBy: Record<string, "asc" | "desc"> = { createdAt: sortOrder || "desc" };
+    if (sortBy === "name") {
+      orderBy = { name: sortOrder || "asc" };
+    } else if (sortBy === "salePrice" || sortBy === "sale_price") {
+      orderBy = { salePrice: sortOrder || "desc" };
+    } else if (sortBy === "purchasePrice" || sortBy === "purchase_price") {
+      orderBy = { purchasePrice: sortOrder || "desc" };
+    } else if (sortBy === "stockQty" || sortBy === "stock_qty") {
+      orderBy = { stockQty: sortOrder || "desc" };
+    } else if (sortBy === "createdAt" || sortBy === "created_at") {
+      orderBy = { createdAt: sortOrder || "desc" };
+    }
+
     const [total, products] = await prisma.$transaction([
       prisma.product.count({ where }),
       prisma.product.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { name: "asc" },
+        orderBy,
         include: { prices: true, company: true },
       }),
     ]);

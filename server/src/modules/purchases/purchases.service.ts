@@ -11,6 +11,8 @@ export const purchasesService = {
     dateFrom,
     dateTo,
     archived = false,
+    sortBy,
+    sortOrder,
   }: {
     page?: number;
     limit?: number;
@@ -18,6 +20,8 @@ export const purchasesService = {
     dateFrom?: string;
     dateTo?: string;
     archived?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   } = {}) {
     const where: Prisma.StockPurchaseWhereInput = {
       active: archived ? 0 : 1,
@@ -45,11 +49,24 @@ export const purchasesService = {
 
     const skip = (page - 1) * limit;
 
+    let orderBy: Prisma.StockPurchaseOrderByWithRelationInput = { createdAt: sortOrder || "desc" };
+    if (sortBy === "productName" || sortBy === "name") {
+      orderBy = { product: { name: sortOrder || "asc" } };
+    } else if (sortBy === "invoiceNumber") {
+      orderBy = { invoiceNumber: sortOrder || "desc" };
+    } else if (sortBy === "batchNumber") {
+      orderBy = { batchNumber: sortOrder || "asc" };
+    } else if (sortBy === "quantity") {
+      orderBy = { quantity: sortOrder || "desc" };
+    } else if (sortBy === "createdAt" || sortBy === "created_at") {
+      orderBy = { createdAt: sortOrder || "desc" };
+    }
+
     const [total, data] = await prisma.$transaction([
       prisma.stockPurchase.count({ where }),
       prisma.stockPurchase.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take: limit,
         include: {

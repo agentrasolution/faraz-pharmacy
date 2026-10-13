@@ -11,8 +11,10 @@ export const medicinesController = {
       const search = req.query.search as string | undefined;
       const includeArchived = req.query.includeArchived === "true";
       const archivedOnly = req.query.archivedOnly === "true" || req.query.archived === "true";
+      const sortBy = req.query.sortBy as string | undefined;
+      const sortOrder = (req.query.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
       
-      const result = await medicinesService.list({ page, limit, search, includeArchived, archivedOnly });
+      const result = await medicinesService.list({ page, limit, search, includeArchived, archivedOnly, sortBy, sortOrder });
       result.data = normalizeProductList(result.data) as any[];
       
       if (isPaginated) {
